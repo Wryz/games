@@ -18,6 +18,7 @@ const SnakeGameContent = () => {
   } = useSnakeGame();
   
   const isMobile = useIsMobile();
+  console.log(isMobile);
 
   const handleMobileScreenTap = () => {
     if (!isMobile) return;
@@ -33,15 +34,15 @@ const SnakeGameContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 overflow-x-hidden">
+    <div className="min-h-screen overflow-hidden">
       {/* Game content at top */}
       <div 
-        className="flex-1 flex flex-col items-center justify-start p-2 sm:p-4 md:p-8 w-full"
+        className="flex-1 p-2 sm:p-4 md:p-6 w-full snake-game-content max-w-full"
         onClick={isMobile ? handleMobileScreenTap : undefined}
       >
         <GameStatus status={gameState.status} score={gameState.score} isMobile={isMobile} />
         
-        <div className="mb-6 flex-shrink-0">
+        <div className="mb-4 flex-shrink-0 w-full max-w-full">
           <SnakeBoard
             snake={gameState.snake}
             apple={gameState.apple}
@@ -51,22 +52,14 @@ const SnakeGameContent = () => {
         </div>
       </div>
 
-      {/* Mobile controls at bottom */}
-      {isMobile && (
-        <MobileControls onDirectionChange={changeDirection} />
-      )}
-
-      {/* Desktop instructions */}
-      {!isMobile && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-center">
-          <div className="bg-gray-800 px-4 py-2 rounded-lg border border-gray-700">
-            <p className="text-sm text-gray-400">
-              Use <span className="text-cyan-400 font-semibold">Arrow Keys</span> to move • 
-              Press <span className="text-cyan-400 font-semibold">Spacebar</span> to start/pause/reset
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Mobile controls at bottom - Always show for now to test */}
+      {isMobile && <MobileControls 
+        onDirectionChange={changeDirection} 
+        onReset={() => {
+          resetGame();
+          setTimeout(() => startGame(), 50);
+        }}
+      />}
     </div>
   );
 };

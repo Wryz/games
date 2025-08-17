@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { Position } from '../types/SnakeTypes';
 
 interface SnakeBoardProps {
@@ -11,34 +11,59 @@ interface SnakeBoardProps {
 const SnakeBoard = ({ snake, apple, boardWidth, boardHeight }: SnakeBoardProps) => {
   // Calculate responsive cell size based on screen width
   const calculateCellSize = () => {
-    if (typeof window === 'undefined') return 40; // Default for SSR
+    if (typeof window === 'undefined') return 20; // Conservative default for SSR
     
     const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     const isMobile = screenWidth <= 768;
     
     if (isMobile) {
-      // On mobile, make cells fit the screen width with some padding
+      // On mobile, make cells fit the screen width with padding
       const availableWidth = screenWidth - 32; // 16px padding on each side
-      const calculatedSize = Math.floor(availableWidth / boardWidth);
-      return Math.max(12, Math.min(calculatedSize, 30)); // Min 12px, max 30px on mobile
+      const availableHeight = screenHeight - 200; // Account for controls and status
+      
+      const widthBasedSize = Math.floor(availableWidth / boardWidth);
+      const heightBasedSize = Math.floor(availableHeight / boardHeight);
+      
+      // Use the smaller of the two to ensure the board fits both dimensions
+      const calculatedSize = Math.min(widthBasedSize, heightBasedSize);
+      return Math.max(8, Math.min(calculatedSize, 25)); // Min 8px, max 25px on mobile
     } else {
-      // On desktop, use fixed size but ensure it fits
-      const availableWidth = screenWidth - 64; // More padding on desktop
-      const calculatedSize = Math.floor(availableWidth / boardWidth);
-      return Math.min(40, calculatedSize); // Max 40px but ensure it fits
+      // On desktop, ensure it fits the screen
+      const availableWidth = Math.min(screenWidth - 64, 1200); // Max width constraint
+      const availableHeight = screenHeight - 150; // Account for header/footer
+      
+      const widthBasedSize = Math.floor(availableWidth / boardWidth);
+      const heightBasedSize = Math.floor(availableHeight / boardHeight);
+      
+      const calculatedSize = Math.min(widthBasedSize, heightBasedSize);
+      return Math.max(15, Math.min(calculatedSize, 35)); // Min 15px, max 35px on desktop
     }
   };
 
-  const [cellSize, setCellSize] = useState(calculateCellSize());
+  const [cellSize, setCellSize] = useState(() => {
+    // Initialize with a safe default that will be updated immediately
+    if (typeof window === 'undefined') return 20;
+    return calculateCellSize();
+  });
+  const [isClient, setIsClient] = useState(false);
+
+  // Use useLayoutEffect to update cell size before paint
+  useLayoutEffect(() => {
+    setIsClient(true);
+    setCellSize(calculateCellSize());
+  }, [boardWidth, boardHeight]);
 
   useEffect(() => {
+    if (!isClient) return;
+    
     const handleResize = () => {
       setCellSize(calculateCellSize());
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [boardWidth]);
+  }, [boardWidth, boardHeight, isClient]);
 
   console.log('SnakeBoard render - Snake:', JSON.stringify(snake), 'Apple:', JSON.stringify(apple));
 
@@ -50,26 +75,36 @@ const SnakeBoard = ({ snake, apple, boardWidth, boardHeight }: SnakeBoardProps) 
     }
   }
 
+  // Don't render until we have proper client-side dimensions
+  if (!isClient) {
+    return (
+      <div className="w-full flex justify-center items-center" style={{ height: '400px' }}>
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full flex justify-center overflow-hidden">
-      <div
-        className="relative bg-gray-900 border-2 border-gray-700 rounded-lg shadow-2xl max-w-full"
-        style={{
-          width: boardWidth * cellSize,
-          height: boardHeight * cellSize,
-        }}
-      >
+    <div className="w-full flex justify-center items-center overflow-hidden px-2">
+       <div
+          className="relative"
+          style={{
+            width: Math.min(boardWidth * cellSize, window.innerWidth - 32),
+            height: Math.min(boardHeight * cellSize, window.innerHeight - 200),
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+          }}
+        >
       {/* Render grid background */}
       {gridCells.map(({ x, y }) => (
         <div
           key={`grid-${x}-${y}`}
-          className="absolute"
+          className="absolute border-[1px] border-neutral-800/50"
           style={{
             left: x * cellSize,
             top: y * cellSize,
             width: cellSize,
             height: cellSize,
-            border: '1px solid #374151', // Very dark gray border
             backgroundColor: 'transparent',
           }}
         />

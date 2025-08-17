@@ -6,10 +6,10 @@ export const useIsMobile = () => {
 
   useEffect(() => {
     const checkIsMobile = () => {
-      // Check for touch capability and screen size
-      const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      // Consider it mobile if the screen is small (regardless of touch capability)
+      // This handles both actual mobile devices and desktop windows that are very narrow
       const isSmallScreen = window.innerWidth <= 768;
-      setIsMobile(hasTouchScreen && isSmallScreen);
+      setIsMobile(isSmallScreen);
     };
 
     // Check on mount

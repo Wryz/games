@@ -16,7 +16,7 @@ interface SnakeGameContextType {
 const SnakeGameContext = createContext<SnakeGameContextType | undefined>(undefined);
 
 const defaultConfig: GameConfig = {
-  boardWidth: 25,
+  boardWidth: 20,
   boardHeight: 20,
   initialSpeed: 200, // 200ms interval
   speedIncrement: 5

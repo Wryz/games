@@ -4,7 +4,7 @@ import { SnakeGameState, Direction, GameConfig } from '../types/SnakeTypes';
 import { GameStatus } from '../../types/GameTypes';
 
 const defaultConfig: GameConfig = {
-  boardWidth: 25,
+  boardWidth: 20,
   boardHeight: 20,
   initialSpeed: 200,
   speedIncrement: 8
