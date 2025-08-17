@@ -40,7 +40,15 @@ const SnakeGameContent = () => {
         className="flex-1 p-2 sm:p-4 md:p-6 w-full snake-game-content max-w-full"
         onClick={isMobile ? handleMobileScreenTap : undefined}
       >
-        <GameStatus status={gameState.status} score={gameState.score} isMobile={isMobile} />
+        <GameStatus 
+          status={gameState.status} 
+          score={gameState.score} 
+          isMobile={isMobile}
+          onReset={() => {
+            resetGame();
+            setTimeout(() => startGame(), 50);
+          }}
+        />
         
         <div className="mb-4 flex-shrink-0 w-full max-w-full">
           <SnakeBoard
@@ -55,10 +63,6 @@ const SnakeGameContent = () => {
       {/* Mobile controls at bottom - Always show for now to test */}
       {isMobile && <MobileControls 
         onDirectionChange={changeDirection} 
-        onReset={() => {
-          resetGame();
-          setTimeout(() => startGame(), 50);
-        }}
       />}
     </div>
   );
