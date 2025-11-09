@@ -92,6 +92,8 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${score.fastest_time}ms (${score.average_time}ms avg)`
             case 'visual-memory':
               return `Level ${score.level_reached} (${score.total_patterns} patterns)`
+            case 'sequence-memory':
+              return `Level ${score.level_reached} (${score.longest_sequence} shapes)`
             case 'pattern-recognition':
               return `${score.patterns_solved} patterns`
             case 'stroop-test':

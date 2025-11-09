@@ -97,7 +97,7 @@ Edit `data/games.ts` to add new cognitive exercises to the platform:
   playTime: '30-60 min',
   tags: ['Tag1', 'Tag2'],
   featured: false,
-  releaseDate: '2024-01-01',
+  releaseDate: '2025-11-09',
   developer: 'Developer Name',
   platform: ['Web', 'Mobile']
 }

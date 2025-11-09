@@ -69,9 +69,9 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
     
     // Navigate to the game URL without scrolling to top
     if (gameId === 'home') {
-      router.push('/', { scroll: false })
+      router.push('/', { scroll: true })
     } else {
-      router.push(`/games/${gameId}`, { scroll: false })
+      router.push(`/games/${gameId}`, { scroll: true })
     }
     
     // Call the callback for any additional handling

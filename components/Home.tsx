@@ -129,6 +129,9 @@ export default function Home({ onGameSelect }: HomeProps) {
             case 'visual-memory':
               formattedValue = `Level ${scoreValue.level_reached} (${scoreValue.total_patterns} patterns)`
               break
+            case 'sequence-memory':
+              formattedValue = `Level ${scoreValue.level_reached} (${scoreValue.longest_sequence} shapes)`
+              break
             case 'pattern-recognition':
               formattedValue = `${scoreValue.patterns_solved} patterns`
               break
@@ -451,30 +454,30 @@ export default function Home({ onGameSelect }: HomeProps) {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4 flex-1">
-                        {/* Animated indicator */}
+                          {/* Animated indicator */}
                         <div className="relative flex-shrink-0">
-                          <div className={`w-3 h-3 rounded-full animate-pulse ${
-                            isUserScore(score.username) ? 'bg-blue-500 shadow-glow' : 'bg-gray-400'
-                          }`} />
-                        </div>
-                        
+                            <div className={`w-3 h-3 rounded-full animate-pulse ${
+                              isUserScore(score.username) ? 'bg-blue-500 shadow-glow' : 'bg-gray-400'
+                            }`} />
+                          </div>
+                          
                         <div className="flex items-center gap-2 flex-wrap flex-1">
-                          <span className={`font-bold text-lg ${
-                            isUserScore(score.username)
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
-                              : 'text-gray-800 dark:text-gray-100'
-                          }`}>
-                            {score.username}
-                            {isUserScore(score.username) && (
-                              <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full shadow-glow animate-pulse-glow">
-                                You
+                              <span className={`font-bold text-lg ${
+                                isUserScore(score.username)
+                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
+                                  : 'text-gray-800 dark:text-gray-100'
+                              }`}>
+                                {score.username}
+                                {isUserScore(score.username) && (
+                                  <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full shadow-glow animate-pulse-glow">
+                                    You
+                                  </span>
+                                )}
                               </span>
-                            )}
-                          </span>
-                          <span className="text-gray-500 dark:text-gray-400">•</span>
-                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                            {score.game_type}
-                          </span>
+                              <span className="text-gray-500 dark:text-gray-400">•</span>
+                              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                                {score.game_type}
+                              </span>
                           <span className="text-gray-500 dark:text-gray-400">•</span>
                           {(() => {
                             // Parse score_value to split into separate bubbles
@@ -503,7 +506,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                       </div>
                       
                       <div className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full ml-4 flex-shrink-0">
-                        {formatTimeAgo(score.date_submitted)}
+                          {formatTimeAgo(score.date_submitted)}
                       </div>
                     </div>
                   </div>

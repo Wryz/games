@@ -1,14 +1,111 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { SequenceMemoryIcon } from '../icons/GameIcons'
-import { getSequenceMemoryScores } from '@/lib/scores'
+import { getSequenceMemoryScores, submitSequenceMemoryScore } from '@/lib/scores'
 import GameWrapper from '../GameWrapper'
 import type { SequenceMemoryScore } from '@/lib/supabase'
+import { useUser } from '@/contexts/UserContext'
+import { supabase } from '@/lib/supabase'
+
+type GameState = 'idle' | 'showing' | 'playing' | 'correct' | 'wrong' | 'finished'
+
+// Shape SVG components
+const shapes = [
+  {
+    id: 'circle',
+    name: 'Circle',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <circle cx="50" cy="50" r="40" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'square',
+    name: 'Square',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <rect x="10" y="10" width="80" height="80" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'triangle',
+    name: 'Triangle',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <polygon points="50,15 90,85 10,85" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'star',
+    name: 'Star',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <polygon points="50,10 61,40 92,40 67,60 78,90 50,70 22,90 33,60 8,40 39,40" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'pentagon',
+    name: 'Pentagon',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <polygon points="50,10 90,40 75,85 25,85 10,40" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'hexagon',
+    name: 'Hexagon',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'diamond',
+    name: 'Diamond',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <polygon points="50,10 90,50 50,90 10,50" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'heart',
+    name: 'Heart',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <path d="M50,85 C50,85 15,60 15,40 C15,25 25,15 35,15 C42,15 47,20 50,25 C53,20 58,15 65,15 C75,15 85,25 85,40 C85,60 50,85 50,85 Z" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 'octagon',
+    name: 'Octagon',
+    svg: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <polygon points="30,10 70,10 90,30 90,70 70,90 30,90 10,70 10,30" fill="currentColor" />
+      </svg>
+    )
+  }
+]
 
 export default function SequenceMemory() {
   const [scores, setScores] = useState<SequenceMemoryScore[]>([])
   const [loading, setLoading] = useState(true)
+  const [gameState, setGameState] = useState<GameState>('idle')
+  const [sequence, setSequence] = useState<string[]>([])
+  const [playerSequence, setPlayerSequence] = useState<string[]>([])
+  const [level, setLevel] = useState(1)
+  const [currentShapeIndex, setCurrentShapeIndex] = useState<number>(-1)
+  const [totalCorrectShapes, setTotalCorrectShapes] = useState(0)
+  const { username } = useUser()
+  const hasSubmittedScore = useRef(false)
 
   const loadScores = async () => {
     try {
@@ -24,11 +121,162 @@ export default function SequenceMemory() {
 
   useEffect(() => {
     loadScores()
+
+    // Set up realtime listener
+    const channel = supabase
+      .channel('sequence_memory_scores_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sequence_memory_scores'
+        },
+        (payload) => {
+          console.log('New sequence memory score:', payload.new)
+          setScores(prev => [payload.new as SequenceMemoryScore, ...prev.slice(0, 49)])
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const formatScore = (score: SequenceMemoryScore) => {
-    return `Level ${score.level_reached} (${score.longest_sequence} sequence)`
+    return `Level ${score.level_reached} (${score.longest_sequence} shapes)`
   }
+
+  // Generate new sequence
+  const generateSequence = useCallback(() => {
+    const randomShape = shapes[Math.floor(Math.random() * shapes.length)].id
+    const newSequence = [...sequence, randomShape]
+    setSequence(newSequence)
+    return newSequence
+  }, [sequence])
+
+  // Play sequence animation
+  const playSequence = useCallback(async (seq: string[]) => {
+    setGameState('showing')
+    setPlayerSequence([])
+    setCurrentShapeIndex(-1)
+
+    // Wait before starting
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    for (let i = 0; i < seq.length; i++) {
+      const shapeIndex = shapes.findIndex(s => s.id === seq[i])
+      setCurrentShapeIndex(shapeIndex)
+
+      // Show shape for 800ms
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      setCurrentShapeIndex(-1)
+
+      // Pause between shapes (400ms)
+      await new Promise(resolve => setTimeout(resolve, 400))
+    }
+
+    setGameState('playing')
+  }, [])
+
+  // Start new game
+  const startGame = useCallback(() => {
+    setLevel(1)
+    setSequence([])
+    setPlayerSequence([])
+    setTotalCorrectShapes(0)
+    hasSubmittedScore.current = false
+
+    // Generate and play first sequence (start with 3 shapes)
+    const firstSequence = []
+    for (let i = 0; i < 3; i++) {
+      firstSequence.push(shapes[Math.floor(Math.random() * shapes.length)].id)
+    }
+    setSequence(firstSequence)
+    playSequence(firstSequence)
+  }, [playSequence])
+
+  // Handle shape click
+  const handleShapeClick = useCallback((shapeId: string) => {
+    if (gameState !== 'playing') return
+
+    const newPlayerSequence = [...playerSequence, shapeId]
+    setPlayerSequence(newPlayerSequence)
+
+    // Check if this click is correct
+    const isCorrect = newPlayerSequence[newPlayerSequence.length - 1] === sequence[newPlayerSequence.length - 1]
+
+    if (!isCorrect) {
+      // Wrong!
+      setGameState('wrong')
+
+      // Calculate total correct shapes (previous correct + correct in this round before the mistake)
+      const correctInThisRound = newPlayerSequence.length - 1 // Minus the wrong one
+      const finalTotal = totalCorrectShapes + correctInThisRound
+
+      console.log('Game ended - Wrong answer', {
+        username,
+        level,
+        totalCorrectShapes,
+        correctInThisRound,
+        finalTotal,
+        hasSubmitted: hasSubmittedScore.current
+      })
+
+      setTimeout(() => {
+        setGameState('finished')
+        
+        // Submit score - always submit if user has a username and played the game
+        if (username && !hasSubmittedScore.current) {
+          console.log('Attempting to submit score:', { username, level, finalTotal })
+          hasSubmittedScore.current = true
+          submitSequenceMemoryScore({
+            username,
+            level_reached: level,
+            longest_sequence: Math.max(0, finalTotal) // Ensure non-negative
+          }).then((data) => {
+            console.log('Score submitted successfully:', data)
+            setTimeout(() => loadScores(), 1000)
+          }).catch(error => {
+            console.error('Error submitting score:', error)
+            hasSubmittedScore.current = false
+          })
+        } else {
+          console.log('Score submission skipped:', {
+            hasUsername: !!username,
+            hasSubmitted: hasSubmittedScore.current,
+            finalTotal
+          })
+        }
+      }, 1500)
+    } else if (newPlayerSequence.length === sequence.length) {
+      // Completed the sequence correctly!
+      setGameState('correct')
+      
+      // Add this sequence length to total correct shapes
+      setTotalCorrectShapes(prev => prev + sequence.length)
+
+      setTimeout(() => {
+        const nextLevel = level + 1
+        setLevel(nextLevel)
+        const nextSequence = generateSequence()
+        playSequence(nextSequence)
+      }, 1000)
+    }
+  }, [gameState, playerSequence, sequence, level, username, totalCorrectShapes, generateSequence, playSequence, loadScores])
+
+  // Reset game
+  const resetGame = useCallback(() => {
+    setGameState('idle')
+    setSequence([])
+    setPlayerSequence([])
+    setLevel(1)
+    setCurrentShapeIndex(-1)
+    setTotalCorrectShapes(0)
+    hasSubmittedScore.current = false
+  }, [])
 
   return (
     <GameWrapper
@@ -40,19 +288,86 @@ export default function SequenceMemory() {
       sortKey="level_reached"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-8 pt-8">
-        <SequenceMemoryIcon size={80} className="mb-4 text-blue-600 dark:text-blue-400 sm:w-24 sm:h-24" />
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-700 dark:text-gray-100 text-center">
-          Sequence Memory
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6 sm:mb-8 text-sm sm:text-base px-4">
-          Remember the order of highlighted squares in increasingly complex sequences.
-        </p>
-        <div className="bg-white dark:bg-gray-700 p-4 sm:p-6 rounded-lg shadow-sm">
-          <p className="text-gray-500 dark:text-gray-400 text-center text-sm sm:text-base">
-            Game coming soon...
-          </p>
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
+        {/* Stats and Reset */}
+        <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
+          <div className="text-gray-600 dark:text-gray-400">
+            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
+          </div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Length: <span className="font-bold text-green-600 dark:text-green-400">{sequence.length}</span>
+          </div>
+          <button
+            onClick={resetGame}
+            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            title="Reset"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
+
+        {/* Main Game Area - Two column on desktop, stacked on mobile */}
+        <div className="w-full max-w-4xl mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+            
+            {/* Left/Top: Shape Display Area */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-full aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-2xl flex items-center justify-center p-8 lg:p-12">
+                {gameState === 'showing' && currentShapeIndex >= 0 ? (
+                  <div className="w-full h-full text-blue-600 dark:text-blue-400 animate-pulse">
+                    {shapes[currentShapeIndex].svg}
+                  </div>
+                ) : playerSequence.length > 0 && (gameState === 'playing' || gameState === 'correct') ? (
+                  <div className="w-full h-full text-green-600 dark:text-green-400">
+                    {shapes.find(s => s.id === playerSequence[playerSequence.length - 1])?.svg}
+                  </div>
+                ) : playerSequence.length > 0 && gameState === 'wrong' ? (
+                  <div className="w-full h-full text-red-600 dark:text-red-400">
+                    {shapes.find(s => s.id === playerSequence[playerSequence.length - 1])?.svg}
+                  </div>
+                ) : (
+                  <div className="text-6xl text-gray-400 dark:text-gray-500">?</div>
+                )}
+              </div>
+            </div>
+
+            {/* Right/Bottom: Shape Selection Grid */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-full aspect-square">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 w-full h-full">
+                  {shapes.map((shape) => (
+                    <button
+                      key={shape.id}
+                      onClick={() => handleShapeClick(shape.id)}
+                      disabled={gameState !== 'playing'}
+                      className={`aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center p-4 sm:p-5 text-gray-700 dark:text-gray-300 ${
+                        gameState === 'playing' 
+                          ? 'hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer' 
+                          : 'opacity-50 cursor-not-allowed'
+                      }`}
+                      title={shape.name}
+                    >
+                      {shape.svg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Start/Play Again Button */}
+        {(gameState === 'idle' || gameState === 'finished') && (
+          <button
+            onClick={startGame}
+            className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+          >
+            {gameState === 'finished' ? 'Play Again' : 'Start Game'}
+          </button>
+        )}
       </div>
     </GameWrapper>
   )

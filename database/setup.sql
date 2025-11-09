@@ -580,14 +580,16 @@ BEGIN
       (SELECT COUNT(*) FROM sequence_memory_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'level_reached', level_reached
+        'level_reached', level_reached,
+        'longest_sequence', longest_sequence
       ) FROM sequence_memory_scores 
       ORDER BY level_reached DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'level_reached', level_reached
+            'level_reached', level_reached,
+            'longest_sequence', longest_sequence
           ) FROM sequence_memory_scores 
           WHERE username = p_username
           ORDER BY level_reached DESC 
@@ -732,7 +734,7 @@ BEGIN
       'sequence-memory' as game_id,
       'Sequence Memory' as game_name,
       username,
-      json_build_object('level_reached', level_reached) as score_value,
+      json_build_object('level_reached', level_reached, 'longest_sequence', longest_sequence) as score_value,
       date_submitted
     FROM sequence_memory_scores
     
