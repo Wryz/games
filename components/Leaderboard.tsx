@@ -67,7 +67,7 @@ export default function Leaderboard({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-0">
+        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-100 mb-4 sm:mb-0">
           {gameType} Leaderboard
         </h3>
         <button
@@ -111,7 +111,7 @@ export default function Leaderboard({
           placeholder="Search username..."
           value={searchUsername}
           onChange={(e) => setSearchUsername(e.target.value)}
-          className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
         />
       </div>
 
@@ -148,7 +148,7 @@ export default function Leaderboard({
                   <div className={`font-medium ${
                     score.username === username
                       ? 'text-blue-700 dark:text-blue-300'
-                      : 'text-gray-900 dark:text-gray-100'
+                      : 'text-gray-700 dark:text-gray-100'
                   }`}>
                     {score.username}
                     {score.username === username && (
@@ -163,7 +163,7 @@ export default function Leaderboard({
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-900 dark:text-gray-100">
+                <div className="font-bold text-gray-700 dark:text-gray-100">
                   {formatScore(score)}
                 </div>
               </div>

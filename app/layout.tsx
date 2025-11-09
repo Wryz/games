@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
+      <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
         <PostHogProvider>
           <ThemeProvider>
             <UserProvider>

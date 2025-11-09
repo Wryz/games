@@ -79,7 +79,7 @@ export default function UsernameInput({ username, onUsernameSubmit, onUsernameCh
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Your username"
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors"
               maxLength={20}
               disabled={isSubmitting}
             />

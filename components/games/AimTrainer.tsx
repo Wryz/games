@@ -226,7 +226,8 @@ export default function AimTrainer() {
         targets_hit: gameStats.targetsHit,
         total_targets: gameStats.totalTargets
       })
-      // Score will be automatically added via realtime listener
+      // Reload scores after submission to ensure leaderboard updates
+      setTimeout(() => loadScores(), 1000)
     } catch (error) {
       console.error('Error submitting score:', error)
       hasSubmittedScore.current = false // Reset on error to allow retry
@@ -279,7 +280,7 @@ export default function AimTrainer() {
       <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4">
         {gameState === 'finished' ? (
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-100">
               Game Complete!
         </h2>
             <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-sm mb-6">

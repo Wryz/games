@@ -94,9 +94,16 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
         <div className="p-6">
           {/* Header with close button */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Brain Benchmark
-            </h2>
+            <div className="flex items-center gap-2">
+              <img 
+                src="/images/brain.png" 
+                alt="Brain" 
+                className="w-8 h-8"
+              />
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100">
+                Brain Benchmark
+              </h2>
+            </div>
             <div className="flex items-center space-x-3">
               <ThemeToggle />
               <button
@@ -155,7 +162,7 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
                   <div className={`font-medium text-sm ${
                     selectedGame === 'home' || selectedGame === null
                       ? 'text-blue-700 dark:text-blue-300'
-                      : 'text-gray-900 dark:text-gray-100'
+                      : 'text-gray-700 dark:text-gray-100'
                   }`}>
                     Home
                   </div>
@@ -202,7 +209,7 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
                           <div className={`font-medium text-sm ${
                             selectedGame === game.id
                               ? 'text-blue-700 dark:text-blue-300'
-                              : 'text-gray-900 dark:text-gray-100'
+                              : 'text-gray-700 dark:text-gray-100'
                           }`}>
                             {game.name}
                           </div>

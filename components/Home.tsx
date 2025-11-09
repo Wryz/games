@@ -304,7 +304,7 @@ export default function Home({ onGameSelect }: HomeProps) {
     <div className="p-6 space-y-8">
       {/* Welcome Section */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <h1 className="text-4xl font-bold text-gray-700 dark:text-gray-100 mb-2">
           Brain Benchmark
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -321,7 +321,7 @@ export default function Home({ onGameSelect }: HomeProps) {
           {/* Game Overview Grid */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100">
                 Games Overview
               </h2>
               {gameStatsLoading && gameStats.length > 0 && (
@@ -347,7 +347,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                   <div className="flex items-center space-x-3 mb-4">
                     <game.icon size={32} className="text-blue-600 dark:text-blue-400" />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                      <h3 className="font-semibold text-gray-700 dark:text-gray-100 truncate">
                         {game.name}
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -364,7 +364,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                       </p>
                       {game.topScore ? (
                         <div>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          <p className="font-semibold text-gray-700 dark:text-gray-100">
                             {game.topScore.value}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -404,7 +404,7 @@ export default function Home({ onGameSelect }: HomeProps) {
 
           {/* Recent Activity */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
               Recent Activity
             </h2>
             <div className="space-y-4">
@@ -435,7 +435,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                               <span className={`font-medium ${
                                 isUserScore(score.username)
                                   ? 'text-blue-700 dark:text-blue-300'
-                                  : 'text-gray-900 dark:text-gray-100'
+                                  : 'text-gray-700 dark:text-gray-100'
                               }`}>
                                 {score.username}
                                 {isUserScore(score.username) && (
@@ -452,7 +452,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                               </span>
                             </div>
                             <div className="mt-1">
-                              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              <span className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                                 {score.score_value}
                               </span>
                             </div>

@@ -65,9 +65,16 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
     <div className="fixed left-0 top-0 h-screen w-80 bg-transparent overflow-y-auto z-10 hidden lg:block">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Brain Benchmark
-          </h2>
+          <div className="flex items-center gap-2">
+            <img 
+              src="/images/brain.png" 
+              alt="Brain" 
+              className="w-8 h-8"
+            />
+            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100">
+              Brain Benchmark
+            </h2>
+          </div>
           <ThemeToggle />
         </div>
         
@@ -102,7 +109,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                 <div className={`font-medium text-sm ${
                   selectedGame === 'home' || selectedGame === null
                     ? 'text-blue-700 dark:text-blue-300'
-                    : 'text-gray-900 dark:text-gray-100'
+                    : 'text-gray-700 dark:text-gray-100'
                 }`}>
                   Home
                 </div>
@@ -148,7 +155,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                         <div className={`font-medium text-sm ${
                           selectedGame === game.id
                             ? 'text-blue-700 dark:text-blue-300'
-                            : 'text-gray-900 dark:text-gray-100'
+                            : 'text-gray-700 dark:text-gray-100'
                         }`}>
                           {game.name}
                         </div>

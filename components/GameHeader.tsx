@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 interface GameHeaderProps {
   onMobileMenuToggle?: () => void
 }
@@ -29,10 +31,19 @@ const GameHeader = ({ onMobileMenuToggle }: GameHeaderProps) => {
             />
           </svg>
         </button>
-        <h1 className="text-2xl font-bold">
-          <span className="text-gray-900 dark:text-gray-100">BRAIN</span>
-          <span className="ml-2 text-cyan-500 dark:text-cyan-400">BENCHMARK</span>
-        </h1>
+        <div className="flex items-center gap-2">
+          <Image 
+            src="/images/brain.png" 
+            alt="Brain" 
+            width={32} 
+            height={32}
+            className="w-8 h-8"
+          />
+          <h1 className="text-2xl font-bold">
+            <span className="text-gray-700 dark:text-gray-100">BRAIN</span>
+            <span className="ml-2 text-cyan-500 dark:text-cyan-400">BENCHMARK</span>
+          </h1>
+        </div>
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
