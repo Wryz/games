@@ -36,13 +36,7 @@ const GameHeader = ({ onMobileMenuToggle }: GameHeaderProps) => {
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
-      {/* Desktop header (centered) */}
-      <div className="text-center mb-8 sm:mb-12 hidden lg:block">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-          <span className="text-gray-900 dark:text-gray-100 transition-colors duration-300">BRAIN</span>
-          <span className="ml-2 sm:ml-4 text-cyan-500 dark:text-cyan-400 block sm:inline transition-colors duration-300" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>BENCHMARK</span>
-        </h1>
-      </div>
+      {/* Desktop header is now handled by MainView - no duplicate title needed */}
     </div>
   )
 }

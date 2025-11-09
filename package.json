@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "types": "supabase gen types typescript --project-id snzsigjseoduyjhqxbwn > types/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.80.0",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "eslint": "^8",
-    "eslint-config-next": "14.0.4"
+    "eslint-config-next": "14.0.4",
+    "supabase": "^2.54.11"
   }
 }

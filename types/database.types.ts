@@ -1,0 +1,454 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+  public: {
+    Tables: {
+      aim_trainer_scores: {
+        Row: {
+          accuracy: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          reaction_time: number
+          targets_hit: number
+          total_targets: number
+          username: string
+        }
+        Insert: {
+          accuracy: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          reaction_time: number
+          targets_hit: number
+          total_targets: number
+          username: string
+        }
+        Update: {
+          accuracy?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          reaction_time?: number
+          targets_hit?: number
+          total_targets?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      chimp_test_scores: {
+        Row: {
+          attempts: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          numbers_remembered: number
+          username: string
+        }
+        Insert: {
+          attempts: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached: number
+          numbers_remembered: number
+          username: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached?: number
+          numbers_remembered?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      memory_scores: {
+        Row: {
+          correct_sequences: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          total_sequences: number
+          username: string
+        }
+        Insert: {
+          correct_sequences: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached: number
+          total_sequences: number
+          username: string
+        }
+        Update: {
+          correct_sequences?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached?: number
+          total_sequences?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      number_memory_scores: {
+        Row: {
+          attempts: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          longest_sequence: number
+          username: string
+        }
+        Insert: {
+          attempts: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          longest_sequence: number
+          username: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          longest_sequence?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      pattern_recognition_scores: {
+        Row: {
+          created_at: string | null
+          date_submitted: string | null
+          difficulty_level: number
+          id: number
+          patterns_solved: number
+          time_taken: number
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_submitted?: string | null
+          difficulty_level: number
+          id?: number
+          patterns_solved: number
+          time_taken: number
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          date_submitted?: string | null
+          difficulty_level?: number
+          id?: number
+          patterns_solved?: number
+          time_taken?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      reaction_time_scores: {
+        Row: {
+          attempts: number
+          average_time: number
+          created_at: string | null
+          date_submitted: string | null
+          fastest_time: number
+          id: number
+          username: string
+        }
+        Insert: {
+          attempts: number
+          average_time: number
+          created_at?: string | null
+          date_submitted?: string | null
+          fastest_time: number
+          id?: number
+          username: string
+        }
+        Update: {
+          attempts?: number
+          average_time?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          fastest_time?: number
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      sequence_memory_scores: {
+        Row: {
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          longest_sequence: number
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached: number
+          longest_sequence: number
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached?: number
+          longest_sequence?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      stroop_test_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          total_questions: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          total_questions: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          total_questions?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      typing_test_scores: {
+        Row: {
+          accuracy: number
+          characters_typed: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          time_taken: number
+          username: string
+          wpm: number
+        }
+        Insert: {
+          accuracy: number
+          characters_typed: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          time_taken: number
+          username: string
+          wpm: number
+        }
+        Update: {
+          accuracy?: number
+          characters_typed?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          time_taken?: number
+          username?: string
+          wpm?: number
+        }
+        Relationships: []
+      }
+      visual_memory_scores: {
+        Row: {
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          patterns_remembered: number
+          total_patterns: number
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached: number
+          patterns_remembered: number
+          total_patterns: number
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          level_reached?: number
+          patterns_remembered?: number
+          total_patterns?: number
+          username?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

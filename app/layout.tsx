@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Fredoka } from 'next/font/google'
 import './tailwind.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { UserProvider } from '@/contexts/UserContext'
 
 const fredoka = Fredoka({ 
   subsets: ['latin'],
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
         <ThemeProvider>
-          {children}
+          <UserProvider>
+            {children}
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>

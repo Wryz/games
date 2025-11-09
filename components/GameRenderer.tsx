@@ -1,8 +1,6 @@
 'use client'
 
 import { BrainIcon } from './icons/GameIcons'
-import { useUser } from '@/contexts/UserContext'
-import UsernameInput from './UsernameInput'
 import AimTrainer from './games/AimTrainer'
 import TypingTest from './games/TypingTest'
 import MemoryGame from './games/MemoryGame'
@@ -19,39 +17,17 @@ interface GameRendererProps {
 }
 
 export default function GameRenderer({ selectedGame }: GameRendererProps) {
-  const { username, setUsername, clearUsername } = useUser()
-
-  const handleUsernameSubmit = async (newUsername: string) => {
-    setUsername(newUsername)
-  }
-
-  const handleUsernameChange = () => {
-    clearUsername()
-  }
-
   if (!selectedGame) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-4 sm:p-8">
-        <BrainIcon size={96} className="mb-4 sm:mb-6 text-blue-600 dark:text-blue-400 sm:w-32 sm:h-32" />
-        <h1 className="text-2xl sm:text-4xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
-          Brain Benchmark
-        </h1>
-        
-        <UsernameInput 
-          username={username}
-          onUsernameSubmit={handleUsernameSubmit}
-          onUsernameChange={handleUsernameChange}
-        />
-        
-        <p className="text-base sm:text-xl text-gray-600 dark:text-gray-400 text-center max-w-2xl mb-6 sm:mb-8 px-4">
-          Test and improve your cognitive abilities with our collection of brain training exercises. 
-          <span className="hidden sm:inline"> Select a game from the sidebar</span>
-          <span className="sm:hidden"> Tap the menu button</span> to get started.
+        <BrainIcon size={96} className="mb-6 text-blue-600 dark:text-blue-400" />
+        <p className="text-base sm:text-xl text-gray-600 dark:text-gray-400 text-center max-w-2xl mb-6 px-4">
+          Test and improve your cognitive abilities with our collection of brain training exercises.
         </p>
         <div className="bg-white dark:bg-gray-700 p-4 sm:p-6 rounded-lg shadow-sm">
           <p className="text-gray-500 dark:text-gray-400 text-center text-sm sm:text-base">
-            <span className="hidden sm:inline">Choose a game from the sidebar</span>
-            <span className="sm:hidden">Open the menu</span> to begin your brain training journey
+            <span className="hidden lg:inline">Choose a game from the sidebar</span>
+            <span className="lg:hidden">Open the menu</span> to begin your brain training journey
           </p>
         </div>
       </div>

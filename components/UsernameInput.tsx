@@ -76,7 +76,7 @@ export default function UsernameInput({ username, onUsernameSubmit, onUsernameCh
             htmlFor="username" 
             className="text-lg font-medium text-gray-700 dark:text-gray-300"
           >
-            Enter your username to start playing
+            Enter a username to start playing
           </label>
           <div className="flex items-center space-x-2">
             <input
@@ -99,9 +99,11 @@ export default function UsernameInput({ username, onUsernameSubmit, onUsernameCh
           </div>
         </div>
       </form>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center max-w-md">
-        Your scores will be saved under this username. No authentication required.
-      </p>
+      <div className="text-center mt-2 max-w-md">
+        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
+          ⚠️ Without a username, your scores won't be counted on the leaderboard
+        </p>
+      </div>
     </div>
   )
 }

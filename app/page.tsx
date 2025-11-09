@@ -6,7 +6,7 @@ import GameHeader from '@/components/GameHeader'
 import GameFooter from '@/components/GameFooter'
 import GameSidebar from '@/components/GameSidebar'
 import MobileGameDrawer from '@/components/MobileGameDrawer'
-import GameRenderer from '@/components/GameRenderer'
+import MainView from '@/components/MainView'
 
 export default function Home() {
   const [selectedGame, setSelectedGame] = useState<string | null>(null)
@@ -31,7 +31,7 @@ export default function Home() {
           
           {/* Game content area */}
           <main className="mt-8 mb-16">
-            <GameRenderer selectedGame={selectedGame} />
+            <MainView selectedGame={selectedGame} />
           </main>
           
           <GameFooter />

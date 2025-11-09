@@ -1,74 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database.types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
-// Database types for each game's score table
-export interface BaseScore {
-  id?: number
-  username: string
-  date_submitted: string
-  created_at?: string
-}
+// Export database types for easier use
+export type AimTrainerScore = Database['public']['Tables']['aim_trainer_scores']['Row']
+export type TypingTestScore = Database['public']['Tables']['typing_test_scores']['Row']
+export type MemoryScore = Database['public']['Tables']['memory_scores']['Row']
+export type PatternRecognitionScore = Database['public']['Tables']['pattern_recognition_scores']['Row']
+export type ReactionTimeScore = Database['public']['Tables']['reaction_time_scores']['Row']
+export type NumberMemoryScore = Database['public']['Tables']['number_memory_scores']['Row']
+export type VisualMemoryScore = Database['public']['Tables']['visual_memory_scores']['Row']
+export type StroopTestScore = Database['public']['Tables']['stroop_test_scores']['Row']
+export type SequenceMemoryScore = Database['public']['Tables']['sequence_memory_scores']['Row']
+export type ChimpTestScore = Database['public']['Tables']['chimp_test_scores']['Row']
 
-export interface AimTrainerScore extends BaseScore {
-  accuracy: number
-  reaction_time: number
-  targets_hit: number
-  total_targets: number
-}
-
-export interface TypingTestScore extends BaseScore {
-  wpm: number
-  accuracy: number
-  characters_typed: number
-  time_taken: number
-}
-
-export interface MemoryScore extends BaseScore {
-  level_reached: number
-  correct_sequences: number
-  total_sequences: number
-}
-
-export interface PatternRecognitionScore extends BaseScore {
-  patterns_solved: number
-  time_taken: number
-  difficulty_level: number
-}
-
-export interface ReactionTimeScore extends BaseScore {
-  average_time: number
-  fastest_time: number
-  attempts: number
-}
-
-export interface NumberMemoryScore extends BaseScore {
-  longest_sequence: number
-  attempts: number
-}
-
-export interface VisualMemoryScore extends BaseScore {
-  level_reached: number
-  patterns_remembered: number
-  total_patterns: number
-}
-
-export interface StroopTestScore extends BaseScore {
-  correct_answers: number
-  total_questions: number
-  average_time: number
-}
-
-export interface SequenceMemoryScore extends BaseScore {
-  level_reached: number
-  longest_sequence: number
-}
-
-export interface ChimpTestScore extends BaseScore {
-  level_reached: number
-  numbers_remembered: number
-  attempts: number
-}
+// Insert types for score submission
+export type AimTrainerScoreInsert = Database['public']['Tables']['aim_trainer_scores']['Insert']
+export type TypingTestScoreInsert = Database['public']['Tables']['typing_test_scores']['Insert']
+export type MemoryScoreInsert = Database['public']['Tables']['memory_scores']['Insert']
+export type PatternRecognitionScoreInsert = Database['public']['Tables']['pattern_recognition_scores']['Insert']
+export type ReactionTimeScoreInsert = Database['public']['Tables']['reaction_time_scores']['Insert']
+export type NumberMemoryScoreInsert = Database['public']['Tables']['number_memory_scores']['Insert']
+export type VisualMemoryScoreInsert = Database['public']['Tables']['visual_memory_scores']['Insert']
+export type StroopTestScoreInsert = Database['public']['Tables']['stroop_test_scores']['Insert']
+export type SequenceMemoryScoreInsert = Database['public']['Tables']['sequence_memory_scores']['Insert']
+export type ChimpTestScoreInsert = Database['public']['Tables']['chimp_test_scores']['Insert']
