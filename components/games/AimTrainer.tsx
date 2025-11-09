@@ -277,7 +277,7 @@ export default function AimTrainer() {
       sortDirection="desc"
       customSort={customSort}
     >
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 pt-8">
         {gameState === 'finished' ? (
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-100">

@@ -264,7 +264,7 @@ export default function TypingTest() {
       sortKey="wpm"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 pt-8">
         {(gameState === 'idle' || gameState === 'playing') && (
           <div className="w-full">
             {/* Timer and Stats */}

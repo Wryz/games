@@ -23,6 +23,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const savedTheme = localStorage.getItem('theme');
+                  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                  document.documentElement.classList.add(theme);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
         <PostHogProvider>
           <ThemeProvider>

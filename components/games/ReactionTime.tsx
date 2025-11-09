@@ -189,7 +189,7 @@ export default function ReactionTime() {
       sortKey="fastest_time"
       sortDirection="asc"
     >
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 pt-8">
         <div className="w-full">
           {/* Stats and Reset */}
           <div className="flex justify-between items-center mb-6 text-sm sm:text-base">
@@ -223,13 +223,13 @@ export default function ReactionTime() {
             className={`
               ${getBackgroundColor()}
               min-h-[500px] rounded-lg flex flex-col items-center justify-center cursor-pointer
-              shadow-lg
+              shadow-lg select-none
             `}
           >
-            <div className="text-white text-center p-8">
+            <div className="text-white text-center p-8 pointer-events-none">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">
                 {instruction}
-              </h2>
+        </h2>
               {gameState === 'waiting' && currentAttempt === 0 && (
                 <p className="text-xl opacity-90">
                   Click when the screen turns green

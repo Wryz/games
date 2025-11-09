@@ -85,156 +85,56 @@ export default function Home({ onGameSelect }: HomeProps) {
 
   const loadRecentScores = async () => {
     try {
-      
-      // Get recent scores from all game tables
-      const [
-        aimTrainerScores,
-        typingTestScores,
-        memoryScores,
-        patternRecognitionScores,
-        reactionTimeScores,
-        numberMemoryScores,
-        visualMemoryScores,
-        stroopTestScores,
-        sequenceMemoryScores,
-        chimpTestScores
-      ] = await Promise.all([
-        supabase.from('aim_trainer_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('typing_test_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('memory_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('pattern_recognition_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('reaction_time_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('number_memory_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('visual_memory_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('stroop_test_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('sequence_memory_scores').select('*').order('date_submitted', { ascending: false }).limit(10),
-        supabase.from('chimp_test_scores').select('*').order('date_submitted', { ascending: false }).limit(10)
-      ])
+      // Use RPC function to get recent activity across all games
+      const { data: rpcData, error } = await supabase
+        .rpc('get_recent_activity', { p_limit: 10 }) as { data: any[] | null, error: any }
 
-      // Combine and format all scores
-      const allScores: RecentScore[] = []
+      if (error) throw error
 
-      // Add aim trainer scores
-      aimTrainerScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Aim Trainer',
-          score_value: `${score.accuracy}% (${score.reaction_time}ms)`,
-          date_submitted: score.date_submitted || score.created_at || '',
-          accuracy: score.accuracy,
-          reaction_time: score.reaction_time
+      // Format the scores for display
+      const formattedScores: RecentScore[] = []
+
+      if (Array.isArray(rpcData)) {
+        rpcData.forEach((item: any, index: number) => {
+          const scoreValue = item.score_value
+          let formattedValue = ''
+          
+          // Format based on game type
+          switch (item.game_id) {
+            case 'aim-trainer':
+              formattedValue = `${scoreValue.accuracy}% (${scoreValue.reaction_time}ms)`
+              break
+            case 'typing-test':
+              formattedValue = `${scoreValue.wpm} WPM (${scoreValue.accuracy}%)`
+              break
+            case 'reaction-time':
+              formattedValue = `${scoreValue.average_time}ms avg`
+              break
+            case 'pattern-recognition':
+              formattedValue = `${scoreValue.patterns_solved} patterns`
+              break
+            case 'stroop-test':
+              formattedValue = `${scoreValue.correct_answers}/${scoreValue.total_questions}`
+              break
+            case 'number-memory':
+              formattedValue = `${scoreValue.longest_sequence} digits`
+              break
+            default:
+              formattedValue = `Level ${scoreValue.level_reached}`
+          }
+
+          formattedScores.push({
+            id: index, // Use index as ID since we don't have the original ID
+            username: item.username,
+            game_type: item.game_name,
+            score_value: formattedValue,
+            date_submitted: item.date_submitted,
+            ...scoreValue // Spread the score value for additional fields
         })
       })
+      }
 
-      // Add typing test scores
-      typingTestScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Typing Test',
-          score_value: `${score.wpm} WPM (${score.accuracy}%)`,
-          date_submitted: score.date_submitted || score.created_at || '',
-          wpm: score.wpm,
-          accuracy: score.accuracy
-        })
-      })
-
-      // Add memory scores
-      memoryScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Memory Game',
-          score_value: `Level ${score.level_reached}`,
-          date_submitted: score.date_submitted || score.created_at || '',
-          level_reached: score.level_reached
-        })
-      })
-
-      // Add pattern recognition scores
-      patternRecognitionScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Pattern Recognition',
-          score_value: `${score.patterns_solved} patterns`,
-          date_submitted: score.date_submitted || score.created_at || '',
-        })
-      })
-
-      // Add reaction time scores
-      reactionTimeScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Reaction Time',
-          score_value: `${score.average_time}ms avg`,
-          date_submitted: score.date_submitted || score.created_at || '',
-        })
-      })
-
-      // Add number memory scores
-      numberMemoryScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Number Memory',
-          score_value: `${score.longest_sequence} digits`,
-          date_submitted: score.date_submitted || score.created_at || '',
-        })
-      })
-
-      // Add visual memory scores
-      visualMemoryScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Visual Memory',
-          score_value: `Level ${score.level_reached}`,
-          date_submitted: score.date_submitted || score.created_at || '',
-          level_reached: score.level_reached
-        })
-      })
-
-      // Add stroop test scores
-      stroopTestScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Stroop Test',
-          score_value: `${score.correct_answers}/${score.total_questions}`,
-          date_submitted: score.date_submitted || score.created_at || '',
-        })
-      })
-
-      // Add sequence memory scores
-      sequenceMemoryScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Sequence Memory',
-          score_value: `Level ${score.level_reached}`,
-          date_submitted: score.date_submitted || score.created_at || '',
-          level_reached: score.level_reached
-        })
-      })
-
-      // Add chimp test scores
-      chimpTestScores.data?.forEach(score => {
-        allScores.push({
-          id: score.id,
-          username: score.username,
-          game_type: 'Chimp Test',
-          score_value: `Level ${score.level_reached}`,
-          date_submitted: score.date_submitted || score.created_at || '',
-          level_reached: score.level_reached
-        })
-      })
-
-      // Sort by date and take top 10
-      allScores.sort((a, b) => new Date(b.date_submitted).getTime() - new Date(a.date_submitted).getTime())
-      setRecentScores(allScores.slice(0, 10))
+      setRecentScores(formattedScores)
 
     } catch (error) {
       console.error('Error loading recent scores:', error)
@@ -281,6 +181,13 @@ export default function Home({ onGameSelect }: HomeProps) {
     }
   }, [])
 
+  // Reload data when username changes to fetch user's best scores
+  useEffect(() => {
+    if (username) {
+      loadGameStats(true, username)
+    }
+  }, [username])
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -313,8 +220,38 @@ export default function Home({ onGameSelect }: HomeProps) {
       </div>
 
       {loading && gameStats.length === 0 ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div>
+          {/* Games Overview Skeleton */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
+              Games Overview
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <GameCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+          
+          {/* Recent Activity Skeleton */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
+              Recent Activity
+            </h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4 animate-pulse">
+                    <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <>

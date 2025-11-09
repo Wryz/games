@@ -65,142 +65,23 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
         setGameStatsLoading(true)
       }
 
+      // Use RPC function to fetch all game stats in a single call
+      const { data: rpcData, error } = await supabase
+        .rpc('get_game_stats_overview', { p_username: username || undefined }) as { data: any[] | null, error: any }
+
+      if (error) throw error
+
       const gameStatsData: GameStats[] = []
 
-      // Load stats for each game
-      for (const game of GAMES) {
-        let tableName: 'aim_trainer_scores' | 'typing_test_scores' | 'memory_scores' | 'pattern_recognition_scores' | 'reaction_time_scores' | 'number_memory_scores' | 'visual_memory_scores' | 'stroop_test_scores' | 'sequence_memory_scores' | 'chimp_test_scores' | '' = ''
-        let scoreField = ''
-        let sortOrder: 'asc' | 'desc' = 'desc'
-
-        // Map game IDs to table names and score fields
-        switch (game.id) {
-          case 'aim-trainer':
-            tableName = 'aim_trainer_scores'
-            scoreField = 'accuracy'
-            break
-          case 'typing-test':
-            tableName = 'typing_test_scores'
-            scoreField = 'wpm'
-            break
-          case 'memory':
-            tableName = 'memory_scores'
-            scoreField = 'level_reached'
-            break
-          case 'pattern-recognition':
-            tableName = 'pattern_recognition_scores'
-            scoreField = 'patterns_solved'
-            break
-          case 'reaction-time':
-            tableName = 'reaction_time_scores'
-            scoreField = 'average_time'
-            sortOrder = 'asc' // Lower is better for reaction time
-            break
-          case 'number-memory':
-            tableName = 'number_memory_scores'
-            scoreField = 'longest_sequence'
-            break
-          case 'visual-memory':
-            tableName = 'visual_memory_scores'
-            scoreField = 'level_reached'
-            break
-          case 'stroop-test':
-            tableName = 'stroop_test_scores'
-            scoreField = 'correct_answers'
-            break
-          case 'sequence-memory':
-            tableName = 'sequence_memory_scores'
-            scoreField = 'level_reached'
-            break
-          case 'chimp-test':
-            tableName = 'chimp_test_scores'
-            scoreField = 'level_reached'
-            break
-          default:
-            continue
-        }
-
-        // Skip if no table name was set
-        if (!tableName) continue
-
-        // Get total games count
-        const { count: totalGames } = await supabase
-          .from(tableName)
-          .select('*', { count: 'exact', head: true })
-
-        // Get top score
-        let topScoreData = null
-        let userBestData = null
-        
-        // Special handling for aim-trainer (needs to consider both accuracy and reaction_time)
-        if (game.id === 'aim-trainer') {
-          // Fetch all scores with 100% accuracy first, then sort by reaction time
-          const { data: perfectScores } = await supabase
-            .from(tableName)
-            .select('*')
-            .eq('accuracy', 100)
-            .order('reaction_time', { ascending: true })
-            .limit(1)
-          
-          if (perfectScores && perfectScores.length > 0) {
-            topScoreData = perfectScores
-          } else {
-            // If no perfect scores, get highest accuracy
-            const { data: highestAccuracy } = await supabase
-              .from(tableName)
-              .select('*')
-              .order('accuracy', { ascending: false })
-              .order('reaction_time', { ascending: true })
-              .limit(1)
-            topScoreData = highestAccuracy
-          }
-          
-          // Get user's best score
-          if (username) {
-            const { data: userPerfectScores } = await supabase
-              .from(tableName)
-              .select('*')
-              .eq('username', username)
-              .eq('accuracy', 100)
-              .order('reaction_time', { ascending: true })
-              .limit(1)
-            
-            if (userPerfectScores && userPerfectScores.length > 0) {
-              userBestData = userPerfectScores[0]
-            } else {
-              const { data: userHighestAccuracy } = await supabase
-                .from(tableName)
-                .select('*')
-                .eq('username', username)
-                .order('accuracy', { ascending: false })
-                .order('reaction_time', { ascending: true })
-                .limit(1)
-              userBestData = userHighestAccuracy?.[0]
-            }
-          }
-        } else {
-          // Standard sorting for other games
-          const { data } = await supabase
-            .from(tableName)
-            .select('*')
-            .order(scoreField, { ascending: sortOrder === 'asc' })
-            .limit(1)
-          topScoreData = data
-
-          // Get user's best score if logged in
-          if (username) {
-            const { data: userData } = await supabase
-              .from(tableName)
-              .select('*')
-              .eq('username', username)
-              .order(scoreField, { ascending: sortOrder === 'asc' })
-              .limit(1)
-            userBestData = userData?.[0]
-          }
-        }
+      // Process the RPC response and map to our GameStats format
+      const rpcDataMap = new Map(
+        Array.isArray(rpcData) ? rpcData.map((item: any) => [item.game_id, item]) : []
+      )
 
         // Format scores based on game type
         const formatScore = (score: any, gameId: string) => {
+        if (!score) return null
+        
           switch (gameId) {
             case 'aim-trainer':
               return `${score.accuracy}% (${score.reaction_time}ms)`
@@ -215,25 +96,30 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
             case 'number-memory':
               return `${score.longest_sequence} digits`
             default:
-              return `Level ${score.level_reached || score[scoreField]}`
-          }
+            return `Level ${score.level_reached}`
         }
+      }
 
+      for (const game of GAMES) {
+        const rpcGameData = rpcDataMap.get(game.id)
+
+        if (rpcGameData) {
         gameStatsData.push({
           id: game.id,
           name: game.name,
           icon: game.icon,
-          totalGames: totalGames || 0,
-          topScore: topScoreData?.[0] ? {
-            username: topScoreData[0].username,
-            value: formatScore(topScoreData[0], game.id),
-            score: topScoreData[0]
+            totalGames: rpcGameData.total_games || 0,
+            topScore: rpcGameData.top_score ? {
+              username: rpcGameData.top_score.username,
+              value: formatScore(rpcGameData.top_score, game.id) || '',
+              score: rpcGameData.top_score
           } : null,
-          userBest: userBestData ? {
-            value: formatScore(userBestData, game.id),
-            score: userBestData
+            userBest: rpcGameData.user_best ? {
+              value: formatScore(rpcGameData.user_best, game.id) || '',
+              score: rpcGameData.user_best
           } : null
         })
+        }
       }
 
       setGameStats(gameStatsData)

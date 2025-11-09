@@ -319,6 +319,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_game_stats_overview: { Args: { p_username?: string }; Returns: Json }
+      get_recent_activity: { Args: { p_limit?: number }; Returns: Json }
       submit_aim_trainer_score: {
         Args: {
           p_accuracy: number

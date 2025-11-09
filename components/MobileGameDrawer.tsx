@@ -67,11 +67,11 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
       username: username || 'anonymous'
     })
     
-    // Navigate to the game URL
+    // Navigate to the game URL without scrolling to top
     if (gameId === 'home') {
-      router.push('/')
+      router.push('/', { scroll: false })
     } else {
-      router.push(`/games/${gameId}`)
+      router.push(`/games/${gameId}`, { scroll: false })
     }
     
     // Call the callback for any additional handling
@@ -101,8 +101,8 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
                 className="w-8 h-8"
               />
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100">
-                Brain Benchmark
-              </h2>
+              Brain Benchmark
+            </h2>
             </div>
             <div className="flex items-center space-x-3">
               <ThemeToggle />

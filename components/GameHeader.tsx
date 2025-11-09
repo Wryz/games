@@ -39,10 +39,10 @@ const GameHeader = ({ onMobileMenuToggle }: GameHeaderProps) => {
             height={32}
             className="w-8 h-8"
           />
-          <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold">
             <span className="text-gray-700 dark:text-gray-100">BRAIN</span>
-            <span className="ml-2 text-cyan-500 dark:text-cyan-400">BENCHMARK</span>
-          </h1>
+          <span className="ml-2 text-cyan-500 dark:text-cyan-400">BENCHMARK</span>
+        </h1>
         </div>
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
