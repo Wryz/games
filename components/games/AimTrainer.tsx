@@ -303,13 +303,11 @@ export default function AimTrainer() {
         ) : (
           <div className="w-full">
 
-            {/* Stats */}
-            {gameState === 'playing' && (
-              <div className="flex justify-between mb-4 text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                <span>Hits: {gameStats.targetsHit}/{gameStats.totalTargets}</span>
-                <span>Accuracy: {accuracy.toFixed(1)}%</span>
-              </div>
-            )}
+            {/* Stats - Show from the start */}
+            <div className="flex justify-between mb-4 text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+              <span>Hits: {gameStats.targetsHit}/{TOTAL_TARGETS}</span>
+              <span>Accuracy: {accuracy.toFixed(1)}%</span>
+            </div>
 
             {/* Game Grid - Responsive Size */}
             <div 
