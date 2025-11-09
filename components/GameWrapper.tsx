@@ -12,6 +12,7 @@ interface GameWrapperProps {
   formatScore: (score: any) => string
   sortKey: string
   sortDirection?: 'asc' | 'desc'
+  customSort?: (a: any, b: any) => number
 }
 
 export default function GameWrapper({
@@ -22,7 +23,8 @@ export default function GameWrapper({
   onRefresh,
   formatScore,
   sortKey,
-  sortDirection = 'desc'
+  sortDirection = 'desc',
+  customSort
 }: GameWrapperProps) {
   return (
     <div className="space-y-8">
@@ -38,6 +40,7 @@ export default function GameWrapper({
         formatScore={formatScore}
         sortKey={sortKey}
         sortDirection={sortDirection}
+        customSort={customSort}
       />
     </div>
   )

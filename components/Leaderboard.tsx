@@ -11,6 +11,7 @@ interface LeaderboardProps {
   formatScore: (score: any) => string
   sortKey: string
   sortDirection?: 'asc' | 'desc'
+  customSort?: (a: any, b: any) => number
 }
 
 export default function Leaderboard({ 
@@ -20,7 +21,8 @@ export default function Leaderboard({
   onRefresh, 
   formatScore, 
   sortKey,
-  sortDirection = 'desc' 
+  sortDirection = 'desc',
+  customSort
 }: LeaderboardProps) {
   const { username } = useUser()
   const [filter, setFilter] = useState<'all' | 'personal'>('all')
@@ -37,6 +39,12 @@ export default function Leaderboard({
   })
 
   const sortedScores = [...filteredScores].sort((a, b) => {
+    // Use custom sort function if provided
+    if (customSort) {
+      return customSort(a, b)
+    }
+    
+    // Default sorting by sortKey
     const aVal = a[sortKey]
     const bVal = b[sortKey]
     

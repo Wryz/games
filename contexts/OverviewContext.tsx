@@ -129,22 +129,74 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
           .select('*', { count: 'exact', head: true })
 
         // Get top score
-        const { data: topScoreData } = await supabase
-          .from(tableName)
-          .select('*')
-          .order(scoreField, { ascending: sortOrder === 'asc' })
-          .limit(1)
-
-        // Get user's best score if logged in
+        let topScoreData = null
         let userBestData = null
-        if (username) {
+        
+        // Special handling for aim-trainer (needs to consider both accuracy and reaction_time)
+        if (game.id === 'aim-trainer') {
+          // Fetch all scores with 100% accuracy first, then sort by reaction time
+          const { data: perfectScores } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('accuracy', 100)
+            .order('reaction_time', { ascending: true })
+            .limit(1)
+          
+          if (perfectScores && perfectScores.length > 0) {
+            topScoreData = perfectScores
+          } else {
+            // If no perfect scores, get highest accuracy
+            const { data: highestAccuracy } = await supabase
+              .from(tableName)
+              .select('*')
+              .order('accuracy', { ascending: false })
+              .order('reaction_time', { ascending: true })
+              .limit(1)
+            topScoreData = highestAccuracy
+          }
+          
+          // Get user's best score
+          if (username) {
+            const { data: userPerfectScores } = await supabase
+              .from(tableName)
+              .select('*')
+              .eq('username', username)
+              .eq('accuracy', 100)
+              .order('reaction_time', { ascending: true })
+              .limit(1)
+            
+            if (userPerfectScores && userPerfectScores.length > 0) {
+              userBestData = userPerfectScores[0]
+            } else {
+              const { data: userHighestAccuracy } = await supabase
+                .from(tableName)
+                .select('*')
+                .eq('username', username)
+                .order('accuracy', { ascending: false })
+                .order('reaction_time', { ascending: true })
+                .limit(1)
+              userBestData = userHighestAccuracy?.[0]
+            }
+          }
+        } else {
+          // Standard sorting for other games
           const { data } = await supabase
             .from(tableName)
             .select('*')
-            .eq('username', username)
             .order(scoreField, { ascending: sortOrder === 'asc' })
             .limit(1)
-          userBestData = data?.[0]
+          topScoreData = data
+
+          // Get user's best score if logged in
+          if (username) {
+            const { data: userData } = await supabase
+              .from(tableName)
+              .select('*')
+              .eq('username', username)
+              .order(scoreField, { ascending: sortOrder === 'asc' })
+              .limit(1)
+            userBestData = userData?.[0]
+          }
         }
 
         // Format scores based on game type

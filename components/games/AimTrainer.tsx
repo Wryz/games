@@ -250,6 +250,16 @@ export default function AimTrainer() {
     return `${score.accuracy}% (${score.reaction_time}ms)`
   }
 
+  // Custom sort function for aim trainer: prioritize accuracy, then reaction time
+  const customSort = (a: AimTrainerScore, b: AimTrainerScore) => {
+    // First, sort by accuracy (descending - higher is better)
+    if (a.accuracy !== b.accuracy) {
+      return b.accuracy - a.accuracy
+    }
+    // If accuracy is the same, sort by reaction time (ascending - lower is better)
+    return a.reaction_time - b.reaction_time
+  }
+
   const accuracy = gameStats.totalClicks > 0 ? (gameStats.targetsHit / gameStats.totalClicks) * 100 : 0
   const avgReactionTime = gameStats.reactionTimes.length > 0 
     ? Math.round(gameStats.reactionTimes.reduce((sum, time) => sum + time, 0) / gameStats.reactionTimes.length)
@@ -264,6 +274,7 @@ export default function AimTrainer() {
       formatScore={formatScore}
       sortKey="accuracy"
       sortDirection="desc"
+      customSort={customSort}
     >
       <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4">
         {gameState === 'finished' ? (

@@ -5,6 +5,8 @@ import { useUser } from '@/contexts/UserContext'
 import { HomeIcon } from './icons/GameIcons'
 import ThemeToggle from './ThemeToggle'
 import UsernameInput from './UsernameInput'
+import { usePostHog } from 'posthog-js/react'
+import { useRouter } from 'next/navigation'
 
 interface GameSidebarProps {
   selectedGame: string | null
@@ -13,6 +15,8 @@ interface GameSidebarProps {
 
 export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarProps) {
   const { username, setUsername, clearUsername } = useUser()
+  const posthog = usePostHog()
+  const router = useRouter()
   
   const handleUsernameSubmit = async (newUsername: string) => {
     setUsername(newUsername)
@@ -20,6 +24,26 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
 
   const handleUsernameChange = () => {
     clearUsername()
+  }
+
+  const handleGameClick = (gameId: string, gameName: string) => {
+    // Track game click event
+    posthog.capture('game_clicked', {
+      game_id: gameId,
+      game_name: gameName,
+      source: 'sidebar',
+      username: username || 'anonymous'
+    })
+    
+    // Navigate to the game URL
+    if (gameId === 'home') {
+      router.push('/')
+    } else {
+      router.push(`/games/${gameId}`)
+    }
+    
+    // Call the callback for any additional handling
+    onGameSelect(gameId)
   }
 
   const categories = {
@@ -59,7 +83,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
         {/* Home Button */}
         <div className="mb-6">
           <button
-            onClick={() => onGameSelect('home')}
+            onClick={() => handleGameClick('home', 'Home')}
             className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
               selectedGame === 'home' || selectedGame === null
                 ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'
@@ -105,7 +129,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                 {games.map((game) => (
                   <button
                     key={game.id}
-                    onClick={() => onGameSelect(game.id)}
+                    onClick={() => handleGameClick(game.id, game.name)}
                     className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
                       selectedGame === game.id
                         ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'

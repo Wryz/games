@@ -5,6 +5,8 @@ import { useUser } from '@/contexts/UserContext'
 import { useOverview } from '@/contexts/OverviewContext'
 import { supabase } from '@/lib/supabase'
 import { GAMES } from '@/types/games'
+import { usePostHog } from 'posthog-js/react'
+import { useRouter } from 'next/navigation'
 
 interface RecentScore {
   id: number
@@ -53,6 +55,24 @@ export default function Home({ onGameSelect }: HomeProps) {
   const [loading, setLoading] = useState(true)
   const { username } = useUser()
   const { gameStats, gameStatsLoading, loadGameStats } = useOverview()
+  const posthog = usePostHog()
+  const router = useRouter()
+
+  const handleGameClick = (gameId: string, gameName: string) => {
+    // Track game click event
+    posthog.capture('game_clicked', {
+      game_id: gameId,
+      game_name: gameName,
+      source: 'home_page',
+      username: username || 'anonymous'
+    })
+    
+    // Navigate to the game URL
+    router.push(`/games/${gameId}`)
+    
+    // Call the callback for any additional handling
+    onGameSelect?.(gameId)
+  }
 
   const loadAllData = async (forceRefresh = false) => {
     setLoading(true)
@@ -321,7 +341,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                 gameStats.map((game) => (
                 <div
                   key={game.id}
-                  onClick={() => onGameSelect?.(game.id)}
+                  onClick={() => handleGameClick(game.id, game.name)}
                   className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 aspect-square flex flex-col"
                 >
                   <div className="flex items-center space-x-3 mb-4">

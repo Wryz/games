@@ -6,6 +6,8 @@ import { useUser } from '@/contexts/UserContext'
 import { HomeIcon } from './icons/GameIcons'
 import ThemeToggle from './ThemeToggle'
 import UsernameInput from './UsernameInput'
+import { usePostHog } from 'posthog-js/react'
+import { useRouter } from 'next/navigation'
 
 interface MobileGameDrawerProps {
   isOpen: boolean
@@ -16,6 +18,8 @@ interface MobileGameDrawerProps {
 
 export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGameSelect }: MobileGameDrawerProps) {
   const { username, setUsername, clearUsername } = useUser()
+  const posthog = usePostHog()
+  const router = useRouter()
   
   const handleUsernameSubmit = async (newUsername: string) => {
     setUsername(newUsername)
@@ -54,7 +58,23 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
     return acc
   }, {} as Record<string, Game[]>)
 
-  const handleGameSelect = (gameId: string) => {
+  const handleGameSelect = (gameId: string, gameName?: string) => {
+    // Track game click event
+    posthog.capture('game_clicked', {
+      game_id: gameId,
+      game_name: gameName || gameId,
+      source: 'mobile_drawer',
+      username: username || 'anonymous'
+    })
+    
+    // Navigate to the game URL
+    if (gameId === 'home') {
+      router.push('/')
+    } else {
+      router.push(`/games/${gameId}`)
+    }
+    
+    // Call the callback for any additional handling
     onGameSelect(gameId)
     onClose()
   }
@@ -163,7 +183,7 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
                   {games.map((game) => (
                     <button
                       key={game.id}
-                      onClick={() => handleGameSelect(game.id)}
+                      onClick={() => handleGameSelect(game.id, game.name)}
                       className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
                         selectedGame === game.id
                           ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'

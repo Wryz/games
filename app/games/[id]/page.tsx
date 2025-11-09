@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useParams } from 'next/navigation'
 import BackgroundPattern from '@/components/BackgroundPattern'
 import GameHeader from '@/components/GameHeader'
 import GameFooter from '@/components/GameFooter'
 import GameSidebar from '@/components/GameSidebar'
 import MobileGameDrawer from '@/components/MobileGameDrawer'
-import Home from '@/components/Home'
+import GameRenderer from '@/components/GameRenderer'
+import { useState } from 'react'
 
-export default function HomePage() {
+export default function GamePage() {
+  const params = useParams()
+  const gameId = params.id as string
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleMobileMenuToggle = () => {
@@ -30,7 +33,7 @@ export default function HomePage() {
           
           {/* Game content area */}
           <main className="mt-8 mb-16">
-            <Home />
+            <GameRenderer selectedGame={gameId} />
           </main>
           
           <GameFooter />
@@ -39,7 +42,7 @@ export default function HomePage() {
       
       {/* Desktop Sidebar */}
       <GameSidebar 
-        selectedGame="home" 
+        selectedGame={gameId} 
         onGameSelect={() => {}} 
       />
       
@@ -47,9 +50,10 @@ export default function HomePage() {
       <MobileGameDrawer
         isOpen={isMobileMenuOpen}
         onClose={handleMobileMenuClose}
-        selectedGame="home"
+        selectedGame={gameId}
         onGameSelect={() => {}}
       />
     </div>
   )
 }
+

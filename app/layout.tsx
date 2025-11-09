@@ -4,6 +4,7 @@ import './tailwind.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { UserProvider } from '@/contexts/UserContext'
 import { OverviewProvider } from '@/contexts/OverviewContext'
+import { PostHogProvider } from './providers'
 
 const fredoka = Fredoka({ 
   subsets: ['latin'],
@@ -23,13 +24,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
-        <ThemeProvider>
-          <UserProvider>
-            <OverviewProvider>
-              {children}
-            </OverviewProvider>
-          </UserProvider>
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider>
+            <UserProvider>
+              <OverviewProvider>
+                {children}
+              </OverviewProvider>
+            </UserProvider>
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   )
