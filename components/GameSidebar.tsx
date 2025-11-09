@@ -105,21 +105,12 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                   : 'text-gray-600 dark:text-gray-400'
                 } 
               />
-              <div className="flex-1 min-w-0">
-                <div className={`font-medium text-sm ${
-                  selectedGame === 'home' || selectedGame === null
-                    ? 'text-blue-700 dark:text-blue-300'
-                    : 'text-gray-700 dark:text-gray-100'
-                }`}>
-                  Home
-                </div>
-                <div className={`text-xs mt-1 ${
-                  selectedGame === 'home' || selectedGame === null
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}>
-                  Recent activity & scores
-                </div>
+              <div className={`font-medium text-sm ${
+                selectedGame === 'home' || selectedGame === null
+                  ? 'text-blue-700 dark:text-blue-300'
+                  : 'text-gray-700 dark:text-gray-100'
+              }`}>
+                Home
               </div>
             </div>
           </button>
@@ -151,21 +142,12 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                           : 'text-gray-600 dark:text-gray-400'
                         } 
                       />
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-medium text-sm ${
-                          selectedGame === game.id
-                            ? 'text-blue-700 dark:text-blue-300'
-                            : 'text-gray-700 dark:text-gray-100'
-                        }`}>
-                          {game.name}
-                        </div>
-                        <div className={`text-xs mt-1 ${
-                          selectedGame === game.id
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }`}>
-                          {game.description}
-                        </div>
+                      <div className={`font-medium text-sm ${
+                        selectedGame === game.id
+                          ? 'text-blue-700 dark:text-blue-300'
+                          : 'text-gray-700 dark:text-gray-100'
+                      }`}>
+                        {game.name}
                       </div>
                     </div>
                   </button>

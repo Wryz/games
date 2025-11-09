@@ -8,6 +8,7 @@ interface GameStats {
   id: string
   name: string
   icon: any
+  category: 'cognitive' | 'motor' | 'memory' | 'perception'
   totalGames: number
   topScore: {
     username: string
@@ -108,6 +109,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
           id: game.id,
           name: game.name,
           icon: game.icon,
+          category: game.category,
             totalGames: rpcGameData.total_games || 0,
             topScore: rpcGameData.top_score ? {
               username: rpcGameData.top_score.username,
