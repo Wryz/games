@@ -31,7 +31,7 @@ export default function Home() {
           
           {/* Game content area */}
           <main className="mt-8 mb-16">
-            <MainView selectedGame={selectedGame} />
+            <MainView selectedGame={selectedGame} onGameSelect={setSelectedGame} />
           </main>
           
           <GameFooter />

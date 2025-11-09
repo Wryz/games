@@ -1,7 +1,10 @@
 'use client'
 
 import { Game, GAMES } from '@/types/games'
+import { useUser } from '@/contexts/UserContext'
+import { HomeIcon } from './icons/GameIcons'
 import ThemeToggle from './ThemeToggle'
+import UsernameInput from './UsernameInput'
 
 interface GameSidebarProps {
   selectedGame: string | null
@@ -9,6 +12,16 @@ interface GameSidebarProps {
 }
 
 export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarProps) {
+  const { username, setUsername, clearUsername } = useUser()
+  
+  const handleUsernameSubmit = async (newUsername: string) => {
+    setUsername(newUsername)
+  }
+
+  const handleUsernameChange = () => {
+    clearUsername()
+  }
+
   const categories = {
     cognitive: 'Cognitive',
     motor: 'Motor Skills',
@@ -29,9 +42,56 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Brain Games
+            Brain Benchmark
           </h2>
           <ThemeToggle />
+        </div>
+        
+        {/* Username Input */}
+        <div className="mb-6">
+          <UsernameInput 
+            username={username}
+            onUsernameSubmit={handleUsernameSubmit}
+            onUsernameChange={handleUsernameChange}
+          />
+        </div>
+
+        {/* Home Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => onGameSelect('home')}
+            className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
+              selectedGame === 'home' || selectedGame === null
+                ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <HomeIcon 
+                size={24} 
+                className={selectedGame === 'home' || selectedGame === null
+                  ? 'text-blue-600 dark:text-blue-400' 
+                  : 'text-gray-600 dark:text-gray-400'
+                } 
+              />
+              <div className="flex-1 min-w-0">
+                <div className={`font-medium text-sm ${
+                  selectedGame === 'home' || selectedGame === null
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : 'text-gray-900 dark:text-gray-100'
+                }`}>
+                  Home
+                </div>
+                <div className={`text-xs mt-1 ${
+                  selectedGame === 'home' || selectedGame === null
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}>
+                  Recent activity & scores
+                </div>
+              </div>
+            </div>
+          </button>
         </div>
         
         <div className="space-y-6">

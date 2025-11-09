@@ -72,12 +72,6 @@ export default function UsernameInput({ username, onUsernameSubmit, onUsernameCh
     <div className="flex flex-col items-center mb-8">
       <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-4">
         <div className="flex flex-col items-center space-y-2">
-          <label 
-            htmlFor="username" 
-            className="text-lg font-medium text-gray-700 dark:text-gray-300"
-          >
-            Enter a username to start playing
-          </label>
           <div className="flex items-center space-x-2">
             <input
               id="username"

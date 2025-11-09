@@ -151,7 +151,191 @@ CREATE INDEX IF NOT EXISTS idx_chimp_test_username ON chimp_test_scores(username
 CREATE INDEX IF NOT EXISTS idx_chimp_test_date ON chimp_test_scores(date_submitted);
 
 -- =====================================================
--- 3. ENABLE ROW LEVEL SECURITY
+-- 3. CREATE RPC FUNCTIONS FOR SCORE SUBMISSION
+-- =====================================================
+
+-- Function to submit aim trainer score
+CREATE OR REPLACE FUNCTION submit_aim_trainer_score(
+  p_username VARCHAR(50),
+  p_accuracy DECIMAL(5,2),
+  p_reaction_time INTEGER,
+  p_targets_hit INTEGER,
+  p_total_targets INTEGER
+) RETURNS aim_trainer_scores AS $$
+DECLARE
+  new_score aim_trainer_scores;
+BEGIN
+  INSERT INTO aim_trainer_scores (username, accuracy, reaction_time, targets_hit, total_targets)
+  VALUES (p_username, p_accuracy, p_reaction_time, p_targets_hit, p_total_targets)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit typing test score
+CREATE OR REPLACE FUNCTION submit_typing_test_score(
+  p_username VARCHAR(50),
+  p_wpm INTEGER,
+  p_accuracy DECIMAL(5,2),
+  p_characters_typed INTEGER,
+  p_time_taken INTEGER
+) RETURNS typing_test_scores AS $$
+DECLARE
+  new_score typing_test_scores;
+BEGIN
+  INSERT INTO typing_test_scores (username, wpm, accuracy, characters_typed, time_taken)
+  VALUES (p_username, p_wpm, p_accuracy, p_characters_typed, p_time_taken)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit memory score
+CREATE OR REPLACE FUNCTION submit_memory_score(
+  p_username VARCHAR(50),
+  p_level_reached INTEGER,
+  p_correct_sequences INTEGER,
+  p_total_sequences INTEGER
+) RETURNS memory_scores AS $$
+DECLARE
+  new_score memory_scores;
+BEGIN
+  INSERT INTO memory_scores (username, level_reached, correct_sequences, total_sequences)
+  VALUES (p_username, p_level_reached, p_correct_sequences, p_total_sequences)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit pattern recognition score
+CREATE OR REPLACE FUNCTION submit_pattern_recognition_score(
+  p_username VARCHAR(50),
+  p_patterns_solved INTEGER,
+  p_time_taken INTEGER,
+  p_difficulty_level INTEGER
+) RETURNS pattern_recognition_scores AS $$
+DECLARE
+  new_score pattern_recognition_scores;
+BEGIN
+  INSERT INTO pattern_recognition_scores (username, patterns_solved, time_taken, difficulty_level)
+  VALUES (p_username, p_patterns_solved, p_time_taken, p_difficulty_level)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit reaction time score
+CREATE OR REPLACE FUNCTION submit_reaction_time_score(
+  p_username VARCHAR(50),
+  p_average_time INTEGER,
+  p_fastest_time INTEGER,
+  p_attempts INTEGER
+) RETURNS reaction_time_scores AS $$
+DECLARE
+  new_score reaction_time_scores;
+BEGIN
+  INSERT INTO reaction_time_scores (username, average_time, fastest_time, attempts)
+  VALUES (p_username, p_average_time, p_fastest_time, p_attempts)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit number memory score
+CREATE OR REPLACE FUNCTION submit_number_memory_score(
+  p_username VARCHAR(50),
+  p_longest_sequence INTEGER,
+  p_attempts INTEGER
+) RETURNS number_memory_scores AS $$
+DECLARE
+  new_score number_memory_scores;
+BEGIN
+  INSERT INTO number_memory_scores (username, longest_sequence, attempts)
+  VALUES (p_username, p_longest_sequence, p_attempts)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit visual memory score
+CREATE OR REPLACE FUNCTION submit_visual_memory_score(
+  p_username VARCHAR(50),
+  p_level_reached INTEGER,
+  p_patterns_remembered INTEGER,
+  p_total_patterns INTEGER
+) RETURNS visual_memory_scores AS $$
+DECLARE
+  new_score visual_memory_scores;
+BEGIN
+  INSERT INTO visual_memory_scores (username, level_reached, patterns_remembered, total_patterns)
+  VALUES (p_username, p_level_reached, p_patterns_remembered, p_total_patterns)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit stroop test score
+CREATE OR REPLACE FUNCTION submit_stroop_test_score(
+  p_username VARCHAR(50),
+  p_correct_answers INTEGER,
+  p_total_questions INTEGER,
+  p_average_time INTEGER
+) RETURNS stroop_test_scores AS $$
+DECLARE
+  new_score stroop_test_scores;
+BEGIN
+  INSERT INTO stroop_test_scores (username, correct_answers, total_questions, average_time)
+  VALUES (p_username, p_correct_answers, p_total_questions, p_average_time)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit sequence memory score
+CREATE OR REPLACE FUNCTION submit_sequence_memory_score(
+  p_username VARCHAR(50),
+  p_level_reached INTEGER,
+  p_longest_sequence INTEGER
+) RETURNS sequence_memory_scores AS $$
+DECLARE
+  new_score sequence_memory_scores;
+BEGIN
+  INSERT INTO sequence_memory_scores (username, level_reached, longest_sequence)
+  VALUES (p_username, p_level_reached, p_longest_sequence)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit chimp test score
+CREATE OR REPLACE FUNCTION submit_chimp_test_score(
+  p_username VARCHAR(50),
+  p_level_reached INTEGER,
+  p_numbers_remembered INTEGER,
+  p_attempts INTEGER
+) RETURNS chimp_test_scores AS $$
+DECLARE
+  new_score chimp_test_scores;
+BEGIN
+  INSERT INTO chimp_test_scores (username, level_reached, numbers_remembered, attempts)
+  VALUES (p_username, p_level_reached, p_numbers_remembered, p_attempts)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =====================================================
+-- 4. ENABLE ROW LEVEL SECURITY
 -- =====================================================
 
 -- Enable Row Level Security (RLS) on all tables

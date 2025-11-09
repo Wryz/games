@@ -1,6 +1,7 @@
 'use client'
 
 import { BrainIcon } from './icons/GameIcons'
+import Home from './Home'
 import AimTrainer from './games/AimTrainer'
 import TypingTest from './games/TypingTest'
 import MemoryGame from './games/MemoryGame'
@@ -14,24 +15,13 @@ import ChimpTest from './games/ChimpTest'
 
 interface GameRendererProps {
   selectedGame: string | null
+  onGameSelect?: (gameId: string) => void
 }
 
-export default function GameRenderer({ selectedGame }: GameRendererProps) {
-  if (!selectedGame) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-4 sm:p-8">
-        <BrainIcon size={96} className="mb-6 text-blue-600 dark:text-blue-400" />
-        <p className="text-base sm:text-xl text-gray-600 dark:text-gray-400 text-center max-w-2xl mb-6 px-4">
-          Test and improve your cognitive abilities with our collection of brain training exercises.
-        </p>
-        <div className="bg-white dark:bg-gray-700 p-4 sm:p-6 rounded-lg shadow-sm">
-          <p className="text-gray-500 dark:text-gray-400 text-center text-sm sm:text-base">
-            <span className="hidden lg:inline">Choose a game from the sidebar</span>
-            <span className="lg:hidden">Open the menu</span> to begin your brain training journey
-          </p>
-        </div>
-      </div>
-    )
+export default function GameRenderer({ selectedGame, onGameSelect }: GameRendererProps) {
+  // Show Home by default when no game is selected
+  if (!selectedGame || selectedGame === 'home') {
+    return <Home onGameSelect={onGameSelect} />
   }
 
   const gameComponents = {

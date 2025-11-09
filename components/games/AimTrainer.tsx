@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { AimTrainerIcon } from '../icons/GameIcons'
 import { getAimTrainerScores, submitAimTrainerScore } from '@/lib/scores'
 import { useUser } from '@/contexts/UserContext'
+import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { AimTrainerScore } from '@/lib/supabase'
 
@@ -32,6 +33,7 @@ export default function AimTrainer() {
     gameStartTime: 0
   })
   const { username } = useUser()
+  const hasSubmittedScore = useRef(false)
 
   const GRID_SIZE = 8
   const TOTAL_TARGETS = 30
@@ -50,6 +52,29 @@ export default function AimTrainer() {
 
   useEffect(() => {
     loadScores()
+    
+    // Set up realtime listener for aim trainer scores
+    const channel = supabase
+      .channel('aim_trainer_scores_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'aim_trainer_scores'
+        },
+        (payload) => {
+          console.log('New aim trainer score:', payload.new)
+          // Add new score to the list
+          setScores(prev => [payload.new as AimTrainerScore, ...prev.slice(0, 49)]) // Keep only top 50
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   // Initialize grid
@@ -184,8 +209,10 @@ export default function AimTrainer() {
 
   // Submit score
   const submitScore = useCallback(async () => {
-    if (!username || gameStats.reactionTimes.length === 0) return
+    if (!username || gameStats.reactionTimes.length === 0 || hasSubmittedScore.current) return
 
+    hasSubmittedScore.current = true
+    
     const accuracy = gameStats.totalClicks > 0 ? (gameStats.targetsHit / gameStats.totalClicks) * 100 : 0
     const avgReactionTime = Math.round(
       gameStats.reactionTimes.reduce((sum, time) => sum + time, 0) / gameStats.reactionTimes.length
@@ -199,20 +226,22 @@ export default function AimTrainer() {
         targets_hit: gameStats.targetsHit,
         total_targets: gameStats.totalTargets
       })
-      await loadScores()
+      // Score will be automatically added via realtime listener
     } catch (error) {
       console.error('Error submitting score:', error)
+      hasSubmittedScore.current = false // Reset on error to allow retry
     }
-  }, [username, gameStats, loadScores])
+  }, [username, gameStats])
 
   // Reset game
   const resetGame = useCallback(() => {
+    hasSubmittedScore.current = false // Reset submission flag
     initializeGame()
   }, [initializeGame])
 
   // Submit score when game finishes
   useEffect(() => {
-    if (gameState === 'finished') {
+    if (gameState === 'finished' && !hasSubmittedScore.current) {
       submitScore()
     }
   }, [gameState, submitScore])
@@ -236,12 +265,12 @@ export default function AimTrainer() {
       sortKey="accuracy"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4">
         {gameState === 'finished' ? (
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
               Game Complete!
-            </h2>
+        </h2>
             <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-sm mb-6">
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
@@ -272,30 +301,25 @@ export default function AimTrainer() {
             </button>
           </div>
         ) : (
-          <div className="w-full max-w-md">
-            {/* Instructions */}
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">
-                Aim Trainer
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {gameState === 'idle' 
-                  ? 'Click the red square to start!' 
-                  : `Click red squares only! ${gameStats.targetsHit}/${TOTAL_TARGETS} targets`
-                }
-              </p>
-            </div>
+          <div className="w-full">
 
             {/* Stats */}
             {gameState === 'playing' && (
-              <div className="flex justify-between mb-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex justify-between mb-4 text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                 <span>Hits: {gameStats.targetsHit}/{gameStats.totalTargets}</span>
                 <span>Accuracy: {accuracy.toFixed(1)}%</span>
               </div>
             )}
 
-            {/* Game Grid */}
-            <div className="grid grid-cols-8 gap-1 bg-gray-200 dark:bg-gray-700 p-2 rounded-lg aspect-square">
+            {/* Game Grid - Responsive Size */}
+            <div 
+              className="grid grid-cols-8 gap-1 bg-gray-200 dark:bg-gray-700 p-2 rounded-lg mx-auto"
+              style={{ 
+                width: 'min(100%, 80vh)',
+                height: 'min(100vw, 80vh)',
+                aspectRatio: '1'
+              }}
+            >
               {targets.map((target) => (
                 <button
                   key={target.id}
@@ -310,7 +334,7 @@ export default function AimTrainer() {
                 />
               ))}
             </div>
-          </div>
+        </div>
         )}
       </div>
     </GameWrapper>
