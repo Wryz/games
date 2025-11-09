@@ -94,8 +94,7 @@ export async function submitNumberMemoryScore(score: NumberMemoryScoreInsert) {
   const { data, error } = await supabase
     .rpc('submit_number_memory_score', {
       p_username: score.username,
-      p_longest_sequence: score.longest_sequence,
-      p_attempts: score.attempts
+      p_longest_sequence: score.longest_sequence
     })
   
   if (error) throw error

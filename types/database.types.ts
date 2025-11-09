@@ -109,7 +109,6 @@ export type Database = {
       }
       number_memory_scores: {
         Row: {
-          attempts: number
           created_at: string | null
           date_submitted: string | null
           id: number
@@ -117,7 +116,6 @@ export type Database = {
           username: string
         }
         Insert: {
-          attempts: number
           created_at?: string | null
           date_submitted?: string | null
           id?: number
@@ -125,7 +123,6 @@ export type Database = {
           username: string
         }
         Update: {
-          attempts?: number
           created_at?: string | null
           date_submitted?: string | null
           id?: number
@@ -392,27 +389,43 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_number_memory_score: {
-        Args: {
-          p_attempts: number
-          p_longest_sequence: number
-          p_username: string
-        }
-        Returns: {
-          attempts: number
-          created_at: string | null
-          date_submitted: string | null
-          id: number
-          longest_sequence: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "number_memory_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      submit_number_memory_score:
+        | {
+            Args: { p_longest_sequence: number; p_username: string }
+            Returns: {
+              created_at: string | null
+              date_submitted: string | null
+              id: number
+              longest_sequence: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "number_memory_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_attempts: number
+              p_longest_sequence: number
+              p_username: string
+            }
+            Returns: {
+              created_at: string | null
+              date_submitted: string | null
+              id: number
+              longest_sequence: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "number_memory_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       submit_pattern_recognition_score: {
         Args: {
           p_difficulty_level: number
