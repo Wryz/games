@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Fredoka } from 'next/font/google'
 import './tailwind.css'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 const fredoka = Fredoka({ 
   subsets: ['latin'],
@@ -8,8 +9,8 @@ const fredoka = Fredoka({
 })
 
 export const metadata: Metadata = {
-  title: 'Games Collection',
-  description: 'A collection of games to play',
+  title: 'Brain Benchmark',
+  description: 'Test and improve your cognitive abilities with brain training exercises',
 }
 
 export default function RootLayout({
@@ -19,8 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${fredoka.className} bg-neutral-900 text-gray-100 min-h-screen overflow-x-hidden`}>
-        {children}
+      <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

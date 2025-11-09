@@ -1,30 +1,25 @@
-# Games Collection
+# Brain Benchmark
 
-A modern Next.js website template featuring a curated collection of games built with TypeScript and Tailwind CSS.
+A modern Next.js platform for cognitive assessment and brain training exercises built with TypeScript and Tailwind CSS.
 
 ## Features
 
-- 🎮 **Game Collection**: Browse and discover amazing games across different categories
+- 🧠 **Cognitive Assessment**: Test and benchmark your mental performance across various domains
+- 🎯 **Targeted Training**: Specialized exercises for aim, reaction time, memory, and attention
 - 🎨 **Modern UI**: Beautiful, responsive design with Tailwind CSS
-- 🔍 **Advanced Filtering**: Search and filter games by category, difficulty, rating, and more
-- 📱 **Mobile Responsive**: Optimized for all screen sizes
+- 📱 **Mobile Responsive**: Optimized for all screen sizes and devices
 - ⚡ **Fast Performance**: Built with Next.js 14 and optimized for speed
-- 🌙 **Dark Mode**: Support for light and dark themes
 - 🎯 **TypeScript**: Fully typed for better development experience
-- 📊 **Game Details**: Detailed game pages with ratings, screenshots, and information
+- 📊 **Performance Tracking**: Detailed analytics and progress monitoring (coming soon)
 
-## Game Categories
+## Brain Training Categories
 
-- Action ⚡
-- Adventure 🗺️
-- Puzzle 🧩
-- Strategy ♟️
-- RPG ⚔️
-- Sports ⚽
-- Racing 🏎️
-- Simulation 🏗️
-- Arcade 🕹️
-- Casual 🎯
+- 🎯 **Aim Training**: Improve precision and hand-eye coordination
+- ⚡ **Reaction Time**: Test and enhance your response speed
+- 🧠 **Memory**: Challenge your working memory capacity
+- 🔍 **Attention**: Measure focus and concentration abilities
+- 🧮 **Processing Speed**: Assess cognitive processing efficiency
+- 🎲 **Decision Making**: Train rapid decision-making skills
 
 ## Getting Started
 
@@ -60,36 +55,34 @@ yarn dev
 ## Project Structure
 
 ```
-games/
+brain-benchmark/
 ├── app/                    # Next.js app directory
-│   ├── globals.css        # Global styles
+│   ├── tailwind.css      # Global styles
 │   ├── layout.tsx         # Root layout
 │   ├── page.tsx          # Home page
 │   ├── loading.tsx       # Loading component
 │   ├── not-found.tsx     # 404 page
-│   ├── about/            # About page
-│   ├── games/            # Games pages
-│   │   ├── page.tsx      # All games page
-│   │   └── [id]/         # Individual game pages
-│   └── categories/       # Category pages
+│   └── about/            # About page
 ├── components/           # Reusable components
-│   ├── Header.tsx       # Navigation header
-│   ├── Footer.tsx       # Site footer
-│   ├── GameCard.tsx     # Game card component
-│   ├── GameGrid.tsx     # Games grid layout
-│   └── GameFilters.tsx  # Filtering component
-├── data/                # Sample data
-│   └── games.ts         # Games data and utilities
+│   ├── BackgroundPattern.tsx  # Background design
+│   ├── GameHeader.tsx    # Main header component
+│   ├── GameFooter.tsx    # Footer component
+│   └── SimpleGameGrid.tsx # Grid layout for exercises
+├── games/               # Brain training exercises (coming soon)
+│   └── types/           # Game type definitions
+├── data/                # Exercise data
+│   └── games.ts         # Exercise configurations
 ├── types/               # TypeScript type definitions
-│   └── game.ts          # Game-related types
+│   └── game.ts          # Exercise-related types
 └── public/              # Static assets
+    └── background/      # Background patterns
 ```
 
 ## Customization
 
-### Adding New Games
+### Adding New Brain Training Exercises
 
-Edit `data/games.ts` to add new games to the collection:
+Edit `data/games.ts` to add new cognitive exercises to the platform:
 
 ```typescript
 {

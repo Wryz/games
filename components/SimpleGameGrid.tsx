@@ -13,13 +13,7 @@ const SimpleGameGrid = ({ games, onGameClick }: SimpleGameGridProps) => {
   const router = useRouter()
 
   const handleGameClick = (gameId: string) => {
-    // Handle specific games with routes
-    if (gameId === 'snake') {
-      router.push('/play/snake')
-      return
-    }
-    
-    // For other games, use the provided callback
+    // For future brain training exercises, use the provided callback
     onGameClick(gameId)
   }
 
