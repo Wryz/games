@@ -287,7 +287,6 @@ export type Database = {
           date_submitted: string | null
           id: number
           level_reached: number
-          patterns_remembered: number
           total_patterns: number
           username: string
         }
@@ -296,7 +295,6 @@ export type Database = {
           date_submitted?: string | null
           id?: number
           level_reached: number
-          patterns_remembered: number
           total_patterns: number
           username: string
         }
@@ -305,7 +303,6 @@ export type Database = {
           date_submitted?: string | null
           id?: number
           level_reached?: number
-          patterns_remembered?: number
           total_patterns?: number
           username?: string
         }
@@ -541,29 +538,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_visual_memory_score: {
-        Args: {
-          p_level_reached: number
-          p_patterns_remembered: number
-          p_total_patterns: number
-          p_username: string
-        }
-        Returns: {
-          created_at: string | null
-          date_submitted: string | null
-          id: number
-          level_reached: number
-          patterns_remembered: number
-          total_patterns: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "visual_memory_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      submit_visual_memory_score:
+        | {
+            Args: {
+              p_level_reached: number
+              p_total_patterns: number
+              p_username: string
+            }
+            Returns: {
+              created_at: string | null
+              date_submitted: string | null
+              id: number
+              level_reached: number
+              total_patterns: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "visual_memory_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_level_reached: number
+              p_patterns_remembered: number
+              p_total_patterns: number
+              p_username: string
+            }
+            Returns: {
+              created_at: string | null
+              date_submitted: string | null
+              id: number
+              level_reached: number
+              total_patterns: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "visual_memory_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
     }
     Enums: {
       [_ in never]: never

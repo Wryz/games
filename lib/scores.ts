@@ -106,7 +106,6 @@ export async function submitVisualMemoryScore(score: VisualMemoryScoreInsert) {
     .rpc('submit_visual_memory_score', {
       p_username: score.username,
       p_level_reached: score.level_reached,
-      p_patterns_remembered: score.patterns_remembered,
       p_total_patterns: score.total_patterns
     })
   
