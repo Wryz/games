@@ -118,13 +118,16 @@ export default function Home({ onGameSelect }: HomeProps) {
           // Format based on game type
           switch (item.game_id) {
             case 'aim-trainer':
-              formattedValue = `${scoreValue.accuracy}% (${scoreValue.reaction_time}ms)`
+              formattedValue = `${scoreValue.reaction_time}ms (${scoreValue.accuracy}%)`
               break
             case 'typing-test':
               formattedValue = `${scoreValue.wpm} WPM (${scoreValue.accuracy}%)`
               break
             case 'reaction-time':
-              formattedValue = `${scoreValue.average_time}ms avg`
+              formattedValue = `${scoreValue.fastest_time}ms (${scoreValue.average_time}ms avg)`
+              break
+            case 'visual-memory':
+              formattedValue = `Level ${scoreValue.level_reached} (${scoreValue.total_patterns} patterns)`
               break
             case 'pattern-recognition':
               formattedValue = `${scoreValue.patterns_solved} patterns`
@@ -447,50 +450,60 @@ export default function Home({ onGameSelect }: HomeProps) {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4">
-                          {/* Animated indicator */}
-                          <div className="relative">
-                            <div className={`w-3 h-3 rounded-full animate-pulse ${
-                              isUserScore(score.username) ? 'bg-blue-500 shadow-glow' : 'bg-gray-400'
-                            }`} />
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <span className={`font-bold text-lg ${
-                                isUserScore(score.username)
-                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
-                                  : 'text-gray-800 dark:text-gray-100'
-                              }`}>
-                                {score.username}
-                                {isUserScore(score.username) && (
-                                  <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full shadow-glow animate-pulse-glow">
-                                    You
+                      <div className="flex items-center space-x-4 flex-1">
+                        {/* Animated indicator */}
+                        <div className="relative flex-shrink-0">
+                          <div className={`w-3 h-3 rounded-full animate-pulse ${
+                            isUserScore(score.username) ? 'bg-blue-500 shadow-glow' : 'bg-gray-400'
+                          }`} />
+                        </div>
+                        
+                        <div className="flex items-center gap-2 flex-wrap flex-1">
+                          <span className={`font-bold text-lg ${
+                            isUserScore(score.username)
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
+                              : 'text-gray-800 dark:text-gray-100'
+                          }`}>
+                            {score.username}
+                            {isUserScore(score.username) && (
+                              <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full shadow-glow animate-pulse-glow">
+                                You
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400">•</span>
+                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                            {score.game_type}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400">•</span>
+                          {(() => {
+                            // Parse score_value to split into separate bubbles
+                            const match = score.score_value.match(/^(.+?)\s*\((.+?)\)$/)
+                            if (match) {
+                              const [, primary, secondary] = match
+                              return (
+                                <>
+                                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                                    {primary}
                                   </span>
-                                )}
-                              </span>
-                              <span className="text-gray-500 dark:text-gray-400">•</span>
+                                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                                    {secondary}
+                                  </span>
+                                </>
+                              )
+                            }
+                            // Fallback for scores without parentheses
+                            return (
                               <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                                {score.game_type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-2xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                                 {score.score_value}
                               </span>
-                            </div>
-                          </div>
+                            )
+                          })()}
                         </div>
                       </div>
                       
-                      <div className="text-right space-y-1">
-                        <div className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                          {formatTimeAgo(score.date_submitted)}
-                        </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500 font-mono">
-                          #{index + 1}
-                        </div>
+                      <div className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full ml-4 flex-shrink-0">
+                        {formatTimeAgo(score.date_submitted)}
                       </div>
                     </div>
                   </div>

@@ -85,11 +85,13 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
         
           switch (gameId) {
             case 'aim-trainer':
-              return `${score.accuracy}% (${score.reaction_time}ms)`
+              return `${score.reaction_time}ms (${score.accuracy}%)`
             case 'typing-test':
-              return `${score.wpm} WPM`
+              return `${score.wpm} WPM (${score.accuracy}%)`
             case 'reaction-time':
-              return `${score.average_time}ms`
+              return `${score.fastest_time}ms (${score.average_time}ms avg)`
+            case 'visual-memory':
+              return `Level ${score.level_reached} (${score.total_patterns} patterns)`
             case 'pattern-recognition':
               return `${score.patterns_solved} patterns`
             case 'stroop-test':

@@ -17,7 +17,6 @@ export type Database = {
       aim_trainer_scores: {
         Row: {
           accuracy: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           reaction_time: number
@@ -27,7 +26,6 @@ export type Database = {
         }
         Insert: {
           accuracy: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           reaction_time: number
@@ -37,7 +35,6 @@ export type Database = {
         }
         Update: {
           accuracy?: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           reaction_time?: number
@@ -50,7 +47,6 @@ export type Database = {
       chimp_test_scores: {
         Row: {
           attempts: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -59,7 +55,6 @@ export type Database = {
         }
         Insert: {
           attempts: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached: number
@@ -68,7 +63,6 @@ export type Database = {
         }
         Update: {
           attempts?: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached?: number
@@ -80,7 +74,6 @@ export type Database = {
       memory_scores: {
         Row: {
           correct_sequences: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -89,7 +82,6 @@ export type Database = {
         }
         Insert: {
           correct_sequences: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached: number
@@ -98,7 +90,6 @@ export type Database = {
         }
         Update: {
           correct_sequences?: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached?: number
@@ -109,21 +100,18 @@ export type Database = {
       }
       number_memory_scores: {
         Row: {
-          created_at: string | null
           date_submitted: string | null
           id: number
           longest_sequence: number
           username: string
         }
         Insert: {
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           longest_sequence: number
           username: string
         }
         Update: {
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           longest_sequence?: number
@@ -133,7 +121,6 @@ export type Database = {
       }
       pattern_recognition_scores: {
         Row: {
-          created_at: string | null
           date_submitted: string | null
           difficulty_level: number
           id: number
@@ -142,7 +129,6 @@ export type Database = {
           username: string
         }
         Insert: {
-          created_at?: string | null
           date_submitted?: string | null
           difficulty_level: number
           id?: number
@@ -151,7 +137,6 @@ export type Database = {
           username: string
         }
         Update: {
-          created_at?: string | null
           date_submitted?: string | null
           difficulty_level?: number
           id?: number
@@ -165,7 +150,6 @@ export type Database = {
         Row: {
           attempts: number
           average_time: number
-          created_at: string | null
           date_submitted: string | null
           fastest_time: number
           id: number
@@ -174,7 +158,6 @@ export type Database = {
         Insert: {
           attempts: number
           average_time: number
-          created_at?: string | null
           date_submitted?: string | null
           fastest_time: number
           id?: number
@@ -183,7 +166,6 @@ export type Database = {
         Update: {
           attempts?: number
           average_time?: number
-          created_at?: string | null
           date_submitted?: string | null
           fastest_time?: number
           id?: number
@@ -193,7 +175,6 @@ export type Database = {
       }
       sequence_memory_scores: {
         Row: {
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -201,7 +182,6 @@ export type Database = {
           username: string
         }
         Insert: {
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached: number
@@ -209,7 +189,6 @@ export type Database = {
           username: string
         }
         Update: {
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached?: number
@@ -222,7 +201,6 @@ export type Database = {
         Row: {
           average_time: number
           correct_answers: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           total_questions: number
@@ -231,7 +209,6 @@ export type Database = {
         Insert: {
           average_time: number
           correct_answers: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           total_questions: number
@@ -240,7 +217,6 @@ export type Database = {
         Update: {
           average_time?: number
           correct_answers?: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           total_questions?: number
@@ -252,7 +228,6 @@ export type Database = {
         Row: {
           accuracy: number
           characters_typed: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           time_taken: number
@@ -262,7 +237,6 @@ export type Database = {
         Insert: {
           accuracy: number
           characters_typed: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           time_taken: number
@@ -272,7 +246,6 @@ export type Database = {
         Update: {
           accuracy?: number
           characters_typed?: number
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           time_taken?: number
@@ -283,7 +256,6 @@ export type Database = {
       }
       visual_memory_scores: {
         Row: {
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -291,7 +263,6 @@ export type Database = {
           username: string
         }
         Insert: {
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached: number
@@ -299,7 +270,6 @@ export type Database = {
           username: string
         }
         Update: {
-          created_at?: string | null
           date_submitted?: string | null
           id?: number
           level_reached?: number
@@ -325,7 +295,6 @@ export type Database = {
         }
         Returns: {
           accuracy: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           reaction_time: number
@@ -349,7 +318,6 @@ export type Database = {
         }
         Returns: {
           attempts: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -372,7 +340,6 @@ export type Database = {
         }
         Returns: {
           correct_sequences: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -390,7 +357,6 @@ export type Database = {
         | {
             Args: { p_longest_sequence: number; p_username: string }
             Returns: {
-              created_at: string | null
               date_submitted: string | null
               id: number
               longest_sequence: number
@@ -410,7 +376,6 @@ export type Database = {
               p_username: string
             }
             Returns: {
-              created_at: string | null
               date_submitted: string | null
               id: number
               longest_sequence: number
@@ -431,7 +396,6 @@ export type Database = {
           p_username: string
         }
         Returns: {
-          created_at: string | null
           date_submitted: string | null
           difficulty_level: number
           id: number
@@ -456,7 +420,6 @@ export type Database = {
         Returns: {
           attempts: number
           average_time: number
-          created_at: string | null
           date_submitted: string | null
           fastest_time: number
           id: number
@@ -476,7 +439,6 @@ export type Database = {
           p_username: string
         }
         Returns: {
-          created_at: string | null
           date_submitted: string | null
           id: number
           level_reached: number
@@ -500,7 +462,6 @@ export type Database = {
         Returns: {
           average_time: number
           correct_answers: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           total_questions: number
@@ -524,7 +485,6 @@ export type Database = {
         Returns: {
           accuracy: number
           characters_typed: number
-          created_at: string | null
           date_submitted: string | null
           id: number
           time_taken: number
@@ -546,7 +506,6 @@ export type Database = {
               p_username: string
             }
             Returns: {
-              created_at: string | null
               date_submitted: string | null
               id: number
               level_reached: number
@@ -568,7 +527,6 @@ export type Database = {
               p_username: string
             }
             Returns: {
-              created_at: string | null
               date_submitted: string | null
               id: number
               level_reached: number

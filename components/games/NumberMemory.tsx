@@ -17,7 +17,6 @@ export default function NumberMemory() {
   const [digitCount, setDigitCount] = useState(1)
   const [userInput, setUserInput] = useState('')
   const [longestSequence, setLongestSequence] = useState(0)
-  const [message, setMessage] = useState('Click Start to begin')
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -82,7 +81,6 @@ export default function NumberMemory() {
     const number = generateNumber(digits)
     setCurrentNumber(number)
     setGameState('showing')
-    setMessage('Remember this number...')
     setUserInput('')
     
     // Show for 1 second per digit (minimum 2 seconds)
@@ -92,8 +90,6 @@ export default function NumberMemory() {
     
     setCurrentNumber('')
     setGameState('input')
-    setMessage('What was the number?')
-    
     // Focus input after a short delay
     setTimeout(() => inputRef.current?.focus(), 100)
     
@@ -118,7 +114,6 @@ export default function NumberMemory() {
     if (userInput === currentNumber) {
       // Correct!
       setGameState('correct')
-      setMessage('Correct!')
       
       const newLongest = Math.max(longestSequence, digitCount)
       setLongestSequence(newLongest)
@@ -132,7 +127,6 @@ export default function NumberMemory() {
     } else {
       // Wrong!
       setGameState('wrong')
-      setMessage(`Wrong! The number was ${currentNumber}`)
       
       setTimeout(() => {
         setGameState('finished')
@@ -168,7 +162,6 @@ export default function NumberMemory() {
     setDigitCount(1)
     setUserInput('')
     setLongestSequence(0)
-    setMessage('Click Start to begin')
     hasSubmittedScore.current = false
   }, [])
 
@@ -182,16 +175,14 @@ export default function NumberMemory() {
       sortKey="longest_sequence"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4 sm:p-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
         {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-md mb-8 text-sm sm:text-base">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{digitCount}</div>
-            <div className="text-gray-600 dark:text-gray-400">Digits</div>
+        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
+          <div className="text-gray-600 dark:text-gray-400">
+            Digits: <span className="font-bold text-blue-600 dark:text-blue-400">{digitCount}</span>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{longestSequence}</div>
-            <div className="text-gray-600 dark:text-gray-400">Best</div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Best: <span className="font-bold text-green-600 dark:text-green-400">{longestSequence}</span>
           </div>
           <button
             onClick={resetGame}
@@ -204,27 +195,13 @@ export default function NumberMemory() {
           </button>
         </div>
 
-        {/* Message */}
-        <div className="mb-8 text-center min-h-[28px]">
-          <p className={`text-lg font-semibold ${
-            gameState === 'correct' ? 'text-green-600 dark:text-green-400' :
-            gameState === 'wrong' ? 'text-red-600 dark:text-red-400' :
-            'text-gray-700 dark:text-gray-300'
-          }`}>
-            {message}
-          </p>
-        </div>
-
         {/* Game Area */}
-        <div className="w-full max-w-md mb-8">
-          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-2xl text-center h-[280px] flex items-center justify-center p-8">
+        <div className="w-full max-w-2xl">
+          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-2xl text-center h-[280px] flex items-center justify-center p-8 mb-6">
             {gameState === 'idle' || gameState === 'finished' ? (
-              <button
-                onClick={startGame}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors text-lg"
-              >
-                {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-              </button>
+              <div className="text-6xl font-bold text-gray-400 dark:text-gray-500">
+                ?
+              </div>
             ) : gameState === 'showing' ? (
               <div className="text-6xl font-bold text-gray-800 dark:text-gray-100 tracking-wider">
                 {currentNumber}
@@ -253,6 +230,16 @@ export default function NumberMemory() {
               </div>
             )}
           </div>
+          
+          {/* Start/Play Again Button */}
+          {(gameState === 'idle' || gameState === 'finished') && (
+            <button
+              onClick={startGame}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors text-lg"
+            >
+              {gameState === 'finished' ? 'Play Again' : 'Start Game'}
+            </button>
+          )}
         </div>
       </div>
     </GameWrapper>

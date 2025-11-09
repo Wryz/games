@@ -315,10 +315,14 @@ export default function AimTrainer() {
         ) : (
           <div className="w-full">
 
-            {/* Stats - Show from the start */}
-            <div className="flex justify-between items-center mb-4 text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              <span>Hits: {gameStats.targetsHit}/{TOTAL_TARGETS}</span>
-              <span>Accuracy: {accuracy.toFixed(1)}%</span>
+            {/* Stats and Reset */}
+            <div className="flex justify-between items-center mb-6 text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              <div className="text-gray-600 dark:text-gray-400">
+                Hits: <span className="font-bold text-blue-600 dark:text-blue-400">{gameStats.targetsHit}/{TOTAL_TARGETS}</span>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Accuracy: <span className="font-bold text-green-600 dark:text-green-400">{accuracy.toFixed(1)}%</span>
+              </div>
               <button
                 onClick={resetGame}
                 className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -332,12 +336,7 @@ export default function AimTrainer() {
 
             {/* Game Grid - Responsive Size */}
             <div 
-              className="grid grid-cols-8 gap-1 bg-gray-200 dark:bg-gray-700 p-2 rounded-lg mx-auto"
-              style={{ 
-                width: 'min(100%, 80vh)',
-                height: 'min(100vw, 80vh)',
-                aspectRatio: '1'
-              }}
+              className="grid grid-cols-8 gap-2 mx-auto w-full max-w-2xl aspect-square"
             >
               {targets.map((target) => (
                 <button

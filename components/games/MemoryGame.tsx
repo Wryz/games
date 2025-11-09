@@ -27,7 +27,6 @@ export default function MemoryGame() {
   const [totalSequences, setTotalSequences] = useState(0)
   const [correctClicks, setCorrectClicks] = useState(0)
   const [activeSquare, setActiveSquare] = useState<number | null>(null)
-  const [message, setMessage] = useState('Click Start to Play')
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const isPlayingSequence = useRef(false)
@@ -86,7 +85,6 @@ export default function MemoryGame() {
     isPlayingSequence.current = true
     
     setGameState('showing')
-    setMessage('Watch carefully...')
     setPlayerSequence([])
     
     // Wait a bit before starting
@@ -106,7 +104,6 @@ export default function MemoryGame() {
     }
     
     setGameState('playing')
-    setMessage('Your turn! Repeat the sequence')
     isPlayingSequence.current = false
   }, [])
 
@@ -143,7 +140,6 @@ export default function MemoryGame() {
     if (!isCorrectSoFar) {
       // Wrong sequence
       setGameState('wrong')
-      setMessage(`Wrong! You reached Level ${level}`)
       setTotalSequences(prev => prev + 1)
       
       // Submit score and finish
@@ -172,7 +168,6 @@ export default function MemoryGame() {
       if (newPlayerSequence.length === sequence.length) {
         // Completed the sequence! Move to next level
         setGameState('correct')
-        setMessage('Correct! Next level...')
         setCorrectSequences(prev => prev + 1)
         setTotalSequences(prev => prev + 1)
         
@@ -195,7 +190,6 @@ export default function MemoryGame() {
     setCorrectSequences(0)
     setTotalSequences(0)
     setCorrectClicks(0)
-    setMessage('Click Start to Play')
     setActiveSquare(null)
     hasSubmittedScore.current = false
     isPlayingSequence.current = false
@@ -212,35 +206,30 @@ export default function MemoryGame() {
       sortDirection="desc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
-        {/* Stats */}
-        <div className="flex gap-6 mb-6 text-sm sm:text-base">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{level}</div>
-            <div className="text-gray-600 dark:text-gray-400">Level</div>
+        {/* Stats and Reset */}
+        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
+          <div className="text-gray-600 dark:text-gray-400">
+            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{correctClicks}</div>
-            <div className="text-gray-600 dark:text-gray-400">Correct</div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctClicks}</span>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{sequence.length}</div>
-            <div className="text-gray-600 dark:text-gray-400">Length</div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Length: <span className="font-bold text-purple-600 dark:text-purple-400">{sequence.length}</span>
           </div>
-        </div>
-
-        {/* Message */}
-        <div className="mb-6 text-center min-h-[28px]">
-          <p className={`text-lg font-semibold ${
-            gameState === 'correct' ? 'text-green-600 dark:text-green-400' :
-            gameState === 'wrong' ? 'text-red-600 dark:text-red-400' :
-            'text-gray-700 dark:text-gray-300'
-          }`}>
-            {message}
-          </p>
+          <button
+            onClick={resetGame}
+            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            title="Reset"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
 
         {/* Game Board */}
-        <div className="w-full max-w-md mb-6">
+        <div className="w-full max-w-2xl mb-6">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 aspect-square">
             {COLORS.map((color) => (
               <button
@@ -260,23 +249,14 @@ export default function MemoryGame() {
         </div>
 
         {/* Control Buttons */}
-        <div className="flex gap-4">
-          {gameState === 'idle' || gameState === 'finished' ? (
-            <button
-              onClick={startGame}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-            >
-              {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-            </button>
-          ) : (
-            <button
-              onClick={resetGame}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-            >
-              Reset
-            </button>
-          )}
-        </div>
+        {(gameState === 'idle' || gameState === 'finished') && (
+          <button
+            onClick={startGame}
+            className="w-full max-w-2xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+          >
+            {gameState === 'finished' ? 'Play Again' : 'Start Game'}
+          </button>
+        )}
 
         {/* Progress indicator during player's turn */}
         <div className="mt-4 text-center min-h-[20px]">

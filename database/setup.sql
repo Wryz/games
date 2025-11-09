@@ -530,14 +530,16 @@ BEGIN
       (SELECT COUNT(*) FROM visual_memory_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'level_reached', level_reached
+        'level_reached', level_reached,
+        'total_patterns', total_patterns
       ) FROM visual_memory_scores 
       ORDER BY level_reached DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'level_reached', level_reached
+            'level_reached', level_reached,
+            'total_patterns', total_patterns
           ) FROM visual_memory_scores 
           WHERE username = p_username
           ORDER BY level_reached DESC 
@@ -708,7 +710,7 @@ BEGIN
       'visual-memory' as game_id,
       'Visual Memory' as game_name,
       username,
-      json_build_object('level_reached', level_reached) as score_value,
+      json_build_object('level_reached', level_reached, 'total_patterns', total_patterns) as score_value,
       date_submitted
     FROM visual_memory_scores
     

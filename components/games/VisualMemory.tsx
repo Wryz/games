@@ -22,7 +22,6 @@ export default function VisualMemory() {
   const [level, setLevel] = useState(1)
   const [squares, setSquares] = useState<Square[]>([])
   const [correctTilesClicked, setCorrectTilesClicked] = useState(0)
-  const [message, setMessage] = useState('Click Start to begin')
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
 
@@ -103,7 +102,6 @@ export default function VisualMemory() {
     const pattern = generatePattern(currentLevel)
     setSquares(pattern)
     setGameState('showing')
-    setMessage('Memorize the pattern...')
     
     // Show pattern for 2 seconds + 200ms per square
     const displayTime = 2000 + (2 + currentLevel) * 200
@@ -113,7 +111,6 @@ export default function VisualMemory() {
     // Don't modify isPattern - just change state to playing
     // The visual will be controlled by the rendering logic
     setGameState('playing')
-    setMessage('Click the squares you remember')
   }, [generatePattern])
 
   // Start game
@@ -152,7 +149,6 @@ export default function VisualMemory() {
       // Correct! Add all the pattern squares to the count
       setCorrectTilesClicked(prev => prev + patternSquares.length)
       setGameState('correct')
-      setMessage('Correct! Next level...')
       
       // Show correct pattern briefly
       setSquares(prev => prev.map(sq => ({ ...sq, isPattern: true, isSelected: sq.isPattern })))
@@ -166,7 +162,6 @@ export default function VisualMemory() {
       // Wrong! Still count the correct clicks they did make
       setCorrectTilesClicked(prev => prev + correctClicks)
       setGameState('wrong')
-      setMessage('Wrong! Game Over')
       
       // Show correct pattern
       setSquares(prev => prev.map(sq => ({ ...sq, isPattern: true })))
@@ -198,7 +193,6 @@ export default function VisualMemory() {
     setLevel(1)
     setSquares([]) // Empty array for idle state
     setCorrectTilesClicked(0)
-    setMessage('Click Start to begin')
     hasSubmittedScore.current = false
   }, [])
 
@@ -212,16 +206,14 @@ export default function VisualMemory() {
       sortKey="level_reached"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] p-4 sm:p-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
         {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-md mb-6 text-sm sm:text-base">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{level}</div>
-            <div className="text-gray-600 dark:text-gray-400">Level</div>
+        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
+          <div className="text-gray-600 dark:text-gray-400">
+            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{Math.min(2 + level, 16)}</div>
-            <div className="text-gray-600 dark:text-gray-400">Squares</div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Squares: <span className="font-bold text-green-600 dark:text-green-400">{Math.min(2 + level, 16)}</span>
           </div>
           <button
             onClick={resetGame}
@@ -234,21 +226,10 @@ export default function VisualMemory() {
           </button>
         </div>
 
-        {/* Message */}
-        <div className="mb-6 text-center min-h-[28px]">
-          <p className={`text-lg font-semibold ${
-            gameState === 'correct' ? 'text-green-600 dark:text-green-400' :
-            gameState === 'wrong' ? 'text-red-600 dark:text-red-400' :
-            'text-gray-700 dark:text-gray-300'
-          }`}>
-            {message}
-          </p>
-        </div>
-
         {/* Game Area */}
-        <div className="w-full max-w-md mb-6">
+        <div className="w-full max-w-2xl mb-6">
           {/* Grid - Always visible */}
-          <div className="grid grid-cols-5 gap-2 mb-6">
+          <div className="grid grid-cols-5 gap-2 mb-6 aspect-square">
             {squares.length > 0 ? squares.map((square) => (
               <button
                 key={square.id}
