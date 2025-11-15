@@ -340,12 +340,25 @@ export default function Home({ onGameSelect }: HomeProps) {
                     cognitive: 'shadow-glow-cyan',
                     perception: 'shadow-glow',
                   }
+                  const categoryBackgrounds = {
+                    motor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/50',
+                    memory: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/50',
+                    cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
+                    perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
+                  }
+                  
+                  // Check if current user has the top score
+                  const hasTopScore = username && game.topScore?.username === username
                   
                   return (
                     <div
                       key={game.id}
                       onClick={() => handleGameClick(game.id, game.name)}
-                      className={`group relative bg-white dark:bg-gray-800/50 rounded-xl md:rounded-2xl border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} p-3 md:p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlow[game.category as keyof typeof categoryGlow]}`}
+                      className={`group relative ${
+                        hasTopScore 
+                          ? categoryBackgrounds[game.category as keyof typeof categoryBackgrounds]
+                          : 'bg-white dark:bg-gray-800/50'
+                      } rounded-xl md:rounded-2xl border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} p-3 md:p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlow[game.category as keyof typeof categoryGlow]}`}
                       style={{
                         animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
                       }}

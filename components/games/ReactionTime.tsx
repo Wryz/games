@@ -64,7 +64,7 @@ export default function ReactionTime() {
 
   // Start a new round
   const startRound = useCallback(() => {
-    if (currentAttempt >= TOTAL_ATTEMPTS) return
+    if (currentAttempt > TOTAL_ATTEMPTS) return
     
     setGameState('ready')
     setInstruction('Wait for green...')
@@ -189,7 +189,7 @@ export default function ReactionTime() {
       sortKey="fastest_time"
       sortDirection="asc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 pt-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         <div className="w-full">
           {/* Stats and Reset */}
           <div className="flex justify-between items-center mb-6 text-sm sm:text-base">

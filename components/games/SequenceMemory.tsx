@@ -288,7 +288,7 @@ export default function SequenceMemory() {
       sortKey="level_reached"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] sm:p-8 pt-8">
         {/* Stats and Reset */}
         <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
@@ -342,7 +342,7 @@ export default function SequenceMemory() {
                       key={shape.id}
                       onClick={() => handleShapeClick(shape.id)}
                       disabled={gameState !== 'playing'}
-                      className={`aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center p-4 sm:p-5 text-gray-700 dark:text-gray-300 ${
+                      className={`aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center sm:p-5 text-gray-700 dark:text-gray-300 ${
                         gameState === 'playing' 
                           ? 'hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer' 
                           : 'opacity-50 cursor-not-allowed'

@@ -27,7 +27,7 @@ export default function GameWrapper({
   customSort
 }: GameWrapperProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Game Content */}
       {children}
 

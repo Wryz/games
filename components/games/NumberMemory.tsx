@@ -175,7 +175,7 @@ export default function NumberMemory() {
       sortKey="longest_sequence"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         {/* Stats and Reset */}
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
@@ -218,7 +218,7 @@ export default function NumberMemory() {
                   onKeyPress={handleKeyPress}
                   disabled={gameState !== 'input'}
                   placeholder="Type the number..."
-                  className="w-full text-4xl text-center p-4 rounded-lg border-4 border-blue-500 dark:border-blue-400 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-600 disabled:opacity-50"
+                  className="w-full text-4xl text-center rounded-lg border-4 border-blue-500 dark:border-blue-400 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-600 disabled:opacity-50"
                 />
                 <button
                   onClick={handleSubmit}

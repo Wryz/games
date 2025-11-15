@@ -26,6 +26,7 @@ export default function TypingTest() {
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const wordsContainerRef = useRef<HTMLDivElement>(null)
 
   const TEST_DURATION = 60 // seconds
 
@@ -217,6 +218,13 @@ export default function TypingTest() {
     initializeGame()
   }, [initializeGame])
 
+  // Auto-scroll to current word
+  useEffect(() => {
+    if (wordsContainerRef.current && gameState === 'playing') {
+      wordsContainerRef.current.scrollTop = wordsContainerRef.current.scrollHeight
+    }
+  }, [currentWordIndex, gameState])
+
   const formatScore = (score: TypingTestScore) => {
     return `${score.wpm} WPM (${score.accuracy}%)`
   }
@@ -264,7 +272,7 @@ export default function TypingTest() {
       sortKey="wpm"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 pt-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         {(gameState === 'idle' || gameState === 'playing') && (
           <div className="w-full">
             {/* Timer and Stats */}
@@ -290,9 +298,9 @@ export default function TypingTest() {
             </div>
 
             {/* Words Display - Fixed Layout */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-4">
+            <div ref={wordsContainerRef} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-4 h-48 overflow-y-auto">
               <div className="text-xl font-mono leading-relaxed flex flex-wrap gap-2">
-                {words.slice(0, currentWordIndex + 20).map((word, idx) => (
+                {words.slice(0, currentWordIndex + 6).map((word, idx) => (
                   <span key={idx}>
                     {getWordDisplay(word, idx)}
                   </span>

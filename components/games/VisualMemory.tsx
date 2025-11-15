@@ -206,7 +206,7 @@ export default function VisualMemory() {
       sortKey="level_reached"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] p-4 sm:p-8 pt-8">
+      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         {/* Stats and Reset */}
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
