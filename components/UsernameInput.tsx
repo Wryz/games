@@ -31,7 +31,7 @@ export default function UsernameInput({ username, onUsernameSubmit, onUsernameCh
 
   if (username) {
     return (
-      <div className="flex flex-col items-center mb-8">
+      <div className="flex flex-col mb-8">
         <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 p-3 shadow-sm">
           <div className="flex items-center space-x-2 flex-1">
             <span className="text-gray-700 dark:text-gray-300 font-medium">

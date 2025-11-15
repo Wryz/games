@@ -6,7 +6,7 @@ interface GameHeaderProps {
 
 const GameHeader = ({ onMobileMenuToggle }: GameHeaderProps) => {
   return (
-    <div className="relative z-10 px-2">
+    <div className="relative z-10">
       {/* Mobile header with menu button */}
       <div className="flex items-center justify-between mb-4 lg:hidden">
         <button

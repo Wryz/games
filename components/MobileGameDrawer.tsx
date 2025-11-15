@@ -92,7 +92,33 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
       {/* Drawer */}
       <div className="fixed left-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-900 shadow-xl z-50 overflow-y-auto lg:hidden transform transition-transform duration-300 ease-in-out">
         <div className="p-6">
-          {/* Header with close button */}
+          {/* Close button - own row */}
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={onClose}
+              className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close menu"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-gray-600 dark:text-gray-400"
+              >
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Header with theme toggle */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <img 
@@ -104,31 +130,7 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
               Brain Benchmark
             </h2>
             </div>
-            <div className="flex items-center space-x-3">
-              <ThemeToggle />
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Close menu"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-gray-600 dark:text-gray-400"
-                >
-                  <path
-                    d="M18 6L6 18M6 6l12 12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
+            <ThemeToggle />
           </div>
           
           {/* Username Input */}

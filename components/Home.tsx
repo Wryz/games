@@ -230,7 +230,7 @@ export default function Home({ onGameSelect }: HomeProps) {
   }
 
   return (
-    <div className="p-6 space-y-12">
+    <div className="space-y-12">
       {/* Enhanced Hero Section */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-12 animate-fade-in-up">
         {/* Hero Text - Left Side */}
@@ -272,7 +272,7 @@ export default function Home({ onGameSelect }: HomeProps) {
             <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
               Games Overview
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
                 <GameCardSkeleton key={i} />
               ))}
@@ -314,7 +314,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {gameStats.length === 0 ? (
                 // Show skeleton cards only when no data is available (initial load)
                 Array.from({ length: GAMES.length }).map((_, index) => (
@@ -345,35 +345,67 @@ export default function Home({ onGameSelect }: HomeProps) {
                     <div
                       key={game.id}
                       onClick={() => handleGameClick(game.id, game.name)}
-                      className={`group relative bg-white dark:bg-gray-800/50 rounded-2xl border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlow[game.category as keyof typeof categoryGlow]}`}
+                      className={`group relative bg-white dark:bg-gray-800/50 rounded-xl md:rounded-2xl border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} p-3 md:p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlow[game.category as keyof typeof categoryGlow]}`}
                       style={{
                         animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
                       }}
                     >
                       {/* Animated border gradient on hover */}
-                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} opacity-0 group-hover:opacity-20 transition-opacity duration-300 -z-10 blur-md`} />
+                      <div className={`absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} opacity-0 group-hover:opacity-20 transition-opacity duration-300 -z-10 blur-md`} />
                       
                       <div className="relative z-10 flex flex-col h-full">
-                        {/* Top Right - Games Played Counter */}
-                        <div className="absolute top-0 right-0 flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-                          </svg>
-                          <span className="text-xs font-medium">{game.totalGames}</span>
+                        {/* Mobile layout - Parent column flex */}
+                        <div className="md:hidden flex flex-row gap-2">
+                          {/* First div: Row flex with icon and user counter */}
+                          <div className="flex flex-col items-start justify-between">
+                          <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColors[game.category as keyof typeof categoryColors]} p-1 rounded-md flex-shrink-0`}>
+                              <game.icon size={20} className="text-white drop-shadow-sm" />
+                            </div>
+                            <div className="flex items-center gap-0.5 text-gray-500 dark:text-gray-400">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+                              </svg>
+                              <span className="text-[10px] font-medium">{game.totalGames}</span>
+                            </div>
+                           
+                          </div>
+                          
+                          {/* Second div: Title, top game score, and top game scorer */}
+                          <div>
+                            <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
+                              {game.name}
+                            </h3>
+                            {/* Top Scorer */}
+                            {game.topScore ? (
+                              <div className="text-xs mt-0.5">
+                                <p className="font-semibold text-xs text-gray-900 dark:text-white">
+                                  {game.topScore.value}
+                                </p>
+                                <p className="text-gray-500 dark:text-gray-400 font-medium text-[10px]">
+                                  {game.topScore.username}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-gray-400 dark:text-gray-500 italic mt-0.5">
+                                No scores yet
+                              </p>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="flex items-start space-x-3 mb-4">
+                        {/* Desktop layout - traditional with icon on left */}
+                        <div className="hidden md:flex items-start space-x-3 mb-4">
                           <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColors[game.category as keyof typeof categoryColors]} p-2 rounded-lg flex-shrink-0`}>
                             <game.icon size={36} className="text-white drop-shadow-sm" />
                           </div>
-                          <div className="flex-1 min-w-0 pr-8">
-                            <h3 className={`font-bold text-lg line-clamp-2 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent transition-all duration-300 leading-tight mb-2`}>
+                          <div className="flex-1 min-w-0 pr-0">
+                            <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent transition-all duration-300 leading-tight mb-2`}>
                               {game.name}
                             </h3>
                             {/* Top Scorer */}
                             {game.topScore ? (
                               <div className="text-xs">
-                                <p className="font-black text-base text-gray-900 dark:text-white">
+                                <p className="font-semibold text-base text-gray-900 dark:text-white">
                                   {game.topScore.value}
                                 </p>
                                 <p className="text-gray-500 dark:text-gray-400 font-medium">
@@ -386,6 +418,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                               </p>
                             )}
                           </div>
+                          {/* Desktop Games Counter */}
+                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+                            </svg>
+                            <span className="text-xs font-medium">{game.totalGames}</span>
+                          </div>
                         </div>
 
                         {/* Spacer to push Your Best to bottom */}
@@ -393,16 +432,16 @@ export default function Home({ onGameSelect }: HomeProps) {
 
                         {/* User Best - Always at bottom */}
                         {username && (
-                          <div className={`border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} border-dashed rounded-lg p-3 transform transition-all duration-300 group-hover:translate-x-1 group-hover:border-solid`}>
-                            <p className={`text-xs font-bold uppercase tracking-wide mb-1 flex items-center gap-1 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
-                              <span>⭐</span> Your Best
+                          <div className={`border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} border-dashed rounded-lg p-2 md:p-3 transform transition-all duration-300 group-hover:translate-x-1 group-hover:border-solid`}>
+                            <p className={`text-[10px] md:text-xs font-bold uppercase tracking-wide mb-0.5 md:mb-1 flex items-center gap-1 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
+                              <span className="text-xs md:text-sm">⭐</span> Your Best
                             </p>
                             {game.userBest ? (
-                              <p className={`font-extrabold text-xl bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
+                              <p className={`font-extrabold text-base md:text-xl bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
                                 {game.userBest.value}
                               </p>
                             ) : (
-                              <p className={`text-sm font-semibold bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent opacity-60`}>
+                              <p className={`text-xs md:text-sm font-semibold bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent opacity-60`}>
                                 Not played yet
                               </p>
                             )}
