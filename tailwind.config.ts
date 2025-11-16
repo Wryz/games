@@ -95,6 +95,7 @@ const config: Config = {
         'stagger-2': 'fadeInUp 0.6s ease-out 0.2s both',
         'stagger-3': 'fadeInUp 0.6s ease-out 0.3s both',
         'stagger-4': 'fadeInUp 0.6s ease-out 0.4s both',
+        'shake': 'shake 0.5s ease-in-out',
       },
       keyframes: {
         fadeIn: {
@@ -152,6 +153,11 @@ const config: Config = {
             opacity: '1',
             transform: 'scale(1.05)',
           },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-8px)' },
+          '20%, 40%, 60%, 80%': { transform: 'translateX(8px)' },
         },
       },
       boxShadow: {

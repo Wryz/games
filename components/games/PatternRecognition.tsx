@@ -137,10 +137,14 @@ export default function PatternRecognition() {
   const [elapsedTime, setElapsedTime] = useState(0)
   const [userAnswer, setUserAnswer] = useState<string | null>(null)
   const [selectedShapes, setSelectedShapes] = useState<string[]>([])
+  const [feedbackShape, setFeedbackShape] = useState<string | null>(null)
+  const [feedbackType, setFeedbackType] = useState<'correct' | 'wrong' | null>(null)
+  const [finalResults, setFinalResults] = useState<{ patternsSolved: number; timeTaken: number; level: number } | null>(null)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const timerInterval = useRef<NodeJS.Timeout | null>(null)
   const currentAnswerRef = useRef<string | string[] | null>(null)
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const loadScores = async () => {
     try {
@@ -178,6 +182,9 @@ export default function PatternRecognition() {
       supabase.removeChannel(channel)
       if (timerInterval.current) {
         clearInterval(timerInterval.current)
+      }
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current)
       }
     }
   }, [])
@@ -409,13 +416,22 @@ export default function PatternRecognition() {
     return { pattern: patternWithColors, type, answer }
   }, [])
 
-  // Start new game
+  // Auto-initialize game on mount
+  useEffect(() => {
+    if (pattern.length === 0 && gameState === 'idle') {
+      const { pattern: initialPattern, type, answer } = generatePattern(1)
+      setPattern(initialPattern)
+      setPatternType(type)
+      currentAnswerRef.current = answer
+    }
+  }, [pattern.length, gameState, generatePattern])
+
+  // Start new game - generate pattern but don't start timer yet
   const startGame = useCallback(() => {
     setDifficultyLevel(1)
     setPatternsSolved(0)
     setElapsedTime(0)
-    const startTime = Date.now()
-    setGameStartTime(startTime)
+    setGameStartTime(0) // Don't start timer yet
     hasSubmittedScore.current = false
 
     const { pattern, type, answer } = generatePattern(1)
@@ -425,13 +441,23 @@ export default function PatternRecognition() {
     setUserAnswer(null)
     setSelectedShapes([])
     
-    // Go directly to playing state
-    setGameState('playing')
+    // Keep in idle state - game starts when user clicks first shape
+    setGameState('idle')
   }, [generatePattern])
 
   // Handle shape selection
   const handleShapeClick = useCallback((shapeId: string) => {
-    if (gameState !== 'playing') return
+    // If in idle state, start the game (start timer and transition to playing)
+    let justStarted = false
+    if (gameState === 'idle') {
+      const startTime = Date.now()
+      setGameStartTime(startTime)
+      setGameState('playing')
+      justStarted = true
+    }
+    
+    // Only process clicks when in playing state (or if we just started)
+    if (!justStarted && gameState !== 'playing') return
 
     const correctAnswer = currentAnswerRef.current
     const requiresTwoShapes = Array.isArray(correctAnswer)
@@ -453,6 +479,19 @@ export default function PatternRecognition() {
       
       // Check if this shape is correct for the current position
       const isCorrect = shapeId === answerArray[currentPosition]
+      
+      // Show feedback
+      setFeedbackShape(shapeId)
+      setFeedbackType(isCorrect ? 'correct' : 'wrong')
+      
+      // Clear feedback after animation
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current)
+      }
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackShape(null)
+        setFeedbackType(null)
+      }, 500)
       
       if (isCorrect) {
         // Correct shape - add it to selected and show it
@@ -476,6 +515,8 @@ export default function PatternRecognition() {
             currentAnswerRef.current = answer
             setUserAnswer(null)
             setSelectedShapes([])
+            setFeedbackShape(null)
+            setFeedbackType(null)
             
             // Go directly to playing state
             setGameState('playing')
@@ -488,8 +529,15 @@ export default function PatternRecognition() {
         const finalTime = elapsedTime
 
         setTimeout(() => {
+          // Set final results and show results screen
+          setFinalResults({
+            patternsSolved,
+            timeTaken: finalTime,
+            level: difficultyLevel
+          })
           setGameState('finished')
           
+          // Submit score
           if (username && !hasSubmittedScore.current && patternsSolved > 0) {
             hasSubmittedScore.current = true
             submitPatternRecognitionScore({
@@ -504,12 +552,44 @@ export default function PatternRecognition() {
               hasSubmittedScore.current = false
             })
           }
+          
+          // Auto-reset after showing results for 3 seconds
+          setTimeout(() => {
+            setDifficultyLevel(1)
+            setPatternsSolved(0)
+            setElapsedTime(0)
+            setGameStartTime(0)
+            hasSubmittedScore.current = false
+            setFinalResults(null)
+            const { pattern: newPattern, type, answer } = generatePattern(1)
+            setPattern(newPattern)
+            setPatternType(type)
+            currentAnswerRef.current = answer
+            setUserAnswer(null)
+            setSelectedShapes([])
+            setFeedbackShape(null)
+            setFeedbackType(null)
+            setGameState('idle')
+          }, 3000)
         }, 1500)
       }
     } else {
       // Handle single-shape selection (original behavior)
       setUserAnswer(shapeId)
       const isCorrect = shapeId === correctAnswer
+
+      // Show feedback
+      setFeedbackShape(shapeId)
+      setFeedbackType(isCorrect ? 'correct' : 'wrong')
+      
+      // Clear feedback after animation
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current)
+      }
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackShape(null)
+        setFeedbackType(null)
+      }, 500)
 
       if (isCorrect && correctAnswer !== null) {
         setGameState('correct')
@@ -525,6 +605,8 @@ export default function PatternRecognition() {
           currentAnswerRef.current = answer
           setUserAnswer(null)
           setSelectedShapes([])
+          setFeedbackShape(null)
+          setFeedbackType(null)
           
           // Go directly to playing state
           setGameState('playing')
@@ -534,8 +616,15 @@ export default function PatternRecognition() {
         const finalTime = elapsedTime
 
         setTimeout(() => {
+          // Set final results and show results screen
+          setFinalResults({
+            patternsSolved,
+            timeTaken: finalTime,
+            level: difficultyLevel
+          })
           setGameState('finished')
           
+          // Submit score
           if (username && !hasSubmittedScore.current && patternsSolved > 0) {
             hasSubmittedScore.current = true
             submitPatternRecognitionScore({
@@ -550,6 +639,25 @@ export default function PatternRecognition() {
               hasSubmittedScore.current = false
             })
           }
+          
+          // Auto-reset after showing results for 3 seconds
+          setTimeout(() => {
+            setDifficultyLevel(1)
+            setPatternsSolved(0)
+            setElapsedTime(0)
+            setGameStartTime(0)
+            hasSubmittedScore.current = false
+            setFinalResults(null)
+            const { pattern: newPattern, type, answer } = generatePattern(1)
+            setPattern(newPattern)
+            setPatternType(type)
+            currentAnswerRef.current = answer
+            setUserAnswer(null)
+            setSelectedShapes([])
+            setFeedbackShape(null)
+            setFeedbackType(null)
+            setGameState('idle')
+          }, 3000)
         }, 1500)
       }
     }
@@ -565,10 +673,16 @@ export default function PatternRecognition() {
     setGameStartTime(0)
     setUserAnswer(null)
     setSelectedShapes([])
+    setFeedbackShape(null)
+    setFeedbackType(null)
+    setFinalResults(null)
     currentAnswerRef.current = null
     hasSubmittedScore.current = false
     if (timerInterval.current) {
       clearInterval(timerInterval.current)
+    }
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current)
     }
   }, [])
 
@@ -594,37 +708,73 @@ export default function PatternRecognition() {
       customSort={customSort}
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{difficultyLevel}</span>
-          </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Solved: <span className="font-bold text-green-600 dark:text-green-400">{patternsSolved}</span>
-          </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Time: <span className="font-bold text-purple-600 dark:text-purple-400">{elapsedTime}s</span>
-          </div>
-          <button
-            onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            title="Reset"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Pattern Display Area */}
-        <div className="w-full max-w-4xl">
-          <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-6 sm:p-8 mb-4">
-            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 min-h-[120px]">
-              {gameState === 'idle' || gameState === 'finished' ? (
-                <div className="text-4xl text-gray-400 dark:text-gray-500 w-full text-center">
-                  ?
+        {gameState === 'finished' && finalResults ? (
+          /* Results Screen */
+          <div className="text-center w-full max-w-4xl">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
+              Game Over!
+            </h2>
+            <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
+              <div className="grid grid-cols-3 gap-4 text-center mb-4">
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
+                    {finalResults.patternsSolved}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Patterns Solved
+                  </div>
                 </div>
-              ) : gameState === 'playing' ? (
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">
+                    {finalResults.timeTaken}s
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Time Taken
+                  </div>
+                </div>
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
+                    {finalResults.level}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Level Reached
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Starting a new game in a few seconds...
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Stats and Reset */}
+            <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
+              <div className="text-gray-600 dark:text-gray-400">
+                Level: <span className="font-bold text-blue-600 dark:text-blue-400">{difficultyLevel}</span>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Solved: <span className="font-bold text-green-600 dark:text-green-400">{patternsSolved}</span>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Time: <span className="font-bold text-purple-600 dark:text-purple-400">{elapsedTime}s</span>
+              </div>
+              <button
+                onClick={resetGame}
+                className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                title="Reset"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Pattern Display Area */}
+            <div className="w-full max-w-4xl">
+              <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-6 sm:p-8 mb-4">
+                <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 min-h-[120px]">
+                  {pattern.length > 0 ? (
                 <>
                   {pattern.map((item, index) => {
                     const shape = shapes.find(s => s.id === item.shapeId)
@@ -742,50 +892,58 @@ export default function PatternRecognition() {
           </div>
         </div>
 
-        {/* Shape Selection Grid */}
-        {gameState === 'playing' && (
-          <div className="w-full max-w-4xl">
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
-              {shapes.map((shape) => {
-                const isSelected = selectedShapes.includes(shape.id)
-                return (
-                  <button
-                    key={shape.id}
-                    onClick={() => handleShapeClick(shape.id)}
-                    disabled={gameState !== 'playing'}
-                    className={`aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer p-3 sm:p-4 ${shape.color} ${
-                      isSelected 
-                        ? 'ring-4 ring-green-500 dark:ring-green-400 scale-110 shadow-2xl' 
-                        : ''
-                    }`}
-                    title={shape.name}
-                  >
-                    {shape.svg}
-                  </button>
-                )
-              })}
-            </div>
-            {Array.isArray(currentAnswerRef.current) && (
-              <p className="text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
-                {selectedShapes.length === 0 
-                  ? 'Select the first shape'
-                  : selectedShapes.length === 1
-                  ? 'Select the second shape'
-                  : 'Both shapes selected!'}
-              </p>
+            {/* Shape Selection Grid */}
+            {pattern.length > 0 && (
+              <div className="w-full max-w-4xl">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
+                  {shapes.map((shape) => {
+                    const isSelected = selectedShapes.includes(shape.id)
+                    const showFeedback = feedbackShape === shape.id
+                    const isCorrect = feedbackType === 'correct' && showFeedback
+                    const isWrong = feedbackType === 'wrong' && showFeedback
+                    const isDisabled = gameState === 'correct' || gameState === 'wrong' || gameState === 'finished'
+                    
+                    return (
+                      <button
+                        key={shape.id}
+                        onClick={() => handleShapeClick(shape.id)}
+                        disabled={isDisabled}
+                        className={`aspect-square rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center p-3 sm:p-4 ${shape.color} ${
+                          isSelected 
+                            ? 'ring-4 ring-green-500 dark:ring-green-400 scale-110 shadow-2xl' 
+                            : ''
+                        } ${
+                          isCorrect
+                            ? 'bg-green-500 dark:bg-green-600 animate-none'
+                            : isWrong
+                            ? 'bg-red-500 dark:bg-red-600 animate-shake'
+                            : 'bg-white dark:bg-gray-700'
+                        } ${
+                          isDisabled
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer'
+                        }`}
+                        title={shape.name}
+                      >
+                        {shape.svg}
+                      </button>
+                    )
+                  })}
+                </div>
+                {gameState === 'playing' && Array.isArray(currentAnswerRef.current) && (
+                  <p className="text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    {selectedShapes.length === 0 
+                      ? 'Select the first shape'
+                      : selectedShapes.length === 1
+                      ? 'Select the second shape'
+                      : 'Both shapes selected!'}
+                  </p>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
 
-        {/* Start/Play Again Button */}
-        {(gameState === 'idle' || gameState === 'finished') && (
-          <button
-            onClick={startGame}
-            className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold shadow-lg transition-colors"
-          >
-            {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-          </button>
-        )}
       </div>
     </GameWrapper>
   )

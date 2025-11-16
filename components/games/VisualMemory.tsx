@@ -22,6 +22,9 @@ export default function VisualMemory() {
   const [level, setLevel] = useState(1)
   const [squares, setSquares] = useState<Square[]>([])
   const [correctTilesClicked, setCorrectTilesClicked] = useState(0)
+  const [feedbackSquares, setFeedbackSquares] = useState<Set<number>>(new Set())
+  const [wrongSquares, setWrongSquares] = useState<Set<number>>(new Set())
+  const [finalResults, setFinalResults] = useState<{ level: number; totalPatterns: number } | null>(null)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
 
@@ -117,6 +120,9 @@ export default function VisualMemory() {
   const startGame = useCallback(async () => {
     setLevel(1)
     setCorrectTilesClicked(0)
+    setFeedbackSquares(new Set())
+    setWrongSquares(new Set())
+    setFinalResults(null)
     hasSubmittedScore.current = false
     
     await showPattern(1)
@@ -145,6 +151,17 @@ export default function VisualMemory() {
     const allCorrect = patternSquares.every(sq => sq.isSelected)
     const noExtra = selectedSquares.every(sq => sq.isPattern)
     
+    // Identify correct and wrong squares for feedback
+    // All pattern squares should show green (correct answer)
+    const correctSquares = new Set<number>(patternSquares.map(sq => sq.id))
+    // Selected squares that are NOT part of the pattern should show red (wrong)
+    const wrongSquaresSet = new Set<number>(
+      selectedSquares.filter(sq => !sq.isPattern).map(sq => sq.id)
+    )
+    
+    setFeedbackSquares(correctSquares)
+    setWrongSquares(wrongSquaresSet)
+    
     if (allCorrect && noExtra && patternSquares.length === selectedSquares.length) {
       // Correct! Add all the pattern squares to the count
       setCorrectTilesClicked(prev => prev + patternSquares.length)
@@ -154,6 +171,8 @@ export default function VisualMemory() {
       setSquares(prev => prev.map(sq => ({ ...sq, isPattern: true, isSelected: sq.isPattern })))
       
       setTimeout(async () => {
+        setFeedbackSquares(new Set())
+        setWrongSquares(new Set())
         const nextLevel = level + 1
         setLevel(nextLevel)
         await showPattern(nextLevel)
@@ -167,6 +186,12 @@ export default function VisualMemory() {
       setSquares(prev => prev.map(sq => ({ ...sq, isPattern: true })))
       
       setTimeout(() => {
+        // Set final results and show results screen
+        const finalTotal = correctTilesClicked + correctClicks
+        setFinalResults({
+          level,
+          totalPatterns: finalTotal
+        })
         setGameState('finished')
         
         // Submit score
@@ -175,7 +200,7 @@ export default function VisualMemory() {
           submitVisualMemoryScore({
             username,
             level_reached: level,
-            total_patterns: correctTilesClicked + correctClicks
+            total_patterns: finalTotal
           }).then(() => {
             setTimeout(() => loadScores(), 1000)
           }).catch(error => {
@@ -193,6 +218,9 @@ export default function VisualMemory() {
     setLevel(1)
     setSquares([]) // Empty array for idle state
     setCorrectTilesClicked(0)
+    setFeedbackSquares(new Set())
+    setWrongSquares(new Set())
+    setFinalResults(null)
     hasSubmittedScore.current = false
   }, [])
 
@@ -207,47 +235,92 @@ export default function VisualMemory() {
       sortDirection="desc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
+        {gameState === 'finished' && finalResults ? (
+          /* Results Screen */
+          <div className="text-center w-full max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
+              Game Over!
+            </h2>
+            <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
+                    {finalResults.level}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Level Reached
+                  </div>
+                </div>
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
+                    {finalResults.totalPatterns}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Correct Tiles
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={startGame}
+              className="w-full max-w-2xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+            >
+              Play Again
+            </button>
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Squares: <span className="font-bold text-green-600 dark:text-green-400">{Math.min(2 + level, 16)}</span>
-          </div>
-          <button
-            onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            title="Reset"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
+        ) : (
+          <>
+            {/* Stats and Reset */}
+            <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
+              <div className="text-gray-600 dark:text-gray-400">
+                Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Squares: <span className="font-bold text-green-600 dark:text-green-400">{Math.min(2 + level, 16)}</span>
+              </div>
+              <button
+                onClick={resetGame}
+                className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                title="Reset"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
 
-        {/* Game Area */}
+            {/* Game Area */}
         <div className="w-full max-w-2xl mb-6">
           {/* Grid - Always visible */}
           <div className="grid grid-cols-5 gap-2 mb-6 aspect-square">
-            {squares.length > 0 ? squares.map((square) => (
-              <button
-                key={square.id}
-                onClick={() => handleSquareClick(square.id)}
-                disabled={gameState !== 'playing'}
-                className={`
-                  aspect-square rounded-lg transition-all duration-200
-                  ${(gameState === 'showing' || gameState === 'correct' || gameState === 'wrong') && square.isPattern
-                    ? 'bg-white dark:bg-gray-200' 
-                    : square.isSelected && gameState === 'playing'
-                    ? 'bg-blue-400 dark:bg-blue-500'
-                    : 'bg-gray-300 dark:bg-gray-600'
-                  }
-                  ${gameState === 'playing' ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed'}
-                  border-2 border-gray-400 dark:border-gray-500
-                `}
-              />
-            )) : (
+            {squares.length > 0 ? squares.map((square) => {
+              const isCorrectFeedback = feedbackSquares.has(square.id) && (gameState === 'correct' || gameState === 'wrong')
+              const isWrongFeedback = wrongSquares.has(square.id) && gameState === 'wrong'
+              const isPatternSquare = square.isPattern
+              
+              return (
+                <button
+                  key={square.id}
+                  onClick={() => handleSquareClick(square.id)}
+                  disabled={gameState !== 'playing'}
+                  className={`
+                    aspect-square rounded-lg transition-all duration-200
+                    ${isWrongFeedback
+                      ? 'bg-red-500 dark:bg-red-600 animate-shake'
+                      : isCorrectFeedback && (gameState === 'correct' || gameState === 'wrong')
+                      ? 'bg-green-500 dark:bg-green-600'
+                      : (gameState === 'showing' || gameState === 'correct' || gameState === 'wrong') && isPatternSquare
+                      ? 'bg-white dark:bg-gray-200' 
+                      : square.isSelected && gameState === 'playing'
+                      ? 'bg-blue-400 dark:bg-blue-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                    }
+                    ${gameState === 'playing' ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed'}
+                    border-2 border-gray-400 dark:border-gray-500
+                  `}
+                />
+              )
+            }) : (
               // Empty grid for idle state
               Array.from({ length: 25 }).map((_, idx) => (
                 <div
@@ -258,24 +331,26 @@ export default function VisualMemory() {
             )}
           </div>
 
-          {/* Button - Changes based on state */}
-          {gameState === 'idle' || gameState === 'finished' ? (
-            <button
-              onClick={startGame}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-            >
-              {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-            </button>
-          ) : (
-            <button
-              onClick={submitAnswer}
-              disabled={gameState !== 'playing'}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-            >
-              Submit Answer
-            </button>
-          )}
-        </div>
+            {/* Button - Changes based on state */}
+            {gameState === 'idle' ? (
+              <button
+                onClick={startGame}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+              >
+                Start Game
+              </button>
+            ) : (
+              <button
+                onClick={submitAnswer}
+                disabled={gameState !== 'playing'}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+              >
+                Submit Answer
+              </button>
+            )}
+          </div>
+          </>
+        )}
       </div>
     </GameWrapper>
   )

@@ -104,8 +104,12 @@ export default function SequenceMemory() {
   const [level, setLevel] = useState(1)
   const [currentShapeIndex, setCurrentShapeIndex] = useState<number>(-1)
   const [totalCorrectShapes, setTotalCorrectShapes] = useState(0)
+  const [feedbackShape, setFeedbackShape] = useState<string | null>(null)
+  const [feedbackType, setFeedbackType] = useState<'correct' | 'wrong' | null>(null)
+  const [finalResults, setFinalResults] = useState<{ level: number; longestSequence: number } | null>(null)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const loadScores = async () => {
     try {
@@ -141,6 +145,9 @@ export default function SequenceMemory() {
 
     return () => {
       supabase.removeChannel(channel)
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current)
+      }
     }
   }, [])
 
@@ -193,7 +200,13 @@ export default function SequenceMemory() {
     setSequence([])
     setPlayerSequence([])
     setTotalCorrectShapes(0)
+    setFeedbackShape(null)
+    setFeedbackType(null)
+    setFinalResults(null)
     hasSubmittedScore.current = false
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current)
+    }
 
     // Generate and play first sequence (start with 3 shapes)
     const firstSequence = []
@@ -214,6 +227,19 @@ export default function SequenceMemory() {
     // Check if this click is correct
     const isCorrect = newPlayerSequence[newPlayerSequence.length - 1] === sequence[newPlayerSequence.length - 1]
 
+    // Show feedback
+    setFeedbackShape(shapeId)
+    setFeedbackType(isCorrect ? 'correct' : 'wrong')
+    
+    // Clear feedback after animation
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current)
+    }
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setFeedbackShape(null)
+      setFeedbackType(null)
+    }, 500)
+
     if (!isCorrect) {
       // Wrong!
       setGameState('wrong')
@@ -232,6 +258,11 @@ export default function SequenceMemory() {
       })
 
       setTimeout(() => {
+        // Set final results and show results screen
+        setFinalResults({
+          level,
+          longestSequence: Math.max(0, finalTotal)
+        })
         setGameState('finished')
         
         // Submit score - always submit if user has a username and played the game
@@ -265,6 +296,8 @@ export default function SequenceMemory() {
       setTotalCorrectShapes(prev => prev + sequence.length)
 
       setTimeout(() => {
+        setFeedbackShape(null)
+        setFeedbackType(null)
         const nextLevel = level + 1
         setLevel(nextLevel)
         const nextSequence = generateSequence()
@@ -281,7 +314,13 @@ export default function SequenceMemory() {
     setLevel(1)
     setCurrentShapeIndex(-1)
     setTotalCorrectShapes(0)
+    setFeedbackShape(null)
+    setFeedbackType(null)
+    setFinalResults(null)
     hasSubmittedScore.current = false
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current)
+    }
   }, [])
 
   return (
@@ -295,26 +334,61 @@ export default function SequenceMemory() {
       sortDirection="desc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] sm:p-8 pt-8">
-        {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
+        {gameState === 'finished' && finalResults ? (
+          /* Results Screen */
+          <div className="text-center w-full max-w-4xl">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
+              Game Over!
+            </h2>
+            <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
+                    {finalResults.level}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Level Reached
+                  </div>
+                </div>
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
+                    {finalResults.longestSequence}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                    Shapes Remembered
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={startGame}
+              className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+            >
+              Play Again
+            </button>
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Length: <span className="font-bold text-green-600 dark:text-green-400">{sequence.length}</span>
-          </div>
-          <button
-            onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            title="Reset"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
+        ) : (
+          <>
+            {/* Stats and Reset */}
+            <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
+              <div className="text-gray-600 dark:text-gray-400">
+                Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Length: <span className="font-bold text-green-600 dark:text-green-400">{sequence.length}</span>
+              </div>
+              <button
+                onClick={resetGame}
+                className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                title="Reset"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
 
-        {/* Main Game Area - Two column on desktop, stacked on mobile */}
+            {/* Main Game Area - Two column on desktop, stacked on mobile */}
         <div className="w-full max-w-4xl mb-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
             
@@ -343,21 +417,33 @@ export default function SequenceMemory() {
             <div className="flex flex-col items-center justify-center">
               <div className="w-full aspect-square">
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 w-full h-full">
-                  {shapes.map((shape) => (
-                    <button
-                      key={shape.id}
-                      onClick={() => handleShapeClick(shape.id)}
-                      disabled={gameState !== 'playing'}
-                      className={`aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center sm:p-5 text-gray-700 dark:text-gray-300 ${
-                        gameState === 'playing' 
-                          ? 'hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer' 
-                          : 'opacity-50 cursor-not-allowed'
-                      }`}
-                      title={shape.name}
-                    >
-                      {shape.svg}
-                    </button>
-                  ))}
+                  {shapes.map((shape) => {
+                    const showFeedback = feedbackShape === shape.id
+                    const isCorrect = feedbackType === 'correct' && showFeedback
+                    const isWrong = feedbackType === 'wrong' && showFeedback
+                    
+                    return (
+                      <button
+                        key={shape.id}
+                        onClick={() => handleShapeClick(shape.id)}
+                        disabled={gameState !== 'playing'}
+                        className={`aspect-square rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center sm:p-5 ${
+                          isCorrect
+                            ? 'bg-green-500 dark:bg-green-600 animate-none'
+                            : isWrong
+                            ? 'bg-red-500 dark:bg-red-600 animate-shake'
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        } ${
+                          gameState === 'playing' 
+                            ? 'hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer' 
+                            : 'opacity-50 cursor-not-allowed'
+                        }`}
+                        title={shape.name}
+                      >
+                        {shape.svg}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -365,14 +451,16 @@ export default function SequenceMemory() {
           </div>
         </div>
 
-        {/* Start/Play Again Button */}
-        {(gameState === 'idle' || gameState === 'finished') && (
-          <button
-            onClick={startGame}
-            className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-          >
-            {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-          </button>
+            {/* Start Button */}
+            {gameState === 'idle' && (
+              <button
+                onClick={startGame}
+                className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+              >
+                Start Game
+              </button>
+            )}
+          </>
         )}
       </div>
     </GameWrapper>
