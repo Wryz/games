@@ -206,23 +206,23 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 1, threshold: 1 }, // Pre-School - 1 pattern
     { level: 2, threshold: 2 }, // Kindergarten - 2 patterns
     { level: 3, threshold: 3 }, // 1st Grade - 3 patterns
-    { level: 4, threshold: 5 }, // 2nd Grade - 5 patterns
-    { level: 5, threshold: 8 }, // 3rd Grade - 8 patterns
-    { level: 6, threshold: 12 }, // 4th Grade - 12 patterns
-    { level: 7, threshold: 15 }, // 5th Grade - 15 patterns
-    { level: 8, threshold: 20 }, // 6th Grade - 20 patterns
-    { level: 9, threshold: 25 }, // 7th Grade - 25 patterns
-    { level: 10, threshold: 30 }, // 8th Grade - 30 patterns
-    { level: 11, threshold: 35 }, // 9th Grade - 35 patterns
-    { level: 12, threshold: 40 }, // 10th Grade - 40 patterns
-    { level: 13, threshold: 50 }, // 11th Grade - 50 patterns
-    { level: 14, threshold: 60 }, // 12th Grade - 60 patterns
-    { level: 15, threshold: 75 }, // College Freshman - 75 patterns
-    { level: 16, threshold: 90 }, // College Sophomore - 90 patterns
-    { level: 17, threshold: 110 }, // College Junior - 110 patterns
-    { level: 18, threshold: 130 }, // College Senior - 130 patterns
-    { level: 19, threshold: 150 }, // Master's - 150 patterns
-    { level: 20, threshold: 200 } // Doctorate - 200+ patterns
+    { level: 4, threshold: 4 }, // 2nd Grade - 5 patterns
+    { level: 5, threshold: 5 }, // 3rd Grade - 8 patterns
+    { level: 6, threshold: 6 }, // 4th Grade - 12 patterns
+    { level: 7, threshold: 7 }, // 5th Grade - 15 patterns
+    { level: 8, threshold: 8 }, // 6th Grade - 20 patterns
+    { level: 9, threshold: 9 }, // 7th Grade - 25 patterns
+    { level: 10, threshold: 10 }, // 8th Grade - 30 patterns
+    { level: 11, threshold: 11 }, // 9th Grade - 35 patterns
+    { level: 12, threshold: 12 }, // 10th Grade - 40 patterns
+    { level: 13, threshold: 13 }, // 11th Grade - 50 patterns
+    { level: 14, threshold: 14 }, // 12th Grade - 60 patterns
+    { level: 15, threshold: 15 }, // College Freshman - 75 patterns
+    { level: 16, threshold: 16 }, // College Sophomore - 90 patterns
+    { level: 17, threshold: 17 }, // College Junior - 110 patterns
+    { level: 18, threshold: 18 }, // College Senior - 130 patterns
+    { level: 19, threshold: 19 }, // Master's - 150 patterns
+    { level: 20, threshold: 20 } // Doctorate - 200+ patterns
   ],
   'stroop-test': [
     { level: 1, threshold: 0 }, // Pre-School - any score

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useUser } from '@/contexts/UserContext'
 import { useOverview } from '@/contexts/OverviewContext'
 import { supabase } from '@/lib/supabase'
@@ -90,14 +90,15 @@ export default function Home({ onGameSelect }: HomeProps) {
     onGameSelect?.(gameId)
   }
 
-  const loadAllData = async (forceRefresh = false) => {
+  const loadAllData = useCallback(async (forceRefresh = false) => {
     setLoading(true)
     await Promise.all([
       loadRecentScores(),
       loadGameStats(forceRefresh, username || undefined)
     ])
     setLoading(false)
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username])
 
   const loadRecentScores = async () => {
     try {
@@ -201,7 +202,7 @@ export default function Home({ onGameSelect }: HomeProps) {
     return () => {
       channels.forEach(channel => supabase.removeChannel(channel))
     }
-  }, [])
+  }, [username, loadAllData]) // Include username and loadAllData so subscriptions use current values
 
   // Reload data when username changes to fetch user's best scores
   useEffect(() => {

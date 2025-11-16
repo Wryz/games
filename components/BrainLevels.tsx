@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { GAMES } from '@/types/games'
 import { 
   calculateGameLevel, 
@@ -18,7 +18,15 @@ interface BrainLevelsProps {
 }
 
 export default function BrainLevels({ username }: BrainLevelsProps) {
-  const { gameStats } = useOverview()
+  const { gameStats, loadGameStats } = useOverview()
+
+  // Load game stats with username when component mounts or username changes
+  useEffect(() => {
+    if (username) {
+      loadGameStats(true, username)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username])
 
   const categoryLevels = useMemo(() => {
     const categories: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive']

@@ -213,7 +213,9 @@ export async function getPatternRecognitionScores(filters?: { username?: string;
   let query = supabase
     .from('pattern_recognition_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    // Sort by patterns_solved DESC, then time_taken ASC (best score = high patterns, low time)
+    .order('patterns_solved', { ascending: false })
+    .order('time_taken', { ascending: true })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)

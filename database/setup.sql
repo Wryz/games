@@ -459,17 +459,19 @@ BEGIN
       (SELECT COUNT(*) FROM pattern_recognition_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'patterns_solved', patterns_solved
+        'patterns_solved', patterns_solved,
+        'time_taken', time_taken
       ) FROM pattern_recognition_scores 
-      ORDER BY patterns_solved DESC 
+      ORDER BY patterns_solved DESC, time_taken ASC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'patterns_solved', patterns_solved
+            'patterns_solved', patterns_solved,
+            'time_taken', time_taken
           ) FROM pattern_recognition_scores 
           WHERE username = p_username
-          ORDER BY patterns_solved DESC 
+          ORDER BY patterns_solved DESC, time_taken ASC 
           LIMIT 1)
         ELSE NULL
       END as user_best

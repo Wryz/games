@@ -169,14 +169,20 @@ export default function SequenceMemory() {
       const shapeIndex = shapes.findIndex(s => s.id === seq[i])
       setCurrentShapeIndex(shapeIndex)
 
-      // Show shape for 800ms
-      await new Promise(resolve => setTimeout(resolve, 800))
+      // Show shape for 1500ms (longer for better visibility)
+      await new Promise(resolve => setTimeout(resolve, 1500))
 
+      // No pause - shapes appear/disappear instantly
+      if (i < seq.length - 1) {
       setCurrentShapeIndex(-1)
-
-      // Pause between shapes (400ms)
-      await new Promise(resolve => setTimeout(resolve, 400))
+        // Brief pause between shapes (200ms)
+        await new Promise(resolve => setTimeout(resolve, 200))
     }
+    }
+
+    // Clear the shape at the end
+    setCurrentShapeIndex(-1)
+    await new Promise(resolve => setTimeout(resolve, 200))
 
     setGameState('playing')
   }, [])
@@ -314,9 +320,9 @@ export default function SequenceMemory() {
             
             {/* Left/Top: Shape Display Area */}
             <div className="flex flex-col items-center justify-center">
-              <div className="w-full aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-2xl flex items-center justify-center p-8 lg:p-12">
+              <div className="w-full aspect-square bg-white dark:bg-gray-700 rounded-lg shadow-sm flex items-center justify-center p-8 lg:p-12">
                 {gameState === 'showing' && currentShapeIndex >= 0 ? (
-                  <div className="w-full h-full text-blue-600 dark:text-blue-400 animate-pulse">
+                  <div className="w-full h-full text-blue-600 dark:text-blue-400">
                     {shapes[currentShapeIndex].svg}
                   </div>
                 ) : playerSequence.length > 0 && (gameState === 'playing' || gameState === 'correct') ? (

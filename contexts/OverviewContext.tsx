@@ -24,6 +24,7 @@ interface GameStats {
 interface CachedGameStats {
   data: GameStats[]
   timestamp: number
+  username?: string | null
 }
 
 interface OverviewContextType {
@@ -44,22 +45,27 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
 
   const loadGameStats = async (forceRefresh = false, username?: string) => {
     try {
-      // If we have cached data, show it immediately (even if expired)
-      if (cachedGameStats && cachedGameStats.data.length > 0) {
+      // Check if username changed - if so, clear cache
+      const usernameChanged = cachedGameStats && cachedGameStats.username !== username
+      
+      // If force refresh or username changed, clear cache immediately
+      if (forceRefresh || usernameChanged) {
+        setCachedGameStats(null)
+        setGameStatsLoading(true)
+      } else if (cachedGameStats && cachedGameStats.data.length > 0) {
+        // If we have cached data for the same user, show it immediately
         setGameStats(cachedGameStats.data)
         setGameStatsLoading(false)
         
-        // Check if cache is still valid and we don't need to force refresh
-        if (!forceRefresh) {
+        // Check if cache is still valid
           const now = Date.now()
           const isValid = (now - cachedGameStats.timestamp) < CACHE_DURATION
           
           if (isValid) {
             return // Cache is valid, no need to fetch
-          }
         }
         
-        // Cache is expired or force refresh requested, fetch fresh data in background
+        // Cache is expired, fetch fresh data in background
         setGameStatsLoading(true)
       } else {
         // No cached data, show loading state
@@ -95,7 +101,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
             case 'sequence-memory':
               return `Level ${score.level_reached} (${score.longest_sequence} shapes)`
             case 'pattern-recognition':
-              return `${score.patterns_solved} patterns`
+              return `${score.patterns_solved} patterns (${score.time_taken}s)`
             case 'stroop-test':
               return `${score.correct_answers}/${score.total_questions}`
             case 'number-memory':
@@ -130,10 +136,11 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
 
       setGameStats(gameStatsData)
       
-      // Cache the fresh data
+      // Cache the fresh data with username
       setCachedGameStats({
         data: gameStatsData,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        username: username || null
       })
       
       setGameStatsLoading(false)
