@@ -186,7 +186,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                   return (
                     <div
                       key={game.gameId}
-                      className="group/game relative grid grid-cols-1 md:grid-cols-3 gap-4 items-center py-1 transition-all duration-300"
+                      className="group/game relative flex flex-col md:grid md:grid-cols-3 gap-4 items-center py-1 transition-all duration-300"
                       style={{
                         animation: `fadeInUp 0.5s ease-out ${(categoryIndex * 0.1) + (gameIndex * 0.05)}s both`,
                       }}
@@ -197,15 +197,55 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                         <div className={`absolute top-2 left-2 w-2 h-2 rounded-full bg-gradient-to-r ${gradient}`} />
                       </div>
 
-                      {/* Game Name */}
-                      <div className="md:col-span-1 relative z-10 overflow-hidden">
+                      {/* Mobile: Two groups side-by-side */}
+                      <div className="flex flex-row items-start justify-between gap-4 w-full md:hidden">
+                        {/* Left Group: Game Name + Level */}
+                        <div className="flex flex-col gap-2 flex-1 relative z-10 overflow-hidden">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white transition-transform duration-300">
+                            {game.gameName}
+                          </p>
+                          <div className="flex items-center gap-2 relative z-10">
+                            <div className="transform transition-transform duration-300 group-hover/game:scale-110 group-hover/game:rotate-6">
+                              <EducationBadge level={currentLevel} categoryColor={colors.hex} size={28} />
+                            </div>
+                            <p className={`text-xs font-semibold px-2 py-1 rounded-md bg-white/50 dark:bg-gray-800/50 ${colors.text} border border-current border-opacity-20`}>
+                              {educationLevel}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right Group: Score Display */}
+                        <div className="relative z-10 flex flex-col gap-1 items-end">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Score:</span>
+                            {userScore ? (
+                              <span className={`text-xs font-bold rounded-md bg-gradient-to-r ${gradient} bg-clip-text text-transparent border border-current border-opacity-20`}>
+                                {userScore}
+                              </span>
+                            ) : (
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">N/A</span>
+                            )}
+                          </div>
+                          {nextLevelThreshold !== null && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Next:</span>
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                {formatThreshold(game.gameId, nextLevelThreshold)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Desktop: Game Name */}
+                      <div className="hidden md:block md:col-span-1 relative z-10 overflow-hidden">
                         <p className="text-sm font-medium text-gray-900 dark:text-white transition-transform duration-300">
                           {game.gameName}
                         </p>
                       </div>
 
-                      {/* Current Level */}
-                      <div className="md:col-span-1 flex items-center gap-2 relative z-10">
+                      {/* Desktop: Current Level */}
+                      <div className="hidden md:flex md:col-span-1 items-center gap-2 relative z-10">
                         <div className="transform transition-transform duration-300 group-hover/game:scale-110 group-hover/game:rotate-6">
                           <EducationBadge level={currentLevel} categoryColor={colors.hex} size={28} />
                         </div>
@@ -214,8 +254,8 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                         </p>
                       </div>
 
-                      {/* Score Display */}
-                      <div className="md:col-span-1 relative z-10 flex flex-col gap-1">
+                      {/* Desktop: Score Display */}
+                      <div className="hidden md:flex md:col-span-1 relative z-10 flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Score:</span>
                           {userScore ? (
@@ -246,7 +286,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
 
       {/* Badge Gallery */}
       <div className="mt-12">
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 xl:grid-cols-8 gap-3 md:gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 xl:grid-cols-8 gap-3 md:gap-4">
           {Array.from({ length: 20 }, (_, i) => i + 1).map((level, index) => {
             const isAchieved = achievedLevels.has(level)
             const isHighlighted = level <= highestLevel // Highlight all badges up to highest level achieved
