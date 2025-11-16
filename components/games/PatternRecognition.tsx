@@ -595,7 +595,7 @@ export default function PatternRecognition() {
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base px-4">
+        <div className="flex justify-between items-center w-full max-w-4xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
             Level: <span className="font-bold text-blue-600 dark:text-blue-400">{difficultyLevel}</span>
           </div>
@@ -617,8 +617,8 @@ export default function PatternRecognition() {
         </div>
 
         {/* Pattern Display Area */}
-        <div className="w-full max-w-4xl mb-6 px-4">
-          <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-6 sm:p-8 mb-6">
+        <div className="w-full max-w-4xl">
+          <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-6 sm:p-8 mb-4">
             <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 min-h-[120px]">
               {gameState === 'idle' || gameState === 'finished' ? (
                 <div className="text-4xl text-gray-400 dark:text-gray-500 w-full text-center">
@@ -740,20 +740,11 @@ export default function PatternRecognition() {
               )}
             </div>
           </div>
-
-          {/* Instruction */}
-          {gameState === 'playing' && (
-            <p className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
-              {Array.isArray(currentAnswerRef.current) 
-                ? 'Select 2 shapes in the correct order that come next in the pattern'
-                : 'What comes next in the pattern?'}
-            </p>
-          )}
         </div>
 
         {/* Shape Selection Grid */}
         {gameState === 'playing' && (
-          <div className="w-full max-w-4xl mb-6 px-4">
+          <div className="w-full max-w-4xl">
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
               {shapes.map((shape) => {
                 const isSelected = selectedShapes.includes(shape.id)
@@ -790,7 +781,7 @@ export default function PatternRecognition() {
         {(gameState === 'idle' || gameState === 'finished') && (
           <button
             onClick={startGame}
-            className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors mx-4"
+            className="w-full max-w-4xl bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold shadow-lg transition-colors"
           >
             {gameState === 'finished' ? 'Play Again' : 'Start Game'}
           </button>
