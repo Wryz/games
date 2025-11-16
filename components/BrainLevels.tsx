@@ -12,9 +12,90 @@ import {
 } from '@/lib/levels'
 import { useOverview } from '@/contexts/OverviewContext'
 import EducationBadge from './EducationBadge'
+import ScoresOverview from './ScoresOverview'
 
 interface BrainLevelsProps {
   username?: string
+}
+
+// Helper function to format all score details for each game type
+function formatScoreDetails(gameId: string, score: any): Array<{ label: string; value: string }> {
+  if (!score) return []
+
+  const details: Array<{ label: string; value: string }> = []
+
+  switch (gameId) {
+    case 'aim-trainer':
+      if (score.accuracy !== undefined) details.push({ label: 'Accuracy', value: `${score.accuracy}%` })
+      if (score.reaction_time !== undefined) details.push({ label: 'Reaction Time', value: `${score.reaction_time}ms` })
+      if (score.targets_hit !== undefined) details.push({ label: 'Targets Hit', value: `${score.targets_hit}` })
+      if (score.total_targets !== undefined) details.push({ label: 'Total Targets', value: `${score.total_targets}` })
+      break
+
+    case 'typing-test':
+      if (score.wpm !== undefined) details.push({ label: 'WPM', value: `${score.wpm}` })
+      if (score.accuracy !== undefined) details.push({ label: 'Accuracy', value: `${score.accuracy}%` })
+      if (score.characters_typed !== undefined) details.push({ label: 'Characters Typed', value: `${score.characters_typed}` })
+      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${score.time_taken}s` })
+      break
+
+    case 'reaction-time':
+      if (score.fastest_time !== undefined) details.push({ label: 'Fastest Time', value: `${score.fastest_time}ms` })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${score.average_time}ms` })
+      if (score.attempts !== undefined) details.push({ label: 'Attempts', value: `${score.attempts}` })
+      break
+
+    case 'visual-memory':
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
+      if (score.total_patterns !== undefined) details.push({ label: 'Total Patterns', value: `${score.total_patterns}` })
+      break
+
+    case 'sequence-memory':
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
+      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: `${score.longest_sequence}` })
+      break
+
+    case 'pattern-recognition':
+      if (score.patterns_solved !== undefined) details.push({ label: 'Patterns Solved', value: `${score.patterns_solved}` })
+      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${score.time_taken}s` })
+      if (score.difficulty_level !== undefined) details.push({ label: 'Difficulty Level', value: `${score.difficulty_level}` })
+      break
+
+    case 'stroop-test':
+      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: `${score.correct_answers}` })
+      if (score.total_questions !== undefined) details.push({ label: 'Total Questions', value: `${score.total_questions}` })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${score.average_time}ms` })
+      break
+
+    case 'number-memory':
+      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: `${score.longest_sequence} digits` })
+      break
+
+    case 'memory':
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
+      if (score.correct_sequences !== undefined) details.push({ label: 'Correct Sequences', value: `${score.correct_sequences}` })
+      if (score.total_sequences !== undefined) details.push({ label: 'Total Sequences', value: `${score.total_sequences}` })
+      break
+
+    case 'chimp-test':
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
+      if (score.numbers_remembered !== undefined) details.push({ label: 'Numbers Remembered', value: `${score.numbers_remembered}` })
+      if (score.attempts !== undefined) details.push({ label: 'Attempts', value: `${score.attempts}` })
+      break
+
+    default:
+      // Generic fallback for any other fields
+      Object.keys(score).forEach(key => {
+        if (key !== 'id' && key !== 'username' && score[key] !== null && score[key] !== undefined) {
+          const formattedKey = key.split('_').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ')
+          details.push({ label: formattedKey, value: String(score[key]) })
+        }
+      })
+  }
+
+  return details
 }
 
 export default function BrainLevels({ username }: BrainLevelsProps) {
@@ -140,6 +221,9 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
 
   return (
     <div className="space-y-8">
+      {/* Scores Overview Table */}
+      <ScoresOverview username={username} />
+      
       <div className="space-y-4">
         {categoryLevels.map((categoryData, categoryIndex) => {
           const colors = categoryColors[categoryData.category]
@@ -175,18 +259,18 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
               <div className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
                 {categoryData.games.map((game, gameIndex) => {
                   const { currentLevel, educationLevel, nextLevelThreshold } = game.levelInfo
-                  const isMaxLevel = currentLevel >= 20
                   const categoryGames = GAMES.filter(g => g.category === categoryData.category)
                   const categoryGameStats = gameStats.filter(gs => 
                     categoryGames.some(cg => cg.id === gs.id)
                   )
                   const gameStat = categoryGameStats.find(gs => gs.id === game.gameId)
                   const userScore = gameStat?.userBest?.score ? formatUserScore(game.gameId, gameStat.userBest.score) : null
+                  const scoreDetails = gameStat?.userBest?.score ? formatScoreDetails(game.gameId, gameStat.userBest.score) : []
                   
                   return (
                     <div
                       key={game.gameId}
-                      className="group/game relative flex flex-col md:grid md:grid-cols-3 gap-4 items-center py-1 transition-all duration-300"
+                      className="group/game relative flex flex-col md:grid md:grid-cols-3 gap-2 md:gap-4 items-center py-2 transition-all duration-300"
                       style={{
                         animation: `fadeInUp 0.5s ease-out ${(categoryIndex * 0.1) + (gameIndex * 0.05)}s both`,
                       }}
@@ -204,7 +288,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                           <p className="text-sm font-medium text-gray-900 dark:text-white transition-transform duration-300">
                             {game.gameName}
                           </p>
-                          <div className="flex items-center gap-2 relative z-10">
+                          <div className="flex items-center gap-2 relative z-10 flex-wrap">
                             <div className="transform transition-transform duration-300 group-hover/game:scale-110 group-hover/game:rotate-6">
                               <EducationBadge level={currentLevel} categoryColor={colors.hex} size={28} />
                             </div>
@@ -212,20 +296,26 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                               {educationLevel}
                             </p>
                           </div>
+                          {/* Score details on mobile */}
+                          {scoreDetails.length > 0 && (
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                              {scoreDetails.map((detail, idx) => (
+                                <span key={idx} className="text-xs text-gray-600 dark:text-gray-400">
+                                  <span className="font-medium">{detail.label}:</span>{' '}
+                                  <span className={`font-semibold ${colors.text}`}>{detail.value}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         {/* Right Group: Score Display */}
                         <div className="relative z-10 flex flex-col gap-1 items-end">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Score:</span>
-                            {userScore ? (
-                              <span className={`text-xs font-bold rounded-md bg-gradient-to-r ${gradient} bg-clip-text text-transparent border border-current border-opacity-20`}>
-                                {userScore}
-                              </span>
-                            ) : (
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">N/A</span>
-                            )}
-                          </div>
+                          {userScore && (
+                            <span className={`text-xs font-bold rounded-md bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+                              {userScore}
+                            </span>
+                          )}
                           {nextLevelThreshold !== null && (
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Next:</span>
@@ -254,20 +344,21 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                         </p>
                       </div>
 
-                      {/* Desktop: Score Display */}
+                      {/* Desktop: Score Display with all details */}
                       <div className="hidden md:flex md:col-span-1 relative z-10 flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Score:</span>
-                          {userScore ? (
-                            <span className={`text-xs font-bold rounded-md bg-gradient-to-r ${gradient} bg-clip-text text-transparent border border-current border-opacity-20`}>
-                              {userScore}
-                            </span>
-                          ) : (
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">N/A</span>
-                          )}
-                        </div>
+
+                        {scoreDetails.length > 0 && (
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+                            {scoreDetails.map((detail, idx) => (
+                              <span key={idx} className="text-gray-600 dark:text-gray-400">
+                                <span className="font-medium">{detail.label}:</span>{' '}
+                                <span className={`font-semibold ${colors.text}`}>{detail.value}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         {nextLevelThreshold !== null && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Next:</span>
                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                               {formatThreshold(game.gameId, nextLevelThreshold)}

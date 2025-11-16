@@ -440,6 +440,7 @@ export function formatUserScore(gameId: string, score: any): string {
     case 'reaction-time':
       return `${score.fastest_time || 0}ms`
     case 'memory':
+      return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
     case 'visual-memory':
     case 'sequence-memory':
     case 'chimp-test':

@@ -343,3 +343,151 @@ export async function getChimpTestScores(filters?: { username?: string; limit?: 
   if (error) throw error
   return data
 }
+
+// Get all scores from all games
+export interface AllScoresEntry {
+  gameId: string
+  gameName: string
+  username: string
+  score: any
+  dateSubmitted: string | null
+}
+
+export async function getAllScores(): Promise<AllScoresEntry[]> {
+  const allScores: AllScoresEntry[] = []
+
+  // Fetch all scores from each game table
+  const [
+    aimTrainerScores,
+    typingTestScores,
+    memoryScores,
+    patternRecognitionScores,
+    reactionTimeScores,
+    numberMemoryScores,
+    visualMemoryScores,
+    stroopTestScores,
+    sequenceMemoryScores,
+    chimpTestScores
+  ] = await Promise.all([
+    getAimTrainerScores(),
+    getTypingTestScores(),
+    getMemoryScores(),
+    getPatternRecognitionScores(),
+    getReactionTimeScores(),
+    getNumberMemoryScores(),
+    getVisualMemoryScores(),
+    getStroopTestScores(),
+    getSequenceMemoryScores(),
+    getChimpTestScores()
+  ])
+
+  // Map each score to AllScoresEntry format
+  aimTrainerScores?.forEach(score => {
+    allScores.push({
+      gameId: 'aim-trainer',
+      gameName: 'Aim Trainer',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  typingTestScores?.forEach(score => {
+    allScores.push({
+      gameId: 'typing-test',
+      gameName: 'Typing Test',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  memoryScores?.forEach(score => {
+    allScores.push({
+      gameId: 'memory',
+      gameName: 'Memory Game',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  patternRecognitionScores?.forEach(score => {
+    allScores.push({
+      gameId: 'pattern-recognition',
+      gameName: 'Pattern Recognition',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  reactionTimeScores?.forEach(score => {
+    allScores.push({
+      gameId: 'reaction-time',
+      gameName: 'Reaction Time',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  numberMemoryScores?.forEach(score => {
+    allScores.push({
+      gameId: 'number-memory',
+      gameName: 'Number Memory',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  visualMemoryScores?.forEach(score => {
+    allScores.push({
+      gameId: 'visual-memory',
+      gameName: 'Visual Memory',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  stroopTestScores?.forEach(score => {
+    allScores.push({
+      gameId: 'stroop-test',
+      gameName: 'Stroop Test',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  sequenceMemoryScores?.forEach(score => {
+    allScores.push({
+      gameId: 'sequence-memory',
+      gameName: 'Sequence Memory',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  chimpTestScores?.forEach(score => {
+    allScores.push({
+      gameId: 'chimp-test',
+      gameName: 'Chimp Test',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  // Sort by date submitted (most recent first)
+  allScores.sort((a, b) => {
+    const dateA = a.dateSubmitted ? new Date(a.dateSubmitted).getTime() : 0
+    const dateB = b.dateSubmitted ? new Date(b.dateSubmitted).getTime() : 0
+    return dateB - dateA
+  })
+
+  return allScores
+}

@@ -362,7 +362,10 @@ BEGIN
         (SELECT json_build_object(
           'username', username,
           'accuracy', accuracy,
-          'reaction_time', reaction_time
+          'reaction_time', reaction_time,
+          'targets_hit', targets_hit,
+          'total_targets', total_targets,
+          'date_submitted', date_submitted
         ) 
         FROM aim_trainer_scores 
         WHERE accuracy = 100 
@@ -372,7 +375,10 @@ BEGIN
         (SELECT json_build_object(
           'username', username,
           'accuracy', accuracy,
-          'reaction_time', reaction_time
+          'reaction_time', reaction_time,
+          'targets_hit', targets_hit,
+          'total_targets', total_targets,
+          'date_submitted', date_submitted
         ) 
         FROM aim_trainer_scores 
         ORDER BY accuracy DESC, reaction_time ASC 
@@ -384,7 +390,10 @@ BEGIN
             -- First try to get user's perfect score
             (SELECT json_build_object(
               'accuracy', accuracy,
-              'reaction_time', reaction_time
+              'reaction_time', reaction_time,
+              'targets_hit', targets_hit,
+              'total_targets', total_targets,
+              'date_submitted', date_submitted
             ) 
             FROM aim_trainer_scores 
             WHERE username = p_username AND accuracy = 100
@@ -393,7 +402,10 @@ BEGIN
             -- Fallback: get user's best accuracy if no perfect score
             (SELECT json_build_object(
               'accuracy', accuracy,
-              'reaction_time', reaction_time
+              'reaction_time', reaction_time,
+              'targets_hit', targets_hit,
+              'total_targets', total_targets,
+              'date_submitted', date_submitted
             ) 
             FROM aim_trainer_scores 
             WHERE username = p_username
@@ -412,7 +424,10 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'wpm', wpm,
-        'accuracy', accuracy
+        'accuracy', accuracy,
+        'characters_typed', characters_typed,
+        'time_taken', time_taken,
+        'date_submitted', date_submitted
       ) FROM typing_test_scores 
       ORDER BY wpm DESC 
       LIMIT 1) as top_score,
@@ -420,7 +435,10 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'wpm', wpm,
-            'accuracy', accuracy
+            'accuracy', accuracy,
+            'characters_typed', characters_typed,
+            'time_taken', time_taken,
+            'date_submitted', date_submitted
           ) FROM typing_test_scores 
           WHERE username = p_username
           ORDER BY wpm DESC 
@@ -436,14 +454,20 @@ BEGIN
       (SELECT COUNT(*) FROM memory_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'level_reached', level_reached
+        'level_reached', level_reached,
+        'correct_sequences', correct_sequences,
+        'total_sequences', total_sequences,
+        'date_submitted', date_submitted
       ) FROM memory_scores 
       ORDER BY level_reached DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'level_reached', level_reached
+            'level_reached', level_reached,
+            'correct_sequences', correct_sequences,
+            'total_sequences', total_sequences,
+            'date_submitted', date_submitted
           ) FROM memory_scores 
           WHERE username = p_username
           ORDER BY level_reached DESC 
@@ -460,7 +484,9 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'patterns_solved', patterns_solved,
-        'time_taken', time_taken
+        'time_taken', time_taken,
+        'difficulty_level', difficulty_level,
+        'date_submitted', date_submitted
       ) FROM pattern_recognition_scores 
       ORDER BY patterns_solved DESC, time_taken ASC 
       LIMIT 1) as top_score,
@@ -468,7 +494,9 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'patterns_solved', patterns_solved,
-            'time_taken', time_taken
+            'time_taken', time_taken,
+            'difficulty_level', difficulty_level,
+            'date_submitted', date_submitted
           ) FROM pattern_recognition_scores 
           WHERE username = p_username
           ORDER BY patterns_solved DESC, time_taken ASC 
@@ -485,7 +513,9 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'average_time', average_time,
-        'fastest_time', fastest_time
+        'fastest_time', fastest_time,
+        'attempts', attempts,
+        'date_submitted', date_submitted
       ) FROM reaction_time_scores 
       ORDER BY average_time ASC 
       LIMIT 1) as top_score,
@@ -493,7 +523,9 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'average_time', average_time,
-            'fastest_time', fastest_time
+            'fastest_time', fastest_time,
+            'attempts', attempts,
+            'date_submitted', date_submitted
           ) FROM reaction_time_scores 
           WHERE username = p_username
           ORDER BY average_time ASC 
@@ -509,14 +541,16 @@ BEGIN
       (SELECT COUNT(*) FROM number_memory_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'longest_sequence', longest_sequence
+        'longest_sequence', longest_sequence,
+        'date_submitted', date_submitted
       ) FROM number_memory_scores 
       ORDER BY longest_sequence DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'longest_sequence', longest_sequence
+            'longest_sequence', longest_sequence,
+            'date_submitted', date_submitted
           ) FROM number_memory_scores 
           WHERE username = p_username
           ORDER BY longest_sequence DESC 
@@ -533,7 +567,8 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'level_reached', level_reached,
-        'total_patterns', total_patterns
+        'total_patterns', total_patterns,
+        'date_submitted', date_submitted
       ) FROM visual_memory_scores 
       ORDER BY level_reached DESC 
       LIMIT 1) as top_score,
@@ -541,7 +576,8 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'level_reached', level_reached,
-            'total_patterns', total_patterns
+            'total_patterns', total_patterns,
+            'date_submitted', date_submitted
           ) FROM visual_memory_scores 
           WHERE username = p_username
           ORDER BY level_reached DESC 
@@ -558,7 +594,9 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'correct_answers', correct_answers,
-        'total_questions', total_questions
+        'total_questions', total_questions,
+        'average_time', average_time,
+        'date_submitted', date_submitted
       ) FROM stroop_test_scores 
       ORDER BY correct_answers DESC 
       LIMIT 1) as top_score,
@@ -566,7 +604,9 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'correct_answers', correct_answers,
-            'total_questions', total_questions
+            'total_questions', total_questions,
+            'average_time', average_time,
+            'date_submitted', date_submitted
           ) FROM stroop_test_scores 
           WHERE username = p_username
           ORDER BY correct_answers DESC 
@@ -583,7 +623,8 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'level_reached', level_reached,
-        'longest_sequence', longest_sequence
+        'longest_sequence', longest_sequence,
+        'date_submitted', date_submitted
       ) FROM sequence_memory_scores 
       ORDER BY level_reached DESC 
       LIMIT 1) as top_score,
@@ -591,7 +632,8 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'level_reached', level_reached,
-            'longest_sequence', longest_sequence
+            'longest_sequence', longest_sequence,
+            'date_submitted', date_submitted
           ) FROM sequence_memory_scores 
           WHERE username = p_username
           ORDER BY level_reached DESC 
@@ -607,14 +649,20 @@ BEGIN
       (SELECT COUNT(*) FROM chimp_test_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'level_reached', level_reached
+        'level_reached', level_reached,
+        'numbers_remembered', numbers_remembered,
+        'attempts', attempts,
+        'date_submitted', date_submitted
       ) FROM chimp_test_scores 
       ORDER BY level_reached DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'level_reached', level_reached
+            'level_reached', level_reached,
+            'numbers_remembered', numbers_remembered,
+            'attempts', attempts,
+            'date_submitted', date_submitted
           ) FROM chimp_test_scores 
           WHERE username = p_username
           ORDER BY level_reached DESC 

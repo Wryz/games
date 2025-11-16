@@ -106,6 +106,8 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${score.correct_answers}/${score.total_questions}`
             case 'number-memory':
               return `${score.longest_sequence} digits`
+            case 'memory':
+              return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
             default:
             return `Level ${score.level_reached}`
         }
