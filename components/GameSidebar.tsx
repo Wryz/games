@@ -2,7 +2,7 @@
 
 import { Game, GAMES } from '@/types/games'
 import { useUser } from '@/contexts/UserContext'
-import { HomeIcon } from './icons/GameIcons'
+import { HomeIcon, MemoryIcon } from './icons/GameIcons'
 import ThemeToggle from './ThemeToggle'
 import UsernameInput from './UsernameInput'
 import { usePostHog } from 'posthog-js/react'
@@ -38,6 +38,8 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
     // Navigate to the game URL without scrolling to top
     if (gameId === 'home') {
       router.push('/', { scroll: true })
+    } else if (gameId === 'brain-levels') {
+      router.push('/brain-levels', { scroll: true })
     } else {
       router.push(`/games/${gameId}`, { scroll: true })
     }
@@ -87,8 +89,9 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
           />
         </div>
 
-        {/* Home Button */}
-        <div className="mb-6">
+        {/* Home and Brain Levels */}
+        <div className="mb-6 space-y-1">
+          {/* Home Button */}
           <button
             onClick={() => handleGameClick('home', 'Home')}
             className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
@@ -111,6 +114,33 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                   : 'text-gray-700 dark:text-gray-100'
               }`}>
                 Home
+              </div>
+            </div>
+          </button>
+
+          {/* Your Progress Button */}
+          <button
+            onClick={() => handleGameClick('brain-levels', 'Your Progress')}
+            className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
+              selectedGame === 'brain-levels'
+                ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <MemoryIcon 
+                size={24} 
+                className={selectedGame === 'brain-levels'
+                  ? 'text-blue-600 dark:text-blue-400' 
+                  : 'text-gray-600 dark:text-gray-400'
+                } 
+              />
+              <div className={`font-medium text-sm ${
+                selectedGame === 'brain-levels'
+                  ? 'text-blue-700 dark:text-blue-300'
+                  : 'text-gray-700 dark:text-gray-100'
+              }`}>
+                Your Progress
               </div>
             </div>
           </button>

@@ -304,9 +304,6 @@ export default function Home({ onGameSelect }: HomeProps) {
           {/* Enhanced Game Overview Grid */}
           <div>
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                Choose Your Challenge
-              </h2>
               {gameStatsLoading && gameStats.length > 0 && (
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>

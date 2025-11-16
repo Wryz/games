@@ -194,18 +194,10 @@ export const SequenceMemoryIcon = ({ className = "", size = 24 }: IconProps) => 
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    {/* Circle */}
-    <circle cx="6" cy="6" r="3" fill="currentColor" opacity="0.8"/>
-    {/* Triangle */}
-    <path d="M12 3 L15 8 L9 8 Z" fill="currentColor" opacity="0.6"/>
-    {/* Square */}
-    <rect x="16" y="3" width="6" height="6" fill="currentColor" opacity="0.4"/>
-    {/* Star */}
-    <path d="M6 18 L6.5 16 L5 15 L7 15 L7.5 13 L8 15 L10 15 L8.5 16 L9 18 L7.5 17 Z" fill="currentColor" opacity="0.9"/>
-    {/* Pentagon */}
-    <path d="M15 12 L17.5 13.5 L16.5 16.5 L13.5 16.5 L12.5 13.5 Z" fill="currentColor" opacity="0.5"/>
-    {/* Diamond */}
-    <path d="M19 15 L21 18 L19 21 L17 18 Z" fill="currentColor" opacity="0.7"/>
+    <path
+      d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z"
+      fill="currentColor"
+    />
   </svg>
 )
 
