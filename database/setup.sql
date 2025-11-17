@@ -112,6 +112,16 @@ CREATE TABLE IF NOT EXISTS chimp_test_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Time Estimation scores
+CREATE TABLE IF NOT EXISTS time_estimation_scores (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  average_accuracy INTEGER NOT NULL, -- average error in milliseconds (lower is better)
+  best_accuracy INTEGER NOT NULL, -- best (lowest) error in milliseconds (lower is better)
+  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- =====================================================
 -- 2. CREATE INDEXES
 -- =====================================================
@@ -146,6 +156,9 @@ CREATE INDEX IF NOT EXISTS idx_sequence_memory_date ON sequence_memory_scores(da
 
 CREATE INDEX IF NOT EXISTS idx_chimp_test_username ON chimp_test_scores(username);
 CREATE INDEX IF NOT EXISTS idx_chimp_test_date ON chimp_test_scores(date_submitted);
+
+CREATE INDEX IF NOT EXISTS idx_time_estimation_username ON time_estimation_scores(username);
+CREATE INDEX IF NOT EXISTS idx_time_estimation_date ON time_estimation_scores(date_submitted);
 
 -- =====================================================
 -- 3. CREATE RPC FUNCTIONS FOR SCORE SUBMISSION
@@ -322,6 +335,23 @@ DECLARE
 BEGIN
   INSERT INTO chimp_test_scores (username, patterns_remembered)
   VALUES (p_username, p_patterns_remembered)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit time estimation score
+CREATE OR REPLACE FUNCTION submit_time_estimation_score(
+  p_username VARCHAR(50),
+  p_average_accuracy INTEGER,
+  p_best_accuracy INTEGER
+) RETURNS time_estimation_scores AS $$
+DECLARE
+  new_score time_estimation_scores;
+BEGIN
+  INSERT INTO time_estimation_scores (username, average_accuracy, best_accuracy)
+  VALUES (p_username, p_average_accuracy, p_best_accuracy)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -657,6 +687,33 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+    
+    UNION ALL
+    
+    -- Time Estimation
+    SELECT 
+      'time-estimation' as game_id,
+      (SELECT COUNT(*) FROM time_estimation_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'average_accuracy', average_accuracy,
+        'best_accuracy', best_accuracy,
+        'date_submitted', date_submitted
+      ) FROM time_estimation_scores 
+      ORDER BY best_accuracy ASC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'average_accuracy', average_accuracy,
+            'best_accuracy', best_accuracy,
+            'date_submitted', date_submitted
+          ) FROM time_estimation_scores 
+          WHERE username = p_username
+          ORDER BY best_accuracy ASC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;
@@ -787,6 +844,17 @@ BEGIN
       date_submitted
     FROM chimp_test_scores
     
+    UNION ALL
+    
+    -- Time Estimation
+    SELECT 
+      'time-estimation' as game_id,
+      'Time Estimation' as game_name,
+      username,
+      json_build_object('average_accuracy', average_accuracy, 'best_accuracy', best_accuracy) as score_value,
+      date_submitted
+    FROM time_estimation_scores
+    
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;
@@ -810,6 +878,7 @@ ALTER TABLE visual_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stroop_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sequence_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chimp_test_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE time_estimation_scores ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- 4. CREATE RLS POLICIES (PUBLIC ACCESS)
@@ -933,6 +1002,18 @@ CREATE POLICY "Allow public read access on chimp_test_scores" ON chimp_test_scor
 CREATE POLICY "Allow public insert access on chimp_test_scores" ON chimp_test_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on chimp_test_scores" ON chimp_test_scores
+    FOR UPDATE USING (true);
+
+-- Policies for time_estimation_scores
+DROP POLICY IF EXISTS "Allow public read access on time_estimation_scores" ON time_estimation_scores;
+DROP POLICY IF EXISTS "Allow public insert access on time_estimation_scores" ON time_estimation_scores;
+DROP POLICY IF EXISTS "Allow public update access on time_estimation_scores" ON time_estimation_scores;
+
+CREATE POLICY "Allow public read access on time_estimation_scores" ON time_estimation_scores
+    FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on time_estimation_scores" ON time_estimation_scores
+    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on time_estimation_scores" ON time_estimation_scores
     FOR UPDATE USING (true);
 
 -- =====================================================

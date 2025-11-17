@@ -19,7 +19,9 @@ import type {
   SequenceMemoryScore,
   SequenceMemoryScoreInsert,
   ChimpTestScore,
-  ChimpTestScoreInsert
+  ChimpTestScoreInsert,
+  TimeEstimationScore,
+  TimeEstimationScoreInsert
 } from './supabase'
 
 // Score submission functions using RPC
@@ -142,6 +144,18 @@ export async function submitChimpTestScore(score: ChimpTestScoreInsert) {
     .rpc('submit_chimp_test_score', {
       p_username: score.username,
       p_patterns_remembered: score.patterns_remembered
+    })
+  
+  if (error) throw error
+  return data
+}
+
+export async function submitTimeEstimationScore(score: TimeEstimationScoreInsert) {
+  const { data, error } = await supabase
+    .rpc('submit_time_estimation_score', {
+      p_username: score.username,
+      p_average_accuracy: score.average_accuracy,
+      p_best_accuracy: score.best_accuracy
     })
   
   if (error) throw error
@@ -341,6 +355,25 @@ export async function getChimpTestScores(filters?: { username?: string; limit?: 
   return data
 }
 
+export async function getTimeEstimationScores(filters?: { username?: string; limit?: number }) {
+  let query = supabase
+    .from('time_estimation_scores')
+    .select('*')
+    .order('best_accuracy', { ascending: true })
+
+  if (filters?.username) {
+    query = query.eq('username', filters.username)
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
 // Get all scores from all games
 export interface AllScoresEntry {
   gameId: string
@@ -364,7 +397,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     visualMemoryScores,
     stroopTestScores,
     sequenceMemoryScores,
-    chimpTestScores
+    chimpTestScores,
+    timeEstimationScores
   ] = await Promise.all([
     getAimTrainerScores(),
     getTypingTestScores(),
@@ -375,7 +409,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     getVisualMemoryScores(),
     getStroopTestScores(),
     getSequenceMemoryScores(),
-    getChimpTestScores()
+    getChimpTestScores(),
+    getTimeEstimationScores()
   ])
 
   // Map each score to AllScoresEntry format
@@ -473,6 +508,16 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     allScores.push({
       gameId: 'chimp-test',
       gameName: 'Chimp Test',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  timeEstimationScores?.forEach(score => {
+    allScores.push({
+      gameId: 'time-estimation',
+      gameName: 'Time Estimation',
       username: score.username,
       score: score,
       dateSubmitted: score.date_submitted

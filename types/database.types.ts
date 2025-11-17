@@ -269,6 +269,30 @@ export type Database = {
         }
         Relationships: []
       }
+      time_estimation_scores: {
+        Row: {
+          average_accuracy: number
+          best_accuracy: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_accuracy: number
+          best_accuracy: number
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_accuracy?: number
+          best_accuracy?: number
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -314,6 +338,26 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "chimp_test_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_time_estimation_score: {
+        Args: {
+          p_average_accuracy: number
+          p_best_accuracy: number
+          p_username: string
+        }
+        Returns: {
+          average_accuracy: number
+          best_accuracy: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "time_estimation_scores"
           isOneToOne: true
           isSetofReturn: false
         }
