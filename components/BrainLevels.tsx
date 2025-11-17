@@ -13,6 +13,8 @@ import {
 import { useOverview } from '@/contexts/OverviewContext'
 import EducationBadge from './EducationBadge'
 import ScoresOverview from './ScoresOverview'
+import GameBadge from './GameBadge'
+import { GAME_BADGES, BUILT_GAMES, getEarnedBadges } from '@/lib/badges'
 
 interface BrainLevelsProps {
   username?: string
@@ -438,60 +440,59 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
         })}
       </div>
 
-      {/* Badge Gallery */}
+      {/* Game Badges Gallery */}
       <div className="mt-12">
-        <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 xl:grid-cols-8 gap-3 md:gap-4">
-          {Array.from({ length: 20 }, (_, i) => i + 1).map((level, index) => {
-            const isAchieved = achievedLevels.has(level)
-            const isHighlighted = level <= highestLevel // Highlight all badges up to highest level achieved
-            const educationLevel = EDUCATION_LEVELS[level] || 'Unknown'
-            
-            // Use category colors for highlighted badges, gray for unhighlighted
-            const categoryIndex = (level - 1) % 5
-            const categoryKeys: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive', 'computation']
-            const categoryKey = categoryKeys[categoryIndex]
-            const gradient = categoryGradients[categoryKey]
-            const badgeColor = isHighlighted
-              ? categoryColors[categoryKey].hex
-              : '#9ca3af' // Gray for unhighlighted
-            
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          Game Badges
+        </h2>
+        <div className="space-y-8">
+          {BUILT_GAMES.map((gameId, gameIndex) => {
+            const game = GAMES.find(g => g.id === gameId)
+            if (!game) return null
+
+            const gameStat = gameStats.find(gs => gs.id === gameId)
+            const userScore = gameStat?.userBest?.score || null
+            const earnedBadges = getEarnedBadges(gameId, userScore)
+            const allBadges = GAME_BADGES[gameId] || []
+
             return (
               <div
-                key={level}
-                className={`group/badge relative flex flex-col items-center justify-between p-3 md:p-4 rounded-xl transition-all duration-300 transform aspect-square min-w-[80px] max-w-[200px] w-full ${
-                  isHighlighted
-                    ? `bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-2 border-gray-300 dark:border-gray-600 shadow-md hover:scale-110 hover:shadow-xl hover:z-10`
-                    : 'bg-gray-50 dark:bg-gray-800/30 border-2 border-gray-200 dark:border-gray-700 opacity-40'
-                }`}
+                key={gameId}
+                className="group/game-badges relative"
                 style={{
-                  animation: `fadeInUp 0.5s ease-out ${index * 0.03}s both`,
+                  animation: `fadeInUp 0.6s ease-out ${gameIndex * 0.1}s both`,
                 }}
               >
-                {/* Animated glow on hover for highlighted badges */}
-                {isHighlighted && (
-                  <div className={`absolute inset-0 rounded-xl bg-gradient-to-r ${gradient} opacity-0 group-hover/badge:opacity-20 transition-opacity duration-300 -z-10 blur-md`} />
-                )}
-                
-                {/* Pulsing indicator for achieved badges */}
-                {isAchieved && (
-                  <>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-ping shadow-lg" />
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg" />
-                  </>
-                )}
-                
-                <div className={`relative z-10 w-full flex items-center justify-center transform transition-all duration-300 ${
-                  isHighlighted 
-                    ? 'scale-100 group-hover/badge:scale-110 group-hover/badge:rotate-6' 
-                    : 'scale-75 opacity-50'
-                }`}>
-                  <EducationBadge level={level} categoryColor={badgeColor} size={56} />
+                {/* Game Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <game.icon 
+                    size={24} 
+                    className="text-gray-700 dark:text-gray-300"
+                  />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {game.name}
+                  </h3>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {earnedBadges.length} / {allBadges.length} badges earned
+                  </span>
                 </div>
-                
-                <div className="text-center relative z-10 w-full">
-                  <p className={`text-xs font-semibold ${isHighlighted ? categoryColors[categoryKey].text : 'text-gray-400 dark:text-gray-500'}`}>
-                    {educationLevel}
-                  </p>
+
+                {/* Badges Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {allBadges.map((badge, badgeIndex) => {
+                    const earned = earnedBadges.some(eb => eb.id === badge.id)
+                    return (
+                      <GameBadge
+                        key={badge.id}
+                        tier={badge.tier}
+                        name={badge.name}
+                        description={badge.description}
+                        earned={earned}
+                        size="md"
+                        gameName={game.name}
+                      />
+                    )
+                  })}
                 </div>
               </div>
             )

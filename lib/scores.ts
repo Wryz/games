@@ -231,7 +231,7 @@ export async function getReactionTimeScores(filters?: { username?: string; limit
   let query = supabase
     .from('reaction_time_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('average_time', { ascending: true })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)

@@ -186,7 +186,7 @@ export default function ReactionTime() {
       loading={loading}
       onRefresh={loadScores}
       formatScore={formatScore}
-      sortKey="fastest_time"
+      sortKey="average_time"
       sortDirection="asc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">

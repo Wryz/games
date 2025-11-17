@@ -44,7 +44,7 @@ export default function UsernameGate({ children }: UsernameGateProps) {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-md w-full mx-4">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Enter a Username
+              Play with a Username (Optional)
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
               To track your scores on the leaderboard, please enter a username
