@@ -398,7 +398,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                           </div>
                           
                           {/* Games Grid for this Category */}
-                          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 items-stretch">
                             {games.map((game, index) => {
                               const categoryColorsMap = {
                                 motor: 'from-blue-500 to-blue-600',
@@ -468,7 +468,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                                     hasTopScore 
                                       ? categoryBackgroundsMap[game.category as keyof typeof categoryBackgroundsMap]
                                       : 'bg-white dark:bg-gray-800/50'
-                                  } rounded-xl md:rounded-2xl border-2 ${categoryBorderColorsMap[game.category as keyof typeof categoryBorderColorsMap]} p-3 md:p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlowMap[game.category as keyof typeof categoryGlowMap]}`}
+                                  } rounded-xl md:rounded-2xl border-2 ${categoryBorderColorsMap[game.category as keyof typeof categoryBorderColorsMap]} p-3 md:p-6 cursor-pointer h-full flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlowMap[game.category as keyof typeof categoryGlowMap]}`}
                                   style={{
                                     animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
                                   }}
@@ -494,9 +494,22 @@ export default function Home({ onGameSelect }: HomeProps) {
                                       
                                       {/* Second div: Title, top game score, and top game scorer */}
                                       <div>
-                                        <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
-                                          {game.name}
-                                        </h3>
+                                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                          <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
+                                            {game.name}
+                                          </h3>
+                                          {(game.id === 'pattern-recognition' || game.id === 'stroop-test' || game.id === 'chimp-test' || game.id === 'time-estimation') && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              Beta
+                                            </span>
+                                          )}
+                                          {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
+                                            game.id === 'word-search' || game.id === 'maze' || game.id === 'anagrams' || game.id === 'countries') && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              Soon
+                                            </span>
+                                          )}
+                                        </div>
                                         {/* Top Scorer */}
                                         {game.topScore ? (
                                           <div className="text-xs mt-0.5">
@@ -521,9 +534,22 @@ export default function Home({ onGameSelect }: HomeProps) {
                                         <game.icon size={36} className="text-white drop-shadow-sm" />
                                       </div>
                                       <div className="flex-1 min-w-0 pr-0">
-                                        <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight mb-2`}>
-                                          {game.name}
-                                        </h3>
+                                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                                          <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
+                                            {game.name}
+                                          </h3>
+                                          {(game.id === 'pattern-recognition' || game.id === 'stroop-test' || game.id === 'chimp-test' || game.id === 'time-estimation') && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              Beta
+                                            </span>
+                                          )}
+                                          {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
+                                            game.id === 'word-search' || game.id === 'maze' || game.id === 'anagrams' || game.id === 'countries') && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              Soon
+                                            </span>
+                                          )}
+                                        </div>
                                         {/* Top Scorer */}
                                         {game.topScore ? (
                                           <div className="text-xs">
