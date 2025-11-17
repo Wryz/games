@@ -142,8 +142,8 @@ export async function submitChimpTestScore(score: ChimpTestScoreInsert) {
     .rpc('submit_chimp_test_score', {
       p_username: score.username,
       p_level_reached: score.level_reached,
-      p_numbers_remembered: score.numbers_remembered,
-      p_attempts: score.attempts
+      p_patterns_remembered: score.patterns_remembered,
+      p_total_patterns: score.total_patterns
     })
   
   if (error) throw error

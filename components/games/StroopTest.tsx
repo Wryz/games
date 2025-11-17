@@ -10,16 +10,17 @@ import type { StroopTestScore } from '@/lib/supabase'
 
 type GameState = 'playing' | 'wrong' | 'finished'
 
+// Colors ordered from coolest to warmest for easier selection
 const COLORS = [
-  { name: 'RED', value: 'red', cssColor: '#dc2626' },
-  { name: 'BLUE', value: 'blue', cssColor: '#2563eb' },
-  { name: 'GREEN', value: 'green', cssColor: '#16a34a' },
-  { name: 'YELLOW', value: 'yellow', cssColor: '#ca8a04' },
-  { name: 'ORANGE', value: 'orange', cssColor: '#ea580c' },
-  { name: 'PURPLE', value: 'purple', cssColor: '#9333ea' },
-  { name: 'PINK', value: 'pink', cssColor: '#db2777' },
-  { name: 'CYAN', value: 'cyan', cssColor: '#06b6d4' },
-  { name: 'BROWN', value: 'brown', cssColor: '#78350f' },
+  { name: 'CYAN', value: 'cyan', cssColor: '#06b6d4' },      // Coolest
+  { name: 'BLUE', value: 'blue', cssColor: '#2563eb' },     // Cool
+  { name: 'PURPLE', value: 'purple', cssColor: '#9333ea' }, // Cool
+  { name: 'GREEN', value: 'green', cssColor: '#16a34a' },    // Cool
+  { name: 'YELLOW', value: 'yellow', cssColor: '#ca8a04' }, // Warm
+  { name: 'PINK', value: 'pink', cssColor: '#db2777' },     // Warm
+  { name: 'ORANGE', value: 'orange', cssColor: '#ea580c' }, // Warm
+  { name: 'RED', value: 'red', cssColor: '#dc2626' },       // Warm
+  { name: 'BROWN', value: 'brown', cssColor: '#78350f' },  // Warmest
 ]
 
 export default function StroopTest() {

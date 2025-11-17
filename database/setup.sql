@@ -108,8 +108,8 @@ CREATE TABLE IF NOT EXISTS chimp_test_scores (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) NOT NULL,
   level_reached INTEGER NOT NULL,
-  numbers_remembered INTEGER NOT NULL,
-  attempts INTEGER NOT NULL,
+  patterns_remembered INTEGER NOT NULL,
+  total_patterns INTEGER NOT NULL,
   date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -318,14 +318,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION submit_chimp_test_score(
   p_username VARCHAR(50),
   p_level_reached INTEGER,
-  p_numbers_remembered INTEGER,
-  p_attempts INTEGER
+  p_patterns_remembered INTEGER,
+  p_total_patterns INTEGER
 ) RETURNS chimp_test_scores AS $$
 DECLARE
   new_score chimp_test_scores;
 BEGIN
-  INSERT INTO chimp_test_scores (username, level_reached, numbers_remembered, attempts)
-  VALUES (p_username, p_level_reached, p_numbers_remembered, p_attempts)
+  INSERT INTO chimp_test_scores (username, level_reached, patterns_remembered, total_patterns)
+  VALUES (p_username, p_level_reached, p_patterns_remembered, p_total_patterns)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -646,8 +646,7 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'level_reached', level_reached,
-        'numbers_remembered', numbers_remembered,
-        'attempts', attempts,
+        'total_patterns', total_patterns,
         'date_submitted', date_submitted
       ) FROM chimp_test_scores 
       ORDER BY level_reached DESC 
@@ -656,8 +655,7 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'level_reached', level_reached,
-            'numbers_remembered', numbers_remembered,
-            'attempts', attempts,
+            'total_patterns', total_patterns,
             'date_submitted', date_submitted
           ) FROM chimp_test_scores 
           WHERE username = p_username

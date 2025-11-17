@@ -46,27 +46,27 @@ export type Database = {
       }
       chimp_test_scores: {
         Row: {
-          attempts: number
           date_submitted: string | null
           id: number
           level_reached: number
-          numbers_remembered: number
+          patterns_remembered: number
+          total_patterns: number
           username: string
         }
         Insert: {
-          attempts: number
           date_submitted?: string | null
           id?: number
           level_reached: number
-          numbers_remembered: number
+          patterns_remembered: number
+          total_patterns: number
           username: string
         }
         Update: {
-          attempts?: number
           date_submitted?: string | null
           id?: number
           level_reached?: number
-          numbers_remembered?: number
+          patterns_remembered?: number
+          total_patterns?: number
           username?: string
         }
         Relationships: []
@@ -308,17 +308,17 @@ export type Database = {
       }
       submit_chimp_test_score: {
         Args: {
-          p_attempts: number
           p_level_reached: number
-          p_numbers_remembered: number
+          p_patterns_remembered: number
+          p_total_patterns: number
           p_username: string
         }
         Returns: {
-          attempts: number
           date_submitted: string | null
           id: number
           level_reached: number
-          numbers_remembered: number
+          patterns_remembered: number
+          total_patterns: number
           username: string
         }
         SetofOptions: {
@@ -449,28 +449,48 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_stroop_test_score: {
-        Args: {
-          p_average_time: number
-          p_correct_answers: number
-          p_total_questions: number
-          p_username: string
-        }
-        Returns: {
-          average_time: number
-          correct_answers: number
-          date_submitted: string | null
-          id: number
-          total_questions: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "stroop_test_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      submit_stroop_test_score:
+        | {
+            Args: {
+              p_average_time: number
+              p_correct_answers: number
+              p_total_questions: number
+              p_username: string
+            }
+            Returns: {
+              average_time: number
+              correct_answers: number
+              date_submitted: string | null
+              id: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "stroop_test_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_average_time: number
+              p_correct_answers: number
+              p_username: string
+            }
+            Returns: {
+              average_time: number
+              correct_answers: number
+              date_submitted: string | null
+              id: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "stroop_test_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       submit_typing_test_score: {
         Args: {
           p_accuracy: number
