@@ -173,12 +173,17 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                           : 'text-gray-600 dark:text-gray-400'
                         } 
                       />
-                      <div className={`font-medium text-sm ${
+                      <div className={`font-medium text-sm flex items-center gap-2 ${
                         selectedGame === game.id
                           ? 'text-blue-700 dark:text-blue-300'
                           : 'text-gray-700 dark:text-gray-100'
                       }`}>
                         {game.name}
+                        {game.id === 'pattern-recognition' && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            Beta
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>

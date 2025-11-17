@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, ReactNode } from 'react'
+import { useState, ReactNode } from 'react'
 import { useUser } from '@/contexts/UserContext'
 
 interface UsernameGateProps {
@@ -13,15 +13,8 @@ export default function UsernameGate({ children }: UsernameGateProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSkipped, setHasSkipped] = useState(false)
 
-  // Check if user has previously skipped
-  useEffect(() => {
-    const skipped = localStorage.getItem('brainbench-username-skipped')
-    if (skipped === 'true') {
-      setHasSkipped(true)
-    }
-  }, [])
-
-  // If user has username or has skipped, show the game
+  // Only show the gate if user doesn't have a username
+  // Skip state is session-only (not persisted)
   if (username || hasSkipped) {
     return <>{children}</>
   }
@@ -33,8 +26,6 @@ export default function UsernameGate({ children }: UsernameGateProps) {
     setIsSubmitting(true)
     try {
       setUsername(inputValue.trim())
-      // Clear skip flag when username is set
-      localStorage.removeItem('brainbench-username-skipped')
       setHasSkipped(false)
     } finally {
       setIsSubmitting(false)
@@ -42,7 +33,7 @@ export default function UsernameGate({ children }: UsernameGateProps) {
   }
 
   const handleSkip = () => {
-    localStorage.setItem('brainbench-username-skipped', 'true')
+    // Skip for this session only (not persisted)
     setHasSkipped(true)
   }
 

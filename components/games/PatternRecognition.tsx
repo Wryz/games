@@ -104,7 +104,13 @@ const shapes = [
   }
 ]
 
-type PatternType = 'simple' | 'alternating' | 'progressive' | 'repeating' | 'reverse' | 'skip' | 'mirror'
+type PatternType = 'simple' | 'alternating' | 'progressive' | 'repeating' | 'reverse'
+
+// Pattern item with shape and color (null shapeId means gap)
+type PatternItem = {
+  shapeId: string | null
+  color: string
+}
 
 // Available colors for random assignment
 const availableColors = [
@@ -119,11 +125,6 @@ const availableColors = [
   'text-cyan-600 dark:text-cyan-400',
 ]
 
-// Pattern item with shape and color
-type PatternItem = {
-  shapeId: string
-  color: string
-}
 
 export default function PatternRecognition() {
   const [scores, setScores] = useState<PatternRecognitionScore[]>([])
@@ -214,257 +215,284 @@ export default function PatternRecognition() {
     return `${score.patterns_solved} patterns (${score.time_taken}s)`
   }
 
+  // Get available shapes based on level (more shapes unlock as level increases)
+  const getAvailableShapes = useCallback((level: number) => {
+    // Start with 3 shapes, add more as level increases
+    const numShapes = Math.min(3 + Math.floor(level / 5), shapes.length)
+    return shapes.slice(0, numShapes)
+  }, [])
+
+  // Validate pattern is solvable - ensure enough information is present
+  const validatePattern = useCallback((pattern: PatternItem[], answer: string | string[], type: PatternType): boolean => {
+    // Count non-gap items
+    const visibleItems = pattern.filter(item => item.shapeId !== null)
+    if (visibleItems.length < 2) return false // Need at least 2 visible items
+    
+    // For reverse patterns, need at least 4 visible items to show the reverse clearly
+    if (type === 'reverse' && visibleItems.length < 4) return false
+    
+    // Ensure answer shapes are present in visible pattern (for validation)
+    const visibleShapeIds = new Set(visibleItems.map(item => item.shapeId))
+    const answerIds = Array.isArray(answer) ? answer : [answer]
+    
+    // All answer shapes should be in the available shapes pool (not necessarily visible)
+    // This is fine - user can select from the shape grid
+    
+    return true
+  }, [])
+
   // Generate pattern based on difficulty
   const generatePattern = useCallback((level: number): { pattern: PatternItem[], type: PatternType, answer: string | string[], colorMap: Record<string, string> } => {
-    // Increase pattern length more gradually - slower growth
-    const baseLength = Math.min(3 + Math.floor(level / 3), 6)
-    // Pattern types unlock much more slowly - keep simple patterns longer
-    // After all types are unlocked (level 24+), cycle through them to prevent repetition
-    const allTypes: PatternType[] = ['simple', 'alternating', 'progressive', 'repeating', 'reverse', 'skip', 'mirror']
+    // Increase pattern length more gradually - slower growth, but longer for reverse
+    const baseLength = Math.min(3 + Math.floor(level / 3), 8)
+    // Pattern types unlock gradually
+    const allTypes: PatternType[] = ['simple', 'alternating', 'progressive', 'repeating', 'reverse']
     const unlockLevel = Math.floor(level / 4)
-    // Cycle through types: first 7 levels unlock each type, then cycle
+    // Cycle through types
     const typeIndex = unlockLevel % allTypes.length
     const type = allTypes[typeIndex]
+    
+    // Get available shapes for this level
+    const availableShapesForLevel = getAvailableShapes(level)
     
     // Helper to assign random color to a shape
     const assignRandomColor = (): string => {
       return availableColors[Math.floor(Math.random() * availableColors.length)]
     }
     
-    let shapePattern: string[] = []
+    // Helper to introduce gaps in pattern (null means gap)
+    const introduceGaps = (pattern: string[], gapProbability: number): (string | null)[] => {
+      // Don't add gaps to first 2 items or last item (need context)
+      return pattern.map((shapeId, index) => {
+        if (index < 2 || index === pattern.length - 1) return shapeId
+        if (Math.random() < gapProbability) return null
+        return shapeId
+      })
+    }
+    
+    let shapePattern: (string | null)[] = []
     let answer: string | string[]
     // For higher levels (8+), require 2 shapes as answer
     const requiresTwoShapes = level >= 8
+    // Gap probability increases with level (but not too high)
+    const gapProbability = Math.min(0.2 + (level - 1) * 0.05, 0.4)
 
-    switch (type) {
-      case 'simple':
-        // Simple sequence: same shape repeated (only for very early levels)
-        if (level <= 2) {
-          const shape = shapes[Math.floor(Math.random() * shapes.length)]
-          shapePattern = Array(baseLength).fill(shape.id)
-          answer = shape.id
-        } else {
-          // After level 2, make it alternating
-          const shapePair = [
-            shapes[Math.floor(Math.random() * shapes.length)],
-            shapes[Math.floor(Math.random() * shapes.length)]
-          ]
-          while (shapePair[0].id === shapePair[1].id) {
-            shapePair[1] = shapes[Math.floor(Math.random() * shapes.length)]
-          }
-          shapePattern = Array(baseLength).fill(0).map((_, i) => shapePair[i % 2].id)
-          answer = shapePair[baseLength % 2].id
-        }
-        break
-
-      case 'alternating':
-        // Alternating pattern: A, B, A, B, ...
-        const shapePair = [
-          shapes[Math.floor(Math.random() * shapes.length)],
-          shapes[Math.floor(Math.random() * shapes.length)]
-        ]
-        while (shapePair[0].id === shapePair[1].id) {
-          shapePair[1] = shapes[Math.floor(Math.random() * shapes.length)]
-        }
-        shapePattern = Array(baseLength).fill(0).map((_, i) => shapePair[i % 2].id)
-        // For higher levels, return both shapes in the pair
-        if (requiresTwoShapes) {
-          answer = [shapePair[0].id, shapePair[1].id]
-        } else {
-          answer = shapePair[baseLength % 2].id
-        }
-        break
-
-      case 'progressive':
-        // Progressive: sequential shapes in order (A, B, C, A, B, C, ...)
-        // Use exactly 3 shapes for clarity
-        const progressiveShapes: string[] = []
-        const availableForProgressive = [...shapes]
-        for (let i = 0; i < 3; i++) {
-          const randomIdx = Math.floor(Math.random() * availableForProgressive.length)
-          progressiveShapes.push(availableForProgressive[randomIdx].id)
-          availableForProgressive.splice(randomIdx, 1)
-        }
-        const startIndex = Math.floor(Math.random() * progressiveShapes.length)
-        shapePattern = Array(baseLength).fill(0).map((_, i) => progressiveShapes[(startIndex + i) % progressiveShapes.length])
-        // For higher levels, return next 2 shapes in sequence
-        if (requiresTwoShapes) {
-          const nextIndex1 = (startIndex + baseLength) % progressiveShapes.length
-          const nextIndex2 = (startIndex + baseLength + 1) % progressiveShapes.length
-          answer = [progressiveShapes[nextIndex1], progressiveShapes[nextIndex2]]
-        } else {
-          answer = progressiveShapes[(startIndex + baseLength) % progressiveShapes.length]
-        }
-        break
-
-      case 'repeating':
-        // Repeating group: [A, B], [A, B], ... - always use 2 shapes for clarity
-        const groupSize = 2
-        // Pick 2 distinct shapes
-        const availableShapes = [...shapes]
-        const group: string[] = []
-        for (let i = 0; i < groupSize; i++) {
-          const randomIdx = Math.floor(Math.random() * availableShapes.length)
-          group.push(availableShapes[randomIdx].id)
-          availableShapes.splice(randomIdx, 1)
-        }
-        
-        const fullGroups = Math.floor(baseLength / groupSize)
-        shapePattern = Array(fullGroups).fill(group).flat()
-        const remainder = baseLength % groupSize
-        if (remainder > 0) {
-          shapePattern = shapePattern.concat(group.slice(0, remainder))
-        }
-        // For higher levels, return the next group (2 shapes)
-        if (requiresTwoShapes) {
-          answer = group
-        } else {
-          answer = group[remainder]
-        }
-        break
-
-      case 'reverse':
-        // Reverse pattern: A, B, C, B, A, B, C, ... (goes forward then backward)
-        // Use 3 shapes for a clear reverse pattern
-        const reverseShapes: string[] = []
-        const availableForReverse = [...shapes]
-        const reverseCount = Math.min(3, shapes.length)
-        for (let i = 0; i < reverseCount; i++) {
-          const randomIdx = Math.floor(Math.random() * availableForReverse.length)
-          reverseShapes.push(availableForReverse[randomIdx].id)
-          availableForReverse.splice(randomIdx, 1)
-        }
-        
-        // Create pattern: A, B, C, B, A, B, C, ...
-        // Pattern oscillates: 0, 1, 2, 1, 0, 1, 2, 1, 0, ...
-        shapePattern = []
-        let direction = 1
-        let pos = 0
-        for (let i = 0; i < baseLength; i++) {
-          shapePattern.push(reverseShapes[pos])
-          pos += direction
-          // Reverse direction when hitting boundaries
-          if (pos >= reverseShapes.length - 1) {
-            direction = -1
-          } else if (pos <= 0) {
-            direction = 1
-          }
-        }
-        // Calculate next position - continue in current direction
-        let nextPos = pos + direction
-        // If next position would be out of bounds, reverse direction
-        if (nextPos >= reverseShapes.length) {
-          direction = -1
-          nextPos = reverseShapes.length - 2
-        } else if (nextPos < 0) {
-          direction = 1
-          nextPos = 1
-        }
-        if (requiresTwoShapes) {
-          // For two shapes, return next two in sequence
-          let nextPos2 = nextPos + direction
-          if (nextPos2 >= reverseShapes.length) {
-            direction = -1
-            nextPos2 = reverseShapes.length - 2
-          } else if (nextPos2 < 0) {
-            direction = 1
-            nextPos2 = 1
-          }
-          answer = [reverseShapes[nextPos], reverseShapes[nextPos2]]
-        } else {
-          answer = reverseShapes[nextPos]
-        }
-        break
-
-      case 'skip':
-        // Skip pattern: A, B, A, B, A, ... (every other is A, alternating with B)
-        // Use only 2 shapes to keep it clear
-        const skipBase = shapes[Math.floor(Math.random() * shapes.length)]
-        const skipOther = shapes.filter(s => s.id !== skipBase.id)[Math.floor(Math.random() * (shapes.length - 1))]
-        shapePattern = Array(baseLength).fill(0).map((_, i) => 
-          i % 2 === 0 ? skipBase.id : skipOther.id
-        )
-        answer = baseLength % 2 === 0 ? skipBase.id : skipOther.id
-        break
-
-      case 'mirror':
-        // Mirror pattern: A, B, A or A, B, B, A (simple palindrome with 2 shapes)
-        // Use only 2 shapes for clarity
-        const mirrorShapes = []
-        const availableForMirror = [...shapes]
-        for (let i = 0; i < 2; i++) {
-          const randomIdx = Math.floor(Math.random() * availableForMirror.length)
-          mirrorShapes.push(availableForMirror[randomIdx].id)
-          availableForMirror.splice(randomIdx, 1)
-        }
-        
-        // Create palindrome: A, B, A or A, B, B, A
-        const halfLength = Math.ceil(baseLength / 2)
-        shapePattern = []
-        for (let i = 0; i < halfLength; i++) {
-          shapePattern.push(mirrorShapes[i % 2])
-        }
-        // Mirror back (skip middle if odd)
-        const mirrorStart = baseLength % 2 === 0 ? halfLength - 1 : halfLength - 2
-        for (let i = mirrorStart; i >= 0; i--) {
-          shapePattern.push(mirrorShapes[i % 2])
-        }
-        // Next starts a new sequence
-        answer = mirrorShapes[0]
-        break
-
-      default:
-        const defaultShape = shapes[Math.floor(Math.random() * shapes.length)]
-        shapePattern = Array(baseLength).fill(defaultShape.id)
-        answer = defaultShape.id
-    }
-
-    // Create a color mapping for each unique shape ID used in the pattern
-    // This ensures the same shape always has the same color within a round
-    const uniqueShapeIds = Array.from(new Set(shapePattern))
-    const colorMap: Record<string, string> = {}
-    const usedColors: string[] = []
+    // Generate pattern with retries to ensure it's valid
+    let patternResult: { pattern: PatternItem[], answer: string | string[] } | null = null
+    let attempts = 0
+    const maxAttempts = 50
     
-    // Assign one unique color to each unique shape ID
-    uniqueShapeIds.forEach(shapeId => {
-      // Assign a random color that hasn't been used yet
-      let color: string
-      let attempts = 0
-      do {
-        color = assignRandomColor()
-        attempts++
-        // Safety check: if we've tried too many times, just use the first available color
-        if (attempts > 100) {
-          color = availableColors.find(c => !usedColors.includes(c)) || availableColors[0]
+    while (!patternResult && attempts < maxAttempts) {
+      attempts++
+      let tempPattern: string[] = []
+      let tempAnswer: string | string[]
+      
+      switch (type) {
+        case 'simple':
+          // Simple sequence: same shape repeated (only for very early levels)
+          if (level <= 2) {
+            const shape = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
+            tempPattern = Array(baseLength).fill(shape.id)
+            tempAnswer = shape.id
+          } else {
+            // After level 2, make it alternating
+            const shapePair = [
+              availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)],
+              availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
+            ]
+            while (shapePair[0].id === shapePair[1].id && availableShapesForLevel.length > 1) {
+              shapePair[1] = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
+            }
+            tempPattern = Array(baseLength).fill(0).map((_, i) => shapePair[i % 2].id)
+            tempAnswer = shapePair[baseLength % 2].id
+          }
           break
-        }
-      } while (usedColors.includes(color))
-      usedColors.push(color)
-      colorMap[shapeId] = color
-    })
+
+        case 'alternating':
+          // Alternating pattern: A, B, A, B, ...
+          const shapePair = [
+            availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)],
+            availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
+          ]
+          while (shapePair[0].id === shapePair[1].id && availableShapesForLevel.length > 1) {
+            shapePair[1] = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
+          }
+          tempPattern = Array(baseLength).fill(0).map((_, i) => shapePair[i % 2].id)
+          // For higher levels, return both shapes in the pair
+          if (requiresTwoShapes) {
+            tempAnswer = [shapePair[0].id, shapePair[1].id]
+          } else {
+            tempAnswer = shapePair[baseLength % 2].id
+          }
+          break
+
+        case 'progressive':
+          // Progressive: sequential shapes in order (A, B, C, A, B, C, ...)
+          // Use exactly 3 shapes for clarity (or available shapes if less)
+          const numProgressiveShapes = Math.min(3, availableShapesForLevel.length)
+          const progressiveShapes: string[] = []
+          const availableForProgressive = [...availableShapesForLevel]
+          for (let i = 0; i < numProgressiveShapes; i++) {
+            const randomIdx = Math.floor(Math.random() * availableForProgressive.length)
+            progressiveShapes.push(availableForProgressive[randomIdx].id)
+            availableForProgressive.splice(randomIdx, 1)
+          }
+          const startIndex = Math.floor(Math.random() * progressiveShapes.length)
+          tempPattern = Array(baseLength).fill(0).map((_, i) => progressiveShapes[(startIndex + i) % progressiveShapes.length])
+          // For higher levels, return next 2 shapes in sequence
+          if (requiresTwoShapes) {
+            const nextIndex1 = (startIndex + baseLength) % progressiveShapes.length
+            const nextIndex2 = (startIndex + baseLength + 1) % progressiveShapes.length
+            tempAnswer = [progressiveShapes[nextIndex1], progressiveShapes[nextIndex2]]
+          } else {
+            tempAnswer = progressiveShapes[(startIndex + baseLength) % progressiveShapes.length]
+          }
+          break
+
+        case 'repeating':
+          // Repeating group: [A, B], [A, B], ... - always use 2 shapes for clarity
+          const groupSize = 2
+          // Pick 2 distinct shapes
+          const availableForRepeating = [...availableShapesForLevel]
+          const group: string[] = []
+          for (let i = 0; i < Math.min(groupSize, availableForRepeating.length); i++) {
+            const randomIdx = Math.floor(Math.random() * availableForRepeating.length)
+            group.push(availableForRepeating[randomIdx].id)
+            availableForRepeating.splice(randomIdx, 1)
+          }
+          
+          const fullGroups = Math.floor(baseLength / groupSize)
+          tempPattern = Array(fullGroups).fill(group).flat()
+          const remainder = baseLength % groupSize
+          if (remainder > 0) {
+            tempPattern = tempPattern.concat(group.slice(0, remainder))
+          }
+          // For higher levels, return the next group (2 shapes)
+          if (requiresTwoShapes) {
+            tempAnswer = group
+          } else {
+            tempAnswer = group[remainder]
+          }
+          break
+
+        case 'reverse':
+          // Reverse pattern: A, B, C, B, A, B, C, B, A, ... (goes forward then backward)
+          // Use 3-4 shapes and make pattern longer to clearly show the reverse
+          const reverseLength = Math.max(baseLength, 6) // Minimum 6 for reverse to be clear
+          const numReverseShapes = Math.min(4, availableShapesForLevel.length)
+          const reverseShapes: string[] = []
+          const availableForReverse = [...availableShapesForLevel]
+          for (let i = 0; i < numReverseShapes; i++) {
+            const randomIdx = Math.floor(Math.random() * availableForReverse.length)
+            reverseShapes.push(availableForReverse[randomIdx].id)
+            availableForReverse.splice(randomIdx, 1)
+          }
+          
+          // Create clear reverse pattern: A, B, C, D, C, B, A, B, C, D, ...
+          // Pattern: 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, ...
+          tempPattern = []
+          let direction = 1
+          let pos = 0
+          for (let i = 0; i < reverseLength; i++) {
+            tempPattern.push(reverseShapes[pos])
+            pos += direction
+            // Reverse direction when hitting boundaries
+            if (pos >= reverseShapes.length - 1) {
+              direction = -1
+              pos = reverseShapes.length - 1
+            } else if (pos <= 0) {
+              direction = 1
+              pos = 0
+            }
+          }
+          // Calculate next position - continue in current direction
+          let nextPos = pos + direction
+          // If next position would be out of bounds, reverse direction
+          if (nextPos >= reverseShapes.length) {
+            direction = -1
+            nextPos = reverseShapes.length - 2
+          } else if (nextPos < 0) {
+            direction = 1
+            nextPos = 1
+          }
+          if (requiresTwoShapes) {
+            // For two shapes, return next two in sequence
+            let nextPos2 = nextPos + direction
+            if (nextPos2 >= reverseShapes.length) {
+              direction = -1
+              nextPos2 = reverseShapes.length - 2
+            } else if (nextPos2 < 0) {
+              direction = 1
+              nextPos2 = 1
+            }
+            tempAnswer = [reverseShapes[nextPos], reverseShapes[nextPos2]]
+          } else {
+            tempAnswer = reverseShapes[nextPos]
+          }
+          break
+
+        default:
+          const defaultShape = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
+          tempPattern = Array(baseLength).fill(defaultShape.id)
+          tempAnswer = defaultShape.id
+      }
+      
+      // Don't introduce gaps in the pattern - show all shapes
+      // Keep the pattern as-is without gaps
+      const patternWithGaps: (string | null)[] = tempPattern
+      
+      // Convert to PatternItem[] with colors
+      const uniqueShapeIds = Array.from(new Set(patternWithGaps.filter((id): id is string => id !== null)))
+      const tempColorMap: Record<string, string> = {}
+      const usedColors: string[] = []
+      
+      uniqueShapeIds.forEach(shapeId => {
+        let color: string
+        let colorAttempts = 0
+        do {
+          color = assignRandomColor()
+          colorAttempts++
+          if (colorAttempts > 100) {
+            color = availableColors.find(c => !usedColors.includes(c)) || availableColors[0]
+            break
+          }
+        } while (usedColors.includes(color))
+        usedColors.push(color)
+        tempColorMap[shapeId] = color
+      })
+      
+      const patternWithColors: PatternItem[] = patternWithGaps.map(shapeId => ({
+        shapeId,
+        color: shapeId ? tempColorMap[shapeId] : availableColors[0] // Use default color for gaps
+      }))
+      
+      // Validate the pattern
+      if (validatePattern(patternWithColors, tempAnswer, type)) {
+        patternResult = { pattern: patternWithColors, answer: tempAnswer }
+      }
+    }
     
-    // Assign colors to pattern items using the mapping - ensure all instances of same shape use same color
-    const patternWithColors: PatternItem[] = shapePattern.map(shapeId => {
-      const color = colorMap[shapeId]
-      if (!color) {
-        // Fallback: should never happen, but just in case
-        console.warn(`No color found for shapeId: ${shapeId}`)
-        return { shapeId, color: assignRandomColor() }
+    // Fallback if validation fails after max attempts
+    if (!patternResult) {
+      // Generate a simple fallback pattern
+      const fallbackShape = availableShapesForLevel[0]
+      const fallbackPattern: PatternItem[] = Array(baseLength).fill(0).map(() => ({
+        shapeId: fallbackShape.id,
+        color: fallbackShape.color
+      }))
+      patternResult = { pattern: fallbackPattern, answer: fallbackShape.id }
+    }
+    
+    // Extract color map from the pattern
+    const colorMap: Record<string, string> = {}
+    patternResult.pattern.forEach(item => {
+      if (item.shapeId && !colorMap[item.shapeId]) {
+        colorMap[item.shapeId] = item.color
       }
-      return { shapeId, color }
     })
 
-    // Verify all instances of same shape have same color
-    const colorVerification: Record<string, string> = {}
-    patternWithColors.forEach(item => {
-      if (colorVerification[item.shapeId] && colorVerification[item.shapeId] !== item.color) {
-        console.error(`Color mismatch for shape ${item.shapeId}: expected ${colorVerification[item.shapeId]}, got ${item.color}`)
-      }
-      colorVerification[item.shapeId] = item.color
-    })
-
-    return { pattern: patternWithColors, type, answer, colorMap }
-  }, [])
+    return { pattern: patternResult.pattern, type, answer: patternResult.answer, colorMap }
+  }, [getAvailableShapes, validatePattern])
 
   // Auto-initialize game on mount
   useEffect(() => {
@@ -841,11 +869,21 @@ export default function PatternRecognition() {
                   {pattern.length > 0 ? (
                 <>
                   {pattern.map((item, index) => {
+                    if (item.shapeId === null) {
+                      return (
+                        <div
+                          key={index}
+                          className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                        >
+                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                        </div>
+                      )
+                    }
                     const shape = shapes.find(s => s.id === item.shapeId)
                     return shape ? (
                       <div
                         key={index}
-                        className={`w-12 h-12 sm:w-16 sm:h-16 ${item.color} opacity-60 flex items-center justify-center`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                       >
                         {shape.svg}
                       </div>
@@ -859,17 +897,17 @@ export default function PatternRecognition() {
                         (() => {
                           const shape = shapes.find(s => s.id === selectedShapes[0])
                           return shape ? (
-                            <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
+                            <div className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                               {shape.svg}
                             </div>
                           ) : (
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
                               <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
                             </div>
                           )
                         })()
                       ) : (
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
                           <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
                         </div>
                       )}
@@ -878,17 +916,17 @@ export default function PatternRecognition() {
                         (() => {
                           const shape = shapes.find(s => s.id === selectedShapes[1])
                           return shape ? (
-                            <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
+                            <div className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                               {shape.svg}
                             </div>
                           ) : (
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
                               <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
                             </div>
                           )
                         })()
                       ) : (
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
                           <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
                         </div>
                       )}
@@ -899,17 +937,17 @@ export default function PatternRecognition() {
                       (() => {
                         const shape = shapes.find(s => s.id === userAnswer)
                         return shape ? (
-                          <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
+                          <div className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                             {shape.svg}
                           </div>
                         ) : (
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
                             <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
                           </div>
                         )
                       })()
                     ) : (
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
                         <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
                       </div>
                     )
@@ -918,11 +956,21 @@ export default function PatternRecognition() {
               ) : gameState === 'correct' ? (
                 <>
                   {pattern.map((item, index) => {
+                    if (item.shapeId === null) {
+                      return (
+                        <div
+                          key={index}
+                          className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                        >
+                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                        </div>
+                      )
+                    }
                     const shape = shapes.find(s => s.id === item.shapeId)
                     return shape ? (
                       <div
                         key={index}
-                        className={`w-12 h-12 sm:w-16 sm:h-16 ${item.color} opacity-60 flex items-center justify-center`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                       >
                         {shape.svg}
                       </div>
@@ -934,7 +982,7 @@ export default function PatternRecognition() {
                     return answerIds.map((answerId, idx) => {
                       const shape = shapes.find(s => s.id === answerId)
                       return shape ? (
-                        <div key={idx} className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center animate-pulse`}>
+                        <div key={idx} className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center animate-pulse`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -944,11 +992,21 @@ export default function PatternRecognition() {
               ) : gameState === 'wrong' ? (
                 <>
                   {pattern.map((item, index) => {
+                    if (item.shapeId === null) {
+                      return (
+                        <div
+                          key={index}
+                          className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                        >
+                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                        </div>
+                      )
+                    }
                     const shape = shapes.find(s => s.id === item.shapeId)
                     return shape ? (
                       <div
                         key={index}
-                        className={`w-12 h-12 sm:w-16 sm:h-16 ${item.color} opacity-60 flex items-center justify-center`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                       >
                         {shape.svg}
                       </div>
@@ -970,7 +1028,7 @@ export default function PatternRecognition() {
                       return (
                         <div 
                           key={`user-${idx}`} 
-                          className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center ${isCorrect ? '' : 'opacity-50'} relative`}
+                          className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center ${isCorrect ? '' : 'opacity-50'} relative`}
                         >
                           {shape.svg}
                           {!isCorrect && (
@@ -989,7 +1047,7 @@ export default function PatternRecognition() {
                     return correctIds.map((answerId, idx) => {
                       const shape = shapes.find(s => s.id === answerId)
                       return shape ? (
-                        <div key={`correct-${idx}`} className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center bg-green-500 dark:bg-green-600`}>
+                        <div key={`correct-${idx}`} className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center bg-green-500 dark:bg-green-600`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -999,11 +1057,21 @@ export default function PatternRecognition() {
               ) : (
                 <>
                   {pattern.map((item, index) => {
+                    if (item.shapeId === null) {
+                      return (
+                        <div
+                          key={index}
+                          className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                        >
+                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                        </div>
+                      )
+                    }
                     const shape = shapes.find(s => s.id === item.shapeId)
                     return shape ? (
                       <div
                         key={index}
-                        className={`w-12 h-12 sm:w-16 sm:h-16 ${item.color} opacity-60 flex items-center justify-center`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                       >
                         {shape.svg}
                       </div>
@@ -1015,7 +1083,7 @@ export default function PatternRecognition() {
                     return answerIds.map((answerId, idx) => {
                       const shape = shapes.find(s => s.id === answerId)
                       return shape ? (
-                        <div key={idx} className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
+                        <div key={idx} className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -1031,7 +1099,7 @@ export default function PatternRecognition() {
             {pattern.length > 0 && (
               <div className="w-full max-w-4xl">
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
-                  {shapes.map((shape) => {
+                  {getAvailableShapes(difficultyLevel).map((shape) => {
                     const isSelected = selectedShapes.includes(shape.id)
                     const showFeedback = feedbackShape === shape.id
                     const isCorrect = feedbackType === 'correct' && showFeedback
