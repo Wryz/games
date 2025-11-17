@@ -104,7 +104,7 @@ const shapes = [
   }
 ]
 
-type PatternType = 'simple' | 'alternating' | 'progressive' | 'repeating' | 'reverse' | 'skip' | 'mirror' | 'fibonacci'
+type PatternType = 'simple' | 'alternating' | 'progressive' | 'repeating' | 'reverse' | 'skip' | 'mirror'
 
 // Available colors for random assignment
 const availableColors = [
@@ -140,6 +140,7 @@ export default function PatternRecognition() {
   const [feedbackShape, setFeedbackShape] = useState<string | null>(null)
   const [feedbackType, setFeedbackType] = useState<'correct' | 'wrong' | null>(null)
   const [finalResults, setFinalResults] = useState<{ patternsSolved: number; timeTaken: number; level: number } | null>(null)
+  const [shapeColorMap, setShapeColorMap] = useState<Record<string, string>>({})
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const timerInterval = useRef<NodeJS.Timeout | null>(null)
@@ -214,12 +215,15 @@ export default function PatternRecognition() {
   }
 
   // Generate pattern based on difficulty
-  const generatePattern = useCallback((level: number): { pattern: PatternItem[], type: PatternType, answer: string | string[] } => {
+  const generatePattern = useCallback((level: number): { pattern: PatternItem[], type: PatternType, answer: string | string[], colorMap: Record<string, string> } => {
     // Increase pattern length more gradually - slower growth
     const baseLength = Math.min(3 + Math.floor(level / 3), 6)
     // Pattern types unlock much more slowly - keep simple patterns longer
-    const allTypes: PatternType[] = ['simple', 'alternating', 'progressive', 'repeating', 'reverse', 'skip', 'mirror', 'fibonacci']
-    const typeIndex = Math.min(Math.floor(level / 4), allTypes.length - 1)
+    // After all types are unlocked (level 24+), cycle through them to prevent repetition
+    const allTypes: PatternType[] = ['simple', 'alternating', 'progressive', 'repeating', 'reverse', 'skip', 'mirror']
+    const unlockLevel = Math.floor(level / 4)
+    // Cycle through types: first 7 levels unlock each type, then cycle
+    const typeIndex = unlockLevel % allTypes.length
     const type = allTypes[typeIndex]
     
     // Helper to assign random color to a shape
@@ -332,18 +336,44 @@ export default function PatternRecognition() {
         }
         
         // Create pattern: A, B, C, B, A, B, C, ...
+        // Pattern oscillates: 0, 1, 2, 1, 0, 1, 2, 1, 0, ...
         shapePattern = []
         let direction = 1
         let pos = 0
         for (let i = 0; i < baseLength; i++) {
           shapePattern.push(reverseShapes[pos])
           pos += direction
-          if (pos >= reverseShapes.length - 1) direction = -1
-          if (pos <= 0) direction = 1
+          // Reverse direction when hitting boundaries
+          if (pos >= reverseShapes.length - 1) {
+            direction = -1
+          } else if (pos <= 0) {
+            direction = 1
+          }
         }
-        // Next continues in current direction
-        const nextPos = pos + direction
-        answer = reverseShapes[Math.max(0, Math.min(reverseShapes.length - 1, nextPos))]
+        // Calculate next position - continue in current direction
+        let nextPos = pos + direction
+        // If next position would be out of bounds, reverse direction
+        if (nextPos >= reverseShapes.length) {
+          direction = -1
+          nextPos = reverseShapes.length - 2
+        } else if (nextPos < 0) {
+          direction = 1
+          nextPos = 1
+        }
+        if (requiresTwoShapes) {
+          // For two shapes, return next two in sequence
+          let nextPos2 = nextPos + direction
+          if (nextPos2 >= reverseShapes.length) {
+            direction = -1
+            nextPos2 = reverseShapes.length - 2
+          } else if (nextPos2 < 0) {
+            direction = 1
+            nextPos2 = 1
+          }
+          answer = [reverseShapes[nextPos], reverseShapes[nextPos2]]
+        } else {
+          answer = reverseShapes[nextPos]
+        }
         break
 
       case 'skip':
@@ -383,45 +413,66 @@ export default function PatternRecognition() {
         answer = mirrorShapes[0]
         break
 
-      case 'fibonacci':
-        // Simple pattern: A, A, B, A, A, B, ... (two A's then one B)
-        // Use only 2 shapes for clarity
-        const fibShapes = [
-          shapes[Math.floor(Math.random() * shapes.length)],
-          shapes[Math.floor(Math.random() * shapes.length)]
-        ]
-        while (fibShapes[0].id === fibShapes[1].id) {
-          fibShapes[1] = shapes[Math.floor(Math.random() * shapes.length)]
-        }
-        // Pattern: A, A, B, A, A, B, ... (every 3rd is B, rest are A)
-        shapePattern = Array(baseLength).fill(0).map((_, i) => {
-          return (i + 1) % 3 === 0 ? fibShapes[1].id : fibShapes[0].id
-        })
-        // Next follows the pattern
-        answer = (baseLength + 1) % 3 === 0 ? fibShapes[1].id : fibShapes[0].id
-        break
-
       default:
         const defaultShape = shapes[Math.floor(Math.random() * shapes.length)]
         shapePattern = Array(baseLength).fill(defaultShape.id)
         answer = defaultShape.id
     }
 
-    // Assign random colors to each shape in the pattern (mix up colors each round)
-    const patternWithColors: PatternItem[] = shapePattern.map(shapeId => ({
-      shapeId,
-      color: assignRandomColor()
-    }))
+    // Create a color mapping for each unique shape ID used in the pattern
+    // This ensures the same shape always has the same color within a round
+    const uniqueShapeIds = Array.from(new Set(shapePattern))
+    const colorMap: Record<string, string> = {}
+    const usedColors: string[] = []
+    
+    // Assign one unique color to each unique shape ID
+    uniqueShapeIds.forEach(shapeId => {
+      // Assign a random color that hasn't been used yet
+      let color: string
+      let attempts = 0
+      do {
+        color = assignRandomColor()
+        attempts++
+        // Safety check: if we've tried too many times, just use the first available color
+        if (attempts > 100) {
+          color = availableColors.find(c => !usedColors.includes(c)) || availableColors[0]
+          break
+        }
+      } while (usedColors.includes(color))
+      usedColors.push(color)
+      colorMap[shapeId] = color
+    })
+    
+    // Assign colors to pattern items using the mapping - ensure all instances of same shape use same color
+    const patternWithColors: PatternItem[] = shapePattern.map(shapeId => {
+      const color = colorMap[shapeId]
+      if (!color) {
+        // Fallback: should never happen, but just in case
+        console.warn(`No color found for shapeId: ${shapeId}`)
+        return { shapeId, color: assignRandomColor() }
+      }
+      return { shapeId, color }
+    })
 
-    return { pattern: patternWithColors, type, answer }
+    // Verify all instances of same shape have same color
+    const colorVerification: Record<string, string> = {}
+    patternWithColors.forEach(item => {
+      if (colorVerification[item.shapeId] && colorVerification[item.shapeId] !== item.color) {
+        console.error(`Color mismatch for shape ${item.shapeId}: expected ${colorVerification[item.shapeId]}, got ${item.color}`)
+      }
+      colorVerification[item.shapeId] = item.color
+    })
+
+    return { pattern: patternWithColors, type, answer, colorMap }
   }, [])
 
   // Auto-initialize game on mount
   useEffect(() => {
     if (pattern.length === 0 && gameState === 'idle') {
-      const { pattern: initialPattern, type, answer } = generatePattern(1)
+      const { pattern: initialPattern, type, answer, colorMap } = generatePattern(1)
       setPattern(initialPattern)
       setPatternType(type)
+      setShapeColorMap(colorMap)
       currentAnswerRef.current = answer
     }
   }, [pattern.length, gameState, generatePattern])
@@ -434,9 +485,10 @@ export default function PatternRecognition() {
     setGameStartTime(0) // Don't start timer yet
     hasSubmittedScore.current = false
 
-    const { pattern, type, answer } = generatePattern(1)
+    const { pattern, type, answer, colorMap } = generatePattern(1)
     setPattern(pattern)
     setPatternType(type)
+    setShapeColorMap(colorMap)
     currentAnswerRef.current = answer
     setUserAnswer(null)
     setSelectedShapes([])
@@ -509,9 +561,10 @@ export default function PatternRecognition() {
           setTimeout(() => {
             const nextLevel = difficultyLevel + 1
             setDifficultyLevel(nextLevel)
-            const { pattern, type, answer } = generatePattern(nextLevel)
+            const { pattern, type, answer, colorMap } = generatePattern(nextLevel)
             setPattern(pattern)
             setPatternType(type)
+            setShapeColorMap(colorMap)
             currentAnswerRef.current = answer
             setUserAnswer(null)
             setSelectedShapes([])
@@ -524,10 +577,15 @@ export default function PatternRecognition() {
         }
       } else {
         // Wrong shape - end the game immediately
-        setUserAnswer(shapeId)
+        // Preserve any previously selected shapes for display
+        const wrongAnswer = selectedShapes.length > 0 
+          ? [...selectedShapes, shapeId].join(',')
+          : shapeId
+        setUserAnswer(wrongAnswer)
         setGameState('wrong')
         const finalTime = elapsedTime
 
+        // Show wrong state with correct answer for 3 seconds before transitioning to finished
         setTimeout(() => {
           // Set final results and show results screen
           setFinalResults({
@@ -561,9 +619,10 @@ export default function PatternRecognition() {
             setGameStartTime(0)
             hasSubmittedScore.current = false
             setFinalResults(null)
-            const { pattern: newPattern, type, answer } = generatePattern(1)
+            const { pattern: newPattern, type, answer, colorMap } = generatePattern(1)
             setPattern(newPattern)
             setPatternType(type)
+            setShapeColorMap(colorMap)
             currentAnswerRef.current = answer
             setUserAnswer(null)
             setSelectedShapes([])
@@ -571,10 +630,11 @@ export default function PatternRecognition() {
             setFeedbackType(null)
             setGameState('idle')
           }, 3000)
-        }, 1500)
+        }, 3000)
       }
     } else {
       // Handle single-shape selection (original behavior)
+      // Set userAnswer immediately so it shows in the display
       setUserAnswer(shapeId)
       const isCorrect = shapeId === correctAnswer
 
@@ -599,9 +659,10 @@ export default function PatternRecognition() {
         setTimeout(() => {
           const nextLevel = difficultyLevel + 1
           setDifficultyLevel(nextLevel)
-          const { pattern, type, answer } = generatePattern(nextLevel)
+          const { pattern, type, answer, colorMap } = generatePattern(nextLevel)
           setPattern(pattern)
           setPatternType(type)
+          setShapeColorMap(colorMap)
           currentAnswerRef.current = answer
           setUserAnswer(null)
           setSelectedShapes([])
@@ -615,6 +676,7 @@ export default function PatternRecognition() {
         setGameState('wrong')
         const finalTime = elapsedTime
 
+        // Show wrong state with correct answer for 3 seconds before transitioning to finished
         setTimeout(() => {
           // Set final results and show results screen
           setFinalResults({
@@ -648,9 +710,10 @@ export default function PatternRecognition() {
             setGameStartTime(0)
             hasSubmittedScore.current = false
             setFinalResults(null)
-            const { pattern: newPattern, type, answer } = generatePattern(1)
+            const { pattern: newPattern, type, answer, colorMap } = generatePattern(1)
             setPattern(newPattern)
             setPatternType(type)
+            setShapeColorMap(colorMap)
             currentAnswerRef.current = answer
             setUserAnswer(null)
             setSelectedShapes([])
@@ -658,7 +721,7 @@ export default function PatternRecognition() {
             setFeedbackType(null)
             setGameState('idle')
           }, 3000)
-        }, 1500)
+        }, 3000)
       }
     }
   }, [gameState, patternsSolved, difficultyLevel, elapsedTime, username, generatePattern, loadScores, selectedShapes])
@@ -676,6 +739,7 @@ export default function PatternRecognition() {
     setFeedbackShape(null)
     setFeedbackType(null)
     setFinalResults(null)
+    setShapeColorMap({})
     currentAnswerRef.current = null
     hasSubmittedScore.current = false
     if (timerInterval.current) {
@@ -795,7 +859,7 @@ export default function PatternRecognition() {
                         (() => {
                           const shape = shapes.find(s => s.id === selectedShapes[0])
                           return shape ? (
-                            <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shape.color} flex items-center justify-center`}>
+                            <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                               {shape.svg}
                             </div>
                           ) : (
@@ -814,7 +878,7 @@ export default function PatternRecognition() {
                         (() => {
                           const shape = shapes.find(s => s.id === selectedShapes[1])
                           return shape ? (
-                            <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shape.color} flex items-center justify-center`}>
+                            <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                               {shape.svg}
                             </div>
                           ) : (
@@ -830,9 +894,25 @@ export default function PatternRecognition() {
                       )}
                     </>
                   ) : (
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                      <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
-                    </div>
+                    // Single shape answer - show selected shape or question mark
+                    userAnswer ? (
+                      (() => {
+                        const shape = shapes.find(s => s.id === userAnswer)
+                        return shape ? (
+                          <div className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
+                            {shape.svg}
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                            <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
+                          </div>
+                        )
+                      })()
+                    ) : (
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
+                        <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
+                      </div>
+                    )
                   )}
                 </>
               ) : gameState === 'correct' ? (
@@ -854,7 +934,62 @@ export default function PatternRecognition() {
                     return answerIds.map((answerId, idx) => {
                       const shape = shapes.find(s => s.id === answerId)
                       return shape ? (
-                        <div key={idx} className={`w-12 h-12 sm:w-16 sm:h-16 ${shape.color} flex items-center justify-center animate-pulse`}>
+                        <div key={idx} className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center animate-pulse`}>
+                          {shape.svg}
+                        </div>
+                      ) : null
+                    })
+                  })()}
+                </>
+              ) : gameState === 'wrong' ? (
+                <>
+                  {pattern.map((item, index) => {
+                    const shape = shapes.find(s => s.id === item.shapeId)
+                    return shape ? (
+                      <div
+                        key={index}
+                        className={`w-12 h-12 sm:w-16 sm:h-16 ${item.color} opacity-60 flex items-center justify-center`}
+                      >
+                        {shape.svg}
+                      </div>
+                    ) : null
+                  })}
+                  {/* Show user's answer(s) - mark wrong ones with X */}
+                  {userAnswer && currentAnswerRef.current && (() => {
+                    const answerIds = userAnswer.includes(',') ? userAnswer.split(',') : [userAnswer]
+                    const correctAnswer = currentAnswerRef.current
+                    const correctIds = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer]
+                    
+                    return answerIds.map((answerId, idx) => {
+                      const shape = shapes.find(s => s.id === answerId)
+                      if (!shape) return null
+                      
+                      // Check if this position was correct
+                      const isCorrect = correctIds[idx] === answerId
+                      
+                      return (
+                        <div 
+                          key={`user-${idx}`} 
+                          className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center ${isCorrect ? '' : 'opacity-50'} relative`}
+                        >
+                          {shape.svg}
+                          {!isCorrect && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-red-600 dark:text-red-400 text-2xl font-bold">✗</span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
+                  })()}
+                  {/* Show correct answer in green (like visual memory) */}
+                  {currentAnswerRef.current && (() => {
+                    const correctAnswer = currentAnswerRef.current
+                    const correctIds = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer]
+                    return correctIds.map((answerId, idx) => {
+                      const shape = shapes.find(s => s.id === answerId)
+                      return shape ? (
+                        <div key={`correct-${idx}`} className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center bg-green-500 dark:bg-green-600`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -880,7 +1015,7 @@ export default function PatternRecognition() {
                     return answerIds.map((answerId, idx) => {
                       const shape = shapes.find(s => s.id === answerId)
                       return shape ? (
-                        <div key={idx} className={`w-12 h-12 sm:w-16 sm:h-16 ${shape.color} flex items-center justify-center`}>
+                        <div key={idx} className={`w-12 h-12 sm:w-16 sm:h-16 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -902,18 +1037,26 @@ export default function PatternRecognition() {
                     const isCorrect = feedbackType === 'correct' && showFeedback
                     const isWrong = feedbackType === 'wrong' && showFeedback
                     const isDisabled = gameState === 'correct' || gameState === 'wrong' || gameState === 'finished'
+                    // Use color from map if shape appears in pattern, otherwise use default color
+                    const shapeColor = shapeColorMap[shape.id] || shape.color
+                    
+                    // Check if this is the correct answer when gameState is 'wrong'
+                    const isCorrectAnswer = gameState === 'wrong' && currentAnswerRef.current && (
+                      (Array.isArray(currentAnswerRef.current) && currentAnswerRef.current.includes(shape.id)) ||
+                      (!Array.isArray(currentAnswerRef.current) && currentAnswerRef.current === shape.id)
+                    )
                     
                     return (
                       <button
                         key={shape.id}
                         onClick={() => handleShapeClick(shape.id)}
                         disabled={isDisabled}
-                        className={`aspect-square rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center p-3 sm:p-4 ${shape.color} ${
+                        className={`aspect-square rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center p-3 sm:p-4 ${shapeColor} ${
                           isSelected 
                             ? 'ring-4 ring-green-500 dark:ring-green-400 scale-110 shadow-2xl' 
                             : ''
                         } ${
-                          isCorrect
+                          isCorrect || isCorrectAnswer
                             ? 'bg-green-500 dark:bg-green-600 animate-none'
                             : isWrong
                             ? 'bg-red-500 dark:bg-red-600 animate-shake'

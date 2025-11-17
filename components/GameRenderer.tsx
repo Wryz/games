@@ -12,6 +12,7 @@ import VisualMemory from './games/VisualMemory'
 import StroopTest from './games/StroopTest'
 import SequenceMemory from './games/SequenceMemory'
 import ChimpTest from './games/ChimpTest'
+import UsernameGate from './UsernameGate'
 
 interface GameRendererProps {
   selectedGame: string | null
@@ -56,5 +57,9 @@ export default function GameRenderer({ selectedGame, onGameSelect }: GameRendere
     )
   }
 
-  return <GameComponent />
+  return (
+    <UsernameGate>
+      <GameComponent />
+    </UsernameGate>
+  )
 }

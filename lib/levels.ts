@@ -305,18 +305,39 @@ function extractScoreValue(gameId: string, score: any): number {
 
 // Check if score meets threshold (handles both higher-is-better and lower-is-better)
 function meetsThreshold(gameId: string, scoreValue: number, threshold: number): boolean {
-  // For reaction-time, lower is better
+  // For reaction-time, lower is better (score must be <= threshold to qualify)
   if (gameId === 'reaction-time') {
     return scoreValue <= threshold
   }
-  // For all others, higher is better
+  // For all others, higher is better (score must be >= threshold to qualify)
   return scoreValue >= threshold
 }
 
 // Calculate level for a specific game
 export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
   const thresholds = GAME_THRESHOLDS[gameId] || []
+  
+  // If no score exists, return level 1 (not calculated from default values)
+  if (!score) {
+    return {
+      currentLevel: 1,
+      educationLevel: EDUCATION_LEVELS[1],
+      nextLevelThreshold: thresholds.length > 0 ? thresholds[0]?.threshold ?? null : null,
+      progress: 0
+    }
+  }
+  
   const scoreValue = extractScoreValue(gameId, score)
+
+  // Handle invalid or negative scores
+  if (scoreValue < 0) {
+    return {
+      currentLevel: 1,
+      educationLevel: EDUCATION_LEVELS[1],
+      nextLevelThreshold: thresholds.length > 0 ? thresholds[0]?.threshold ?? null : null,
+      progress: 0
+    }
+  }
 
   if (thresholds.length === 0) {
     return {
@@ -328,12 +349,20 @@ export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
   }
 
   // Find the highest level the user has achieved
+  // For reaction-time: lower is better, so we check from highest level (lowest threshold) down
+  // For others: higher is better, so we check from highest level (highest threshold) down
   let currentLevel = 1
   for (let i = thresholds.length - 1; i >= 0; i--) {
     if (meetsThreshold(gameId, scoreValue, thresholds[i].threshold)) {
       currentLevel = thresholds[i].level
       break
     }
+  }
+  
+  // Ensure we never return a level higher than what the score actually qualifies for
+  // This is a safety check to prevent edge cases
+  if (currentLevel < 1) {
+    currentLevel = 1
   }
 
   // Find next level threshold
@@ -345,10 +374,23 @@ export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
   if (nextThreshold) {
     const currentThreshold = thresholds.find(t => t.level === currentLevel)
     if (currentThreshold) {
-      const range = nextThreshold.threshold - currentThreshold.threshold
-      const progressValue = scoreValue - currentThreshold.threshold
-      if (range > 0) {
-        progress = Math.min(100, Math.max(0, (progressValue / range) * 100))
+      if (gameId === 'reaction-time') {
+        // For reaction-time: lower is better, so progress is inverted
+        // Example: current=260ms, next=250ms, score=258ms
+        // Range = 260 - 250 = 10ms (how much faster you need to be)
+        // Progress = (260 - 258) / 10 = 2/10 = 20% (how close you are to next level)
+        const range = currentThreshold.threshold - nextThreshold.threshold
+        const progressValue = currentThreshold.threshold - scoreValue
+        if (range > 0) {
+          progress = Math.min(100, Math.max(0, (progressValue / range) * 100))
+        }
+      } else {
+        // For other games: higher is better
+        const range = nextThreshold.threshold - currentThreshold.threshold
+        const progressValue = scoreValue - currentThreshold.threshold
+        if (range > 0) {
+          progress = Math.min(100, Math.max(0, (progressValue / range) * 100))
+        }
       }
     }
   } else {

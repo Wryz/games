@@ -94,13 +94,13 @@ export default function MemoryGame() {
       const colorId = seq[i]
       setActiveSquare(colorId)
       
-      // Show the square for 500ms
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Show the square for 300ms (faster)
+      await new Promise(resolve => setTimeout(resolve, 300))
       
       setActiveSquare(null)
       
-      // Pause between squares (300ms)
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // Pause between squares (150ms, faster)
+      await new Promise(resolve => setTimeout(resolve, 150))
     }
     
     setGameState('playing')
