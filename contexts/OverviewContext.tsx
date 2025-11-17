@@ -110,6 +110,8 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
             case 'chimp-test':
               return `${score.patterns_remembered || 0} correct`
+            case 'time-estimation':
+              return `${score.average_accuracy || 0}ms avg (${score.best_accuracy || 0}ms best)`
             default:
             return `Level ${score.level_reached}`
         }

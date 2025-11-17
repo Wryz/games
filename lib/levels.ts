@@ -536,6 +536,8 @@ export function formatUserScore(gameId: string, score: any): string {
       return `${score.patterns_solved || 0} patterns`
     case 'stroop-test':
       return `${score.correct_answers || 0} correct (${score.average_time || 0}ms)`
+    case 'time-estimation':
+      return `${score.average_accuracy || 0}ms avg (${score.best_accuracy || 0}ms best)`
     default:
       return 'No score'
   }

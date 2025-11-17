@@ -145,6 +145,9 @@ export default function Home({ onGameSelect }: HomeProps) {
             case 'chimp-test':
               formattedValue = `${scoreValue.patterns_remembered || 0} correct`
               break
+            case 'time-estimation':
+              formattedValue = `${scoreValue.average_accuracy || 0}ms avg (${scoreValue.best_accuracy || 0}ms best)`
+              break
             default:
               formattedValue = `Level ${scoreValue.level_reached}`
           }
@@ -309,7 +312,7 @@ export default function Home({ onGameSelect }: HomeProps) {
         </div>
       ) : (
         <>
-          {/* Enhanced Game Overview Grid */}
+          {/* Enhanced Game Overview Grid - Organized by Category */}
           <div>
             <div className="flex items-center justify-between mb-8">
               {gameStatsLoading && gameStats.length > 0 && (
@@ -319,190 +322,265 @@ export default function Home({ onGameSelect }: HomeProps) {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-              {gameStats.length === 0 ? (
-                // Show skeleton cards only when no data is available (initial load)
-                Array.from({ length: GAMES.length }).map((_, index) => (
+            
+            {gameStats.length === 0 ? (
+              // Show skeleton cards only when no data is available (initial load)
+              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                {Array.from({ length: GAMES.length }).map((_, index) => (
                   <GameCardSkeleton key={`skeleton-${index}`} />
-                ))
-              ) : (
-                gameStats.map((game, index) => {
-                  const categoryColors = {
-                    motor: 'from-blue-500 to-blue-600',
-                    memory: 'from-purple-500 to-purple-600',
-                    cognitive: 'from-cyan-500 to-cyan-600',
-                    perception: 'from-pink-500 to-pink-600',
-                    computation: 'from-orange-500 to-orange-600',
-                    linguistic: 'from-green-500 to-green-600',
-                    geography: 'from-teal-500 to-teal-600',
-                    attention: 'from-yellow-500 to-yellow-600',
-                    language: 'from-indigo-500 to-indigo-600',
-                    social: 'from-rose-500 to-rose-600',
-                    creative: 'from-violet-500 to-violet-600',
-                    spatial: 'from-emerald-500 to-emerald-600',
+                ))}
+              </div>
+            ) : (
+              (() => {
+                // Group games by category
+                const gamesByCategory = gameStats.reduce((acc, game) => {
+                  const category = game.category || 'other'
+                  if (!acc[category]) {
+                    acc[category] = []
                   }
-                  const categoryBorderColors = {
-                    motor: 'border-blue-500 dark:border-blue-400',
-                    memory: 'border-purple-500 dark:border-purple-400',
-                    cognitive: 'border-cyan-500 dark:border-cyan-400',
-                    perception: 'border-pink-500 dark:border-pink-400',
-                    computation: 'border-orange-500 dark:border-orange-400',
-                    linguistic: 'border-green-500 dark:border-green-400',
-                    geography: 'border-teal-500 dark:border-teal-400',
-                    attention: 'border-yellow-500 dark:border-yellow-400',
-                    language: 'border-indigo-500 dark:border-indigo-400',
-                    social: 'border-rose-500 dark:border-rose-400',
-                    creative: 'border-violet-500 dark:border-violet-400',
-                    spatial: 'border-emerald-500 dark:border-emerald-400',
-                  }
-                  const categoryGlow = {
-                    motor: 'shadow-glow',
-                    memory: 'shadow-glow-purple',
-                    cognitive: 'shadow-glow-cyan',
-                    perception: 'shadow-glow',
-                    computation: 'shadow-glow',
-                    linguistic: 'shadow-glow',
-                    geography: 'shadow-glow',
-                    attention: 'shadow-glow',
-                    language: 'shadow-glow',
-                    social: 'shadow-glow',
-                    creative: 'shadow-glow',
-                    spatial: 'shadow-glow',
-                  }
-                  const categoryBackgrounds = {
-                    motor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/50',
-                    memory: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/50',
-                    cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
-                    perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
-                    computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
-                    linguistic: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/50',
-                    geography: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/50',
-                    attention: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/50',
-                    language: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/50',
-                    social: 'bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/50',
-                    creative: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/50',
-                    spatial: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/50',
-                  }
-                  
-                  // Check if current user has the top score
-                  const hasTopScore = username && game.topScore?.username === username
-                  
-                  return (
-                    <div
-                      key={game.id}
-                      onClick={() => handleGameClick(game.id, game.name)}
-                      className={`group relative ${
-                        hasTopScore 
-                          ? categoryBackgrounds[game.category as keyof typeof categoryBackgrounds]
-                          : 'bg-white dark:bg-gray-800/50'
-                      } rounded-xl md:rounded-2xl border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} p-3 md:p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlow[game.category as keyof typeof categoryGlow]}`}
-                      style={{
-                        animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
-                      }}
-                    >
-                      {/* Animated border gradient on hover */}
-                      <div className={`absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} opacity-0 group-hover:opacity-20 transition-opacity duration-300 -z-10 blur-md`} />
-                      
-                      <div className="relative z-10 flex flex-col h-full">
-                        {/* Mobile layout - Parent column flex */}
-                        <div className="md:hidden flex flex-row gap-2">
-                          {/* First div: Row flex with icon and user counter */}
-                          <div className="flex flex-col items-start justify-between">
-                          <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColors[game.category as keyof typeof categoryColors]} p-1 rounded-md flex-shrink-0`}>
-                              <game.icon size={20} className="text-white drop-shadow-sm" />
-                            </div>
-                            <div className="flex items-center gap-0.5 text-gray-500 dark:text-gray-400">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
-                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-                              </svg>
-                              <span className="text-[10px] font-medium">{game.totalGames}</span>
-                            </div>
-                           
+                  acc[category].push(game)
+                  return acc
+                }, {} as Record<string, typeof gameStats>)
+
+                // Category display names
+                const categoryNames: Record<string, string> = {
+                  motor: 'Motor Skills',
+                  memory: 'Memory',
+                  cognitive: 'Cognitive',
+                  perception: 'Perception',
+                  computation: 'Computation',
+                  linguistic: 'Linguistic',
+                  geography: 'Geography',
+                  attention: 'Attention',
+                  language: 'Language',
+                  social: 'Social',
+                  creative: 'Creative',
+                  spatial: 'Spatial',
+                  other: 'Other'
+                }
+
+                // Category order (you can customize this)
+                const categoryOrder = ['motor', 'memory', 'cognitive', 'perception', 'computation', 'linguistic', 'geography', 'attention', 'language', 'social', 'creative', 'spatial', 'other']
+
+                return (
+                  <div className="space-y-12">
+                    {categoryOrder.map((category) => {
+                      const games = gamesByCategory[category]
+                      if (!games || games.length === 0) return null
+
+                      const categoryColors = {
+                        motor: 'from-blue-500 to-blue-600',
+                        memory: 'from-purple-500 to-purple-600',
+                        cognitive: 'from-cyan-500 to-cyan-600',
+                        perception: 'from-pink-500 to-pink-600',
+                        computation: 'from-orange-500 to-orange-600',
+                        linguistic: 'from-green-500 to-green-600',
+                        geography: 'from-teal-500 to-teal-600',
+                        attention: 'from-yellow-500 to-yellow-600',
+                        language: 'from-indigo-500 to-indigo-600',
+                        social: 'from-rose-500 to-rose-600',
+                        creative: 'from-violet-500 to-violet-600',
+                        spatial: 'from-emerald-500 to-emerald-600',
+                        other: 'from-gray-500 to-gray-600',
+                      }
+
+                      return (
+                        <div key={category} className="space-y-4">
+                          {/* Category Header */}
+                          <div className="flex items-center gap-3">
+                            <h2 className={`text-2xl font-bold bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
+                              {categoryNames[category] || category.charAt(0).toUpperCase() + category.slice(1)}
+                            </h2>
+                            <div className="flex-1 h-px bg-gradient-to-r from-gray-300 via-gray-200 to-transparent dark:from-gray-600 dark:via-gray-700"></div>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                              {games.length} {games.length === 1 ? 'game' : 'games'}
+                            </span>
                           </div>
                           
-                          {/* Second div: Title, top game score, and top game scorer */}
-                          <div>
-                            <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
-                              {game.name}
-                            </h3>
-                            {/* Top Scorer */}
-                            {game.topScore ? (
-                              <div className="text-xs mt-0.5">
-                                <p className="font-semibold text-xs text-gray-900 dark:text-white">
-                                  {game.topScore.value}
-                                </p>
-                                <p className="text-gray-500 dark:text-gray-400 font-medium text-[10px]">
-                                  {game.topScore.username}
-                                </p>
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-gray-400 dark:text-gray-500 italic mt-0.5">
-                                No scores yet
-                              </p>
-                            )}
+                          {/* Games Grid for this Category */}
+                          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                            {games.map((game, index) => {
+                              const categoryColorsMap = {
+                                motor: 'from-blue-500 to-blue-600',
+                                memory: 'from-purple-500 to-purple-600',
+                                cognitive: 'from-cyan-500 to-cyan-600',
+                                perception: 'from-pink-500 to-pink-600',
+                                computation: 'from-orange-500 to-orange-600',
+                                linguistic: 'from-green-500 to-green-600',
+                                geography: 'from-teal-500 to-teal-600',
+                                attention: 'from-yellow-500 to-yellow-600',
+                                language: 'from-indigo-500 to-indigo-600',
+                                social: 'from-rose-500 to-rose-600',
+                                creative: 'from-violet-500 to-violet-600',
+                                spatial: 'from-emerald-500 to-emerald-600',
+                              }
+                              const categoryBorderColorsMap = {
+                                motor: 'border-blue-500 dark:border-blue-400',
+                                memory: 'border-purple-500 dark:border-purple-400',
+                                cognitive: 'border-cyan-500 dark:border-cyan-400',
+                                perception: 'border-pink-500 dark:border-pink-400',
+                                computation: 'border-orange-500 dark:border-orange-400',
+                                linguistic: 'border-green-500 dark:border-green-400',
+                                geography: 'border-teal-500 dark:border-teal-400',
+                                attention: 'border-yellow-500 dark:border-yellow-400',
+                                language: 'border-indigo-500 dark:border-indigo-400',
+                                social: 'border-rose-500 dark:border-rose-400',
+                                creative: 'border-violet-500 dark:border-violet-400',
+                                spatial: 'border-emerald-500 dark:border-emerald-400',
+                              }
+                              const categoryGlowMap = {
+                                motor: 'shadow-glow',
+                                memory: 'shadow-glow-purple',
+                                cognitive: 'shadow-glow-cyan',
+                                perception: 'shadow-glow',
+                                computation: 'shadow-glow',
+                                linguistic: 'shadow-glow',
+                                geography: 'shadow-glow',
+                                attention: 'shadow-glow',
+                                language: 'shadow-glow',
+                                social: 'shadow-glow',
+                                creative: 'shadow-glow',
+                                spatial: 'shadow-glow',
+                              }
+                              const categoryBackgroundsMap = {
+                                motor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/50',
+                                memory: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/50',
+                                cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
+                                perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
+                                computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
+                                linguistic: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/50',
+                                geography: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/50',
+                                attention: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/50',
+                                language: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/50',
+                                social: 'bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/50',
+                                creative: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/50',
+                                spatial: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/50',
+                              }
+                              
+                              // Check if current user has the top score
+                              const hasTopScore = username && game.topScore?.username === username
+                              
+                              return (
+                                <div
+                                  key={game.id}
+                                  onClick={() => handleGameClick(game.id, game.name)}
+                                  className={`group relative ${
+                                    hasTopScore 
+                                      ? categoryBackgroundsMap[game.category as keyof typeof categoryBackgroundsMap]
+                                      : 'bg-white dark:bg-gray-800/50'
+                                  } rounded-xl md:rounded-2xl border-2 ${categoryBorderColorsMap[game.category as keyof typeof categoryBorderColorsMap]} p-3 md:p-6 cursor-pointer aspect-square flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlowMap[game.category as keyof typeof categoryGlowMap]}`}
+                                  style={{
+                                    animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
+                                  }}
+                                >
+                                  {/* Animated border gradient on hover */}
+                                  <div className={`absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} opacity-0 group-hover:opacity-20 transition-opacity duration-300 -z-10 blur-md`} />
+                                  
+                                  <div className="relative z-10 flex flex-col h-full">
+                                    {/* Mobile layout - Parent column flex */}
+                                    <div className="md:hidden flex flex-row gap-2">
+                                      {/* First div: Row flex with icon and user counter */}
+                                      <div className="flex flex-col items-start justify-between">
+                                        <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} p-1 rounded-md flex-shrink-0`}>
+                                          <game.icon size={20} className="text-white drop-shadow-sm" />
+                                        </div>
+                                        <div className="flex items-center gap-0.5 text-gray-500 dark:text-gray-400">
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+                                          </svg>
+                                          <span className="text-[10px] font-medium">{game.totalGames}</span>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Second div: Title, top game score, and top game scorer */}
+                                      <div>
+                                        <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
+                                          {game.name}
+                                        </h3>
+                                        {/* Top Scorer */}
+                                        {game.topScore ? (
+                                          <div className="text-xs mt-0.5">
+                                            <p className="font-semibold text-xs text-gray-900 dark:text-white">
+                                              {game.topScore.value}
+                                            </p>
+                                            <p className="text-gray-500 dark:text-gray-400 font-medium text-[10px]">
+                                              {game.topScore.username}
+                                            </p>
+                                          </div>
+                                        ) : (
+                                          <p className="text-[10px] text-gray-400 dark:text-gray-500 italic mt-0.5">
+                                            No scores yet
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Desktop layout - traditional with icon on left */}
+                                    <div className="hidden md:flex items-start space-x-3 mb-4">
+                                      <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} p-2 rounded-lg flex-shrink-0`}>
+                                        <game.icon size={36} className="text-white drop-shadow-sm" />
+                                      </div>
+                                      <div className="flex-1 min-w-0 pr-0">
+                                        <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight mb-2`}>
+                                          {game.name}
+                                        </h3>
+                                        {/* Top Scorer */}
+                                        {game.topScore ? (
+                                          <div className="text-xs">
+                                            <p className="font-semibold text-base text-gray-900 dark:text-white">
+                                              {game.topScore.value}
+                                            </p>
+                                            <p className="text-gray-500 dark:text-gray-400 font-medium">
+                                              {game.topScore.username}
+                                            </p>
+                                          </div>
+                                        ) : (
+                                          <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            No scores yet
+                                          </p>
+                                        )}
+                                      </div>
+                                      {/* Desktop Games Counter */}
+                                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
+                                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+                                        </svg>
+                                        <span className="text-xs font-medium">{game.totalGames}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Spacer to push Your Best to bottom */}
+                                    <div className="flex-1"></div>
+
+                                    {/* User Best - Always at bottom */}
+                                    {username && (
+                                      <div className={`border-2 ${categoryBorderColorsMap[game.category as keyof typeof categoryBorderColorsMap]} border-dashed rounded-lg p-2 md:p-3 transform transition-all duration-300 group-hover:translate-x-1 group-hover:border-solid`}>
+                                        <p className={`text-[10px] md:text-xs font-bold uppercase tracking-wide mb-0.5 md:mb-1 flex items-center gap-1 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent`}>
+                                          <span className="text-xs md:text-sm">⭐</span> Your Best
+                                        </p>
+                                        {game.userBest ? (
+                                          <p className={`font-extrabold text-base md:text-xl bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent`}>
+                                            {game.userBest.value}
+                                          </p>
+                                        ) : (
+                                          <p className={`text-xs md:text-sm font-semibold bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent opacity-60`}>
+                                            Not played yet
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
                           </div>
                         </div>
-
-                        {/* Desktop layout - traditional with icon on left */}
-                        <div className="hidden md:flex items-start space-x-3 mb-4">
-                          <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColors[game.category as keyof typeof categoryColors]} p-2 rounded-lg flex-shrink-0`}>
-                            <game.icon size={36} className="text-white drop-shadow-sm" />
-                          </div>
-                          <div className="flex-1 min-w-0 pr-0">
-                            <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent transition-all duration-300 leading-tight mb-2`}>
-                              {game.name}
-                            </h3>
-                            {/* Top Scorer */}
-                            {game.topScore ? (
-                              <div className="text-xs">
-                                <p className="font-semibold text-base text-gray-900 dark:text-white">
-                                  {game.topScore.value}
-                                </p>
-                                <p className="text-gray-500 dark:text-gray-400 font-medium">
-                                  {game.topScore.username}
-                                </p>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                No scores yet
-                              </p>
-                            )}
-                          </div>
-                          {/* Desktop Games Counter */}
-                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
-                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-                            </svg>
-                            <span className="text-xs font-medium">{game.totalGames}</span>
-                          </div>
-                        </div>
-
-                        {/* Spacer to push Your Best to bottom */}
-                        <div className="flex-1"></div>
-
-                        {/* User Best - Always at bottom */}
-                        {username && (
-                          <div className={`border-2 ${categoryBorderColors[game.category as keyof typeof categoryBorderColors]} border-dashed rounded-lg p-2 md:p-3 transform transition-all duration-300 group-hover:translate-x-1 group-hover:border-solid`}>
-                            <p className={`text-[10px] md:text-xs font-bold uppercase tracking-wide mb-0.5 md:mb-1 flex items-center gap-1 bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
-                              <span className="text-xs md:text-sm">⭐</span> Your Best
-                            </p>
-                            {game.userBest ? (
-                              <p className={`font-extrabold text-base md:text-xl bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
-                                {game.userBest.value}
-                              </p>
-                            ) : (
-                              <p className={`text-xs md:text-sm font-semibold bg-gradient-to-r ${categoryColors[game.category as keyof typeof categoryColors]} bg-clip-text text-transparent opacity-60`}>
-                                Not played yet
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()
+            )}
           </div>
 
           {/* Enhanced Recent Activity */}

@@ -82,6 +82,11 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       if (score.patterns_remembered !== undefined) details.push({ label: 'Correct', value: `${score.patterns_remembered}` })
       break
 
+    case 'time-estimation':
+      if (score.average_accuracy !== undefined) details.push({ label: 'Average Accuracy', value: `${score.average_accuracy}ms` })
+      if (score.best_accuracy !== undefined) details.push({ label: 'Best Accuracy', value: `${score.best_accuracy}ms` })
+      break
+
     default:
       // Generic fallback for any other fields
       Object.keys(score).forEach(key => {
