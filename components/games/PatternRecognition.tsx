@@ -318,9 +318,11 @@ export default function PatternRecognition() {
             shapePair[1] = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
           }
           tempPattern = Array(baseLength).fill(0).map((_, i) => shapePair[i % 2].id)
-          // For higher levels, return both shapes in the pair
+          // For higher levels, return next 2 shapes in sequence based on pattern position
           if (requiresTwoShapes) {
-            tempAnswer = [shapePair[0].id, shapePair[1].id]
+            const nextIndex1 = baseLength % 2
+            const nextIndex2 = (baseLength + 1) % 2
+            tempAnswer = [shapePair[nextIndex1].id, shapePair[nextIndex2].id]
           } else {
             tempAnswer = shapePair[baseLength % 2].id
           }
@@ -367,19 +369,24 @@ export default function PatternRecognition() {
           if (remainder > 0) {
             tempPattern = tempPattern.concat(group.slice(0, remainder))
           }
-          // For higher levels, return the next group (2 shapes)
+          // For higher levels, return next 2 shapes in sequence based on pattern position
           if (requiresTwoShapes) {
-            tempAnswer = group
+            const nextIndex1 = baseLength % groupSize
+            const nextIndex2 = (baseLength + 1) % groupSize
+            tempAnswer = [group[nextIndex1], group[nextIndex2]]
           } else {
             tempAnswer = group[remainder]
           }
           break
 
         case 'reverse':
-          // Reverse pattern: A, B, C, B, A, B, C, B, A, ... (goes forward then backward)
+          // Reverse pattern: A, B, C, D, C, B, A, B, C, D, ... (goes forward then backward)
           // Use 3-4 shapes and make pattern longer to clearly show the reverse
-          const reverseLength = Math.max(baseLength, 6) // Minimum 6 for reverse to be clear
+          // Ensure we show at least one full cycle: forward to end, then backward to start
           const numReverseShapes = Math.min(4, availableShapesForLevel.length)
+          // A full cycle needs: forward (numReverseShapes) + backward (numReverseShapes-1) + forward start (1) = 2*numReverseShapes
+          const minLengthForCycle = 2 * numReverseShapes
+          const reverseLength = Math.max(baseLength, minLengthForCycle) // Ensure at least one full cycle
           const reverseShapes: string[] = []
           const availableForReverse = [...availableShapesForLevel]
           for (let i = 0; i < numReverseShapes; i++) {
@@ -390,44 +397,67 @@ export default function PatternRecognition() {
           
           // Create clear reverse pattern: A, B, C, D, C, B, A, B, C, D, ...
           // Pattern: 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, ...
+          // This pattern bounces back and forth: forward to end, then backward to start, repeat
           tempPattern = []
           let direction = 1
           let pos = 0
+          
+          // Generate the pattern
           for (let i = 0; i < reverseLength; i++) {
             tempPattern.push(reverseShapes[pos])
+            // Move position
             pos += direction
-            // Reverse direction when hitting boundaries
-            if (pos >= reverseShapes.length - 1) {
+            // Reverse direction at boundaries
+            if (pos >= reverseShapes.length) {
+              // Hit the end, bounce back
               direction = -1
-              pos = reverseShapes.length - 1
-            } else if (pos <= 0) {
+              pos = reverseShapes.length - 2
+            } else if (pos < 0) {
+              // Hit the beginning, bounce forward
               direction = 1
-              pos = 0
+              pos = 1
             }
           }
-          // Calculate next position - continue in current direction
-          let nextPos = pos + direction
-          // If next position would be out of bounds, reverse direction
-          if (nextPos >= reverseShapes.length) {
-            direction = -1
-            nextPos = reverseShapes.length - 2
-          } else if (nextPos < 0) {
-            direction = 1
-            nextPos = 1
+          
+          // Calculate the next position(s) after the pattern ends
+          // After the loop, pos is the position that would be used for the next item
+          // and direction is the current direction
+          // The first next shape is at pos (after validating bounds)
+          let firstNextPos = pos
+          let firstNextDir = direction
+          
+          // Ensure firstNextPos is valid (should already be, but double-check)
+          if (firstNextPos < 0) {
+            firstNextPos = 0
+            firstNextDir = 1
+          } else if (firstNextPos >= reverseShapes.length) {
+            firstNextPos = reverseShapes.length - 1
+            firstNextDir = -1
           }
+          
+          // Helper to get next position following bounce logic
+          const getNextBouncePos = (currentPos: number, currentDir: number): { pos: number, dir: number } => {
+            let np = currentPos + currentDir
+            let nd = currentDir
+            
+            if (np >= reverseShapes.length) {
+              nd = -1
+              np = reverseShapes.length - 2
+            } else if (np < 0) {
+              nd = 1
+              np = 1
+            }
+            
+            return { pos: np, dir: nd }
+          }
+          
           if (requiresTwoShapes) {
-            // For two shapes, return next two in sequence
-            let nextPos2 = nextPos + direction
-            if (nextPos2 >= reverseShapes.length) {
-              direction = -1
-              nextPos2 = reverseShapes.length - 2
-            } else if (nextPos2 < 0) {
-              direction = 1
-              nextPos2 = 1
-            }
-            tempAnswer = [reverseShapes[nextPos], reverseShapes[nextPos2]]
+            // First next shape is at firstNextPos
+            // Second next shape is firstNextPos + firstNextDir (with boundary handling)
+            const secondNext = getNextBouncePos(firstNextPos, firstNextDir)
+            tempAnswer = [reverseShapes[firstNextPos], reverseShapes[secondNext.pos]]
           } else {
-            tempAnswer = reverseShapes[nextPos]
+            tempAnswer = reverseShapes[firstNextPos]
           }
           break
 

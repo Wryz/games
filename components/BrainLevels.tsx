@@ -107,7 +107,9 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
   }, [username])
 
   const categoryLevels = useMemo(() => {
-    const categories: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive', 'computation']
+    // Get all unique categories from games
+    const allCategories = Array.from(new Set(GAMES.map(g => g.category))) as GameCategory[]
+    const categories: GameCategory[] = allCategories
     const categoryData: CategoryLevelInfo[] = []
 
     categories.forEach(category => {
@@ -169,6 +171,41 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
       border: 'border-orange-500',
       text: 'text-orange-600 dark:text-orange-400',
       hex: '#f97316' // orange-500
+    },
+    linguistic: {
+      border: 'border-green-500',
+      text: 'text-green-600 dark:text-green-400',
+      hex: '#22c55e' // green-500
+    },
+    geography: {
+      border: 'border-teal-500',
+      text: 'text-teal-600 dark:text-teal-400',
+      hex: '#14b8a6' // teal-500
+    },
+    attention: {
+      border: 'border-yellow-500',
+      text: 'text-yellow-600 dark:text-yellow-400',
+      hex: '#eab308' // yellow-500
+    },
+    language: {
+      border: 'border-indigo-500',
+      text: 'text-indigo-600 dark:text-indigo-400',
+      hex: '#6366f1' // indigo-500
+    },
+    social: {
+      border: 'border-rose-500',
+      text: 'text-rose-600 dark:text-rose-400',
+      hex: '#f43f5e' // rose-500
+    },
+    creative: {
+      border: 'border-violet-500',
+      text: 'text-violet-600 dark:text-violet-400',
+      hex: '#8b5cf6' // violet-500
+    },
+    spatial: {
+      border: 'border-emerald-500',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      hex: '#10b981' // emerald-500
     }
   }
 
@@ -177,7 +214,14 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
     memory: 'Memory',
     perception: 'Perception',
     cognitive: 'Cognitive',
-    computation: 'Computation'
+    computation: 'Computation',
+    linguistic: 'Linguistic',
+    geography: 'Geography',
+    attention: 'Attention',
+    language: 'Language',
+    social: 'Social',
+    creative: 'Creative',
+    spatial: 'Spatial'
   }
 
   // Calculate highest level achieved across all games
@@ -214,6 +258,13 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
     perception: 'from-pink-500 to-pink-600',
     cognitive: 'from-cyan-500 to-cyan-600',
     computation: 'from-orange-500 to-orange-600',
+    linguistic: 'from-green-500 to-green-600',
+    geography: 'from-teal-500 to-teal-600',
+    attention: 'from-yellow-500 to-yellow-600',
+    language: 'from-indigo-500 to-indigo-600',
+    social: 'from-rose-500 to-rose-600',
+    creative: 'from-violet-500 to-violet-600',
+    spatial: 'from-emerald-500 to-emerald-600',
   }
 
   const categoryBackgrounds = {
@@ -222,6 +273,13 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
     perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
     cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
     computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
+    linguistic: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/50',
+    geography: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/50',
+    attention: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/50',
+    language: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/50',
+    social: 'bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/50',
+    creative: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/50',
+    spatial: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/50',
   }
 
   return (

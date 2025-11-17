@@ -12,8 +12,13 @@ import {
   ChimpTestIcon,
   AlgebraIcon,
   LinearAlgebraIcon,
-  CalculusIcon,
-  GeometryIcon
+  ArithmeticIcon,
+  GeometryIcon,
+  TimeEstimationIcon,
+  WordSearchIcon,
+  MazeIcon,
+  AnagramsIcon,
+  CountriesIcon
 } from '@/components/icons/GameIcons'
 
 export interface Game {
@@ -21,7 +26,7 @@ export interface Game {
   name: string
   description: string
   icon: ComponentType<{ className?: string; size?: number }>
-  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation'
+  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'spatial' | 'linguistic' | 'geography'
 }
 
 export const GAMES: Game[] = [
@@ -110,10 +115,10 @@ export const GAMES: Game[] = [
     category: 'computation'
   },
   {
-    id: 'calculus',
-    name: 'Calculus',
-    description: 'Master derivatives, integrals, and limits',
-    icon: CalculusIcon,
+    id: 'arithmetic',
+    name: 'Arithmetic',
+    description: 'Master basic math operations and calculations',
+    icon: ArithmeticIcon,
     category: 'computation'
   },
   {
@@ -122,5 +127,40 @@ export const GAMES: Game[] = [
     description: 'Explore shapes, angles, and spatial relationships',
     icon: GeometryIcon,
     category: 'computation'
+  },
+  {
+    id: 'time-estimation',
+    name: 'Time Estimation',
+    description: 'Measure your perception of time and temporal awareness',
+    icon: TimeEstimationIcon,
+    category: 'perception'
+  },
+  {
+    id: 'word-search',
+    name: 'Word Search',
+    description: 'Find hidden words in letter grids',
+    icon: WordSearchIcon,
+    category: 'linguistic'
+  },
+  {
+    id: 'maze',
+    name: 'Maze',
+    description: 'Navigate through complex mazes and test your spatial awareness',
+    icon: MazeIcon,
+    category: 'perception'
+  },
+  {
+    id: 'anagrams',
+    name: 'Anagrams',
+    description: 'Unscramble letters to form words and test your linguistic skills',
+    icon: AnagramsIcon,
+    category: 'linguistic'
+  },
+  {
+    id: 'countries',
+    name: 'Countries',
+    description: 'Test your knowledge of world geography and country locations',
+    icon: CountriesIcon,
+    category: 'geography'
   }
 ]

@@ -8,7 +8,7 @@ interface GameStats {
   id: string
   name: string
   icon: any
-  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation'
+  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'spatial' | 'linguistic' | 'geography'
   totalGames: number
   topScore: {
     username: string
@@ -118,24 +118,23 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
       for (const game of GAMES) {
         const rpcGameData = rpcDataMap.get(game.id)
 
-        if (rpcGameData) {
+        // Include all games, even if they don't have scores yet
         gameStatsData.push({
           id: game.id,
           name: game.name,
           icon: game.icon,
           category: game.category,
-            totalGames: rpcGameData.total_games || 0,
-            topScore: rpcGameData.top_score ? {
-              username: rpcGameData.top_score.username,
-              value: formatScore(rpcGameData.top_score, game.id) || '',
-              score: rpcGameData.top_score
+          totalGames: rpcGameData?.total_games || 0,
+          topScore: rpcGameData?.top_score ? {
+            username: rpcGameData.top_score.username,
+            value: formatScore(rpcGameData.top_score, game.id) || '',
+            score: rpcGameData.top_score
           } : null,
-            userBest: rpcGameData.user_best ? {
-              value: formatScore(rpcGameData.user_best, game.id) || '',
-              score: rpcGameData.user_best
+          userBest: rpcGameData?.user_best ? {
+            value: formatScore(rpcGameData.user_best, game.id) || '',
+            score: rpcGameData.user_best
           } : null
         })
-        }
       }
 
       setGameStats(gameStatsData)

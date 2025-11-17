@@ -14,8 +14,13 @@ import SequenceMemory from './games/SequenceMemory'
 import ChimpTest from './games/ChimpTest'
 import Algebra from './games/Algebra'
 import LinearAlgebra from './games/LinearAlgebra'
-import Calculus from './games/Calculus'
+import Arithmetic from './games/Arithmetic'
 import Geometry from './games/Geometry'
+import TimeEstimation from './games/TimeEstimation'
+import WordSearch from './games/WordSearch'
+import Maze from './games/Maze'
+import Anagrams from './games/Anagrams'
+import Countries from './games/Countries'
 import UsernameGate from './UsernameGate'
 
 interface GameRendererProps {
@@ -42,8 +47,13 @@ export default function GameRenderer({ selectedGame, onGameSelect }: GameRendere
     'chimp-test': ChimpTest,
     'algebra': Algebra,
     'linear-algebra': LinearAlgebra,
-    'calculus': Calculus,
+    'arithmetic': Arithmetic,
     'geometry': Geometry,
+    'time-estimation': TimeEstimation,
+    'word-search': WordSearch,
+    'maze': Maze,
+    'anagrams': Anagrams,
+    'countries': Countries,
   }
 
   const GameComponent = gameComponents[selectedGame as keyof typeof gameComponents]

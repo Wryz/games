@@ -333,6 +333,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                     cognitive: 'from-cyan-500 to-cyan-600',
                     perception: 'from-pink-500 to-pink-600',
                     computation: 'from-orange-500 to-orange-600',
+                    linguistic: 'from-green-500 to-green-600',
+                    geography: 'from-teal-500 to-teal-600',
+                    attention: 'from-yellow-500 to-yellow-600',
+                    language: 'from-indigo-500 to-indigo-600',
+                    social: 'from-rose-500 to-rose-600',
+                    creative: 'from-violet-500 to-violet-600',
+                    spatial: 'from-emerald-500 to-emerald-600',
                   }
                   const categoryBorderColors = {
                     motor: 'border-blue-500 dark:border-blue-400',
@@ -340,6 +347,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                     cognitive: 'border-cyan-500 dark:border-cyan-400',
                     perception: 'border-pink-500 dark:border-pink-400',
                     computation: 'border-orange-500 dark:border-orange-400',
+                    linguistic: 'border-green-500 dark:border-green-400',
+                    geography: 'border-teal-500 dark:border-teal-400',
+                    attention: 'border-yellow-500 dark:border-yellow-400',
+                    language: 'border-indigo-500 dark:border-indigo-400',
+                    social: 'border-rose-500 dark:border-rose-400',
+                    creative: 'border-violet-500 dark:border-violet-400',
+                    spatial: 'border-emerald-500 dark:border-emerald-400',
                   }
                   const categoryGlow = {
                     motor: 'shadow-glow',
@@ -347,6 +361,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                     cognitive: 'shadow-glow-cyan',
                     perception: 'shadow-glow',
                     computation: 'shadow-glow',
+                    linguistic: 'shadow-glow',
+                    geography: 'shadow-glow',
+                    attention: 'shadow-glow',
+                    language: 'shadow-glow',
+                    social: 'shadow-glow',
+                    creative: 'shadow-glow',
+                    spatial: 'shadow-glow',
                   }
                   const categoryBackgrounds = {
                     motor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/50',
@@ -354,6 +375,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                     cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
                     perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
                     computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
+                    linguistic: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/50',
+                    geography: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/50',
+                    attention: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/50',
+                    language: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/50',
+                    social: 'bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/50',
+                    creative: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/50',
+                    spatial: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/50',
                   }
                   
                   // Check if current user has the top score

@@ -240,12 +240,12 @@ export const AlgebraIcon = ({ className = "", size = 24 }: IconProps) => (
   <svg
     width={size}
     height={size}
-    viewBox="0 0 1024 1024"
+    viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    <path fill="currentColor" d="M960 640H640v320q0 27-18.5 45.5T576 1024H448q-27 0-45.5-19T384 960V640H64q-27 0-45.5-19T0 576V448q0-27 18.5-45.5T64 384h320V64q0-27 18.5-45.5T448 0h128q27 0 45.5 18.5T640 64v320h320q27 0 45.5 18.5T1024 448v128q0 26-18.5 45T960 640z"/>
+    <path fill="currentColor" d="M15.444 4.952a.5.5 0 0 0-.728-.163l-.385.275a1 1 0 0 1-1.162-1.627l.385-.276a2.5 2.5 0 0 1 3.636.817l.508.91l1.595-1.595a1 1 0 1 1 1.414 1.414L18.71 6.704l.793 1.42a.5.5 0 0 0 .751.145l.365-.295a1 1 0 0 1 1.26 1.553l-.364.295a2.5 2.5 0 0 1-3.759-.723l-.516-.925l-1.534 1.533a1 1 0 1 1-1.414-1.414l1.935-1.935l-.784-1.406Zm-7.048 9.186c-1.416.276-3.002.345-4.53.36c-.273 1.11-.16 1.897.097 2.429c.302.623.885 1.064 1.708 1.27c1.7.423 4.174-.25 5.827-2.134a1 1 0 1 1 1.504 1.318c-2.098 2.393-5.32 3.378-7.815 2.756c-1.274-.318-2.412-1.076-3.023-2.338c-.607-1.253-.612-2.828.01-4.626c.84-2.423 2.118-3.941 3.407-4.886a8.161 8.161 0 0 1 3.218-1.416c1.626-.333 3.085.124 3.9 1.194c.828 1.088.8 2.567-.092 3.787c-.98 1.338-2.58 1.968-4.211 2.286ZM9.2 8.83A6.162 6.162 0 0 0 6.764 9.9c-.721.529-1.491 1.333-2.13 2.584c1.207-.03 2.36-.11 3.379-.31c1.455-.283 2.446-.773 2.98-1.503c.43-.589.346-1.09.115-1.394c-.245-.32-.848-.664-1.908-.447Z"/>
   </svg>
 )
 
@@ -262,16 +262,16 @@ export const LinearAlgebraIcon = ({ className = "", size = 24 }: IconProps) => (
   </svg>
 )
 
-export const CalculusIcon = ({ className = "", size = 24 }: IconProps) => (
+export const ArithmeticIcon = ({ className = "", size = 24 }: IconProps) => (
   <svg
     width={size}
     height={size}
-    viewBox="0 0 384 512"
+    viewBox="0 0 1024 1024"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    <path fill="currentColor" d="M377.21 73.03l-28-36.17C328.43 9.98 295.87-3.75 262.05.89 221.86 6.41 190.54 40 181.42 80.82l-78.16 334.36-23.95-30.91c-10.69-13.79-30.18-16.03-43.53-4.98l-24.17 20c-13.35 11.05-15.51 31.19-4.82 44.98l21.42 27.65c15.98 20.63 38.53 35.82 63.89 39.21 49.82 6.67 94.4-26.18 105.34-75.22l79.2-339.11 28.03 36.2c10.68 13.8 30.17 16.04 43.52 5l24.18-20c13.36-11.03 15.53-31.17 4.84-44.97z"/>
+    <path fill="currentColor" d="M960 640H640v320q0 27-18.5 45.5T576 1024H448q-27 0-45.5-19T384 960V640H64q-27 0-45.5-19T0 576V448q0-27 18.5-45.5T64 384h320V64q0-27 18.5-45.5T448 0h128q27 0 45.5 18.5T640 64v320h320q27 0 45.5 18.5T1024 448v128q0 26-18.5 45T960 640z"/>
   </svg>
 )
 
@@ -286,4 +286,72 @@ export const GeometryIcon = ({ className = "", size = 24 }: IconProps) => (
   >
     <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 21l4-12m2 0l1.48 4.439m.949 2.847L17 21M10 7a2 2 0 1 0 4 0a2 2 0 1 0-4 0m-6 5c1.526 2.955 4.588 5 8 5c3.41 0 6.473-2.048 8-5m-8-7V3"/>
   </svg>
+)
+
+export const SpatialReasoningIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none"/>
+  </svg>
+)
+
+export const TaskSwitchingIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M8 3L4 7l4 4M16 21l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M4 7h16M20 17H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
+
+export const TimeEstimationIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
+
+export const WordSearchIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <path d="M6 8h12M6 12h12M6 16h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+)
+
+export const MazeIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg width={size} height={size} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" className={className}><path fill="currentColor" d="M5 9V3h3v1H6v5h2v1H2v3h3v-1H3v-1h5v1H6v1h6v1H1V1h1v5h2v2H3V7H2v2zm9-8v13h-1v-2H9V9h3v1h-2v1h3V8H9V6H8v2H7V5h4V4H9V3h3v3h-2v1h3V2H4v3H3V1z"/></svg>
+)
+
+export const AnagramsIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 48 48" className={className}><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M24 4a7.115 7.115 0 0 0-7.115 7.116a7.1 7.1 0 0 0 .954 3.524l-3.188 3.188a7.1 7.1 0 0 0-3.536-.944A7.115 7.115 0 0 0 4 24h0a7.115 7.115 0 0 0 7.116 7.115a7.1 7.1 0 0 0 3.524-.954l3.199 3.2a7.1 7.1 0 0 0-.954 3.525a7.115 7.115 0 0 0 14.23-.002c0-1.24-.326-2.459-.943-3.535l3.188-3.188a7.1 7.1 0 0 0 3.525.954a7.115 7.115 0 1 0-5.389-2.468l-2.851 2.85A7.12 7.12 0 0 0 24 29.77a7.12 7.12 0 0 0-4.647 1.727l-2.849-2.85A7.12 7.12 0 0 0 18.231 24a7.12 7.12 0 0 0-1.729-4.645l2.852-2.852a7.115 7.115 0 0 0 11.761-5.386A7.115 7.115 0 0 0 24.002 4z"/><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M21.91 40.616v-7.377h2.415a2.474 2.474 0 0 1 2.472 2.476v.001a2.474 2.474 0 0 1-2.471 2.478H21.91m2.415 0l2.415 2.42m.949-32.928l-1.845 7.377L24 7.686l-1.844 7.377l-1.845-7.377m14.802 20.003V20.31h1.66A3.23 3.23 0 0 1 40 23.54h0v.922a3.23 3.23 0 0 1-3.227 3.228zm-23.997-7.378a2.44 2.44 0 0 1 2.444 2.445v2.49a2.44 2.44 0 0 1-2.445 2.443h0a2.44 2.44 0 0 1-2.443-2.445v-2.49a2.44 2.44 0 0 1 2.444-2.443"/></svg>
+)
+
+export const CountriesIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 16 16" className={className}><path fill="currentColor" d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8s8-3.6 8-8s-3.6-8-8-8zm5.2 5.3c.4 0 .7.3 1.1.3c-.3.4-1.6.4-2-.1c.3-.1.5-.2.9-.2zM1 8c0-.4 0-.8.1-1.3c.1 0 .2.1.3.1c0 0 .1.1.1.2c0 .3.3.5.5.5c.8.1 1.1.8 1.8 1c.2.1.1.3 0 .5c-.6.8-.1 1.4.4 1.9c.5.4.5.8.6 1.4c0 .7.1 1.5.4 2.2C2.7 13.3 1 10.9 1 8zm7 7c-.7 0-1.5-.1-2.1-.3c-.1-.2-.1-.4 0-.6c.4-.8.8-1.5 1.3-2.2c.2-.2.4-.4.4-.7c0-.2.1-.5.2-.7c.3-.5.2-.8-.2-.9c-.8-.2-1.2-.9-1.8-1.2s-1.2-.5-1.7-.2c-.2.1-.5.2-.5-.1c0-.4-.5-.7-.4-1.1c-.1 0-.2 0-.3.1s-.2.2-.4.1c-.2-.2-.1-.4-.1-.6c.1-.2.2-.3.4-.4c.4-.1.8-.1 1 .4c.3-.9.9-1.4 1.5-1.8c0 0 .8-.7.9-.7s.2.2.4.3c.2 0 .3 0 .3-.2c.1-.5-.2-1.1-.6-1.2c0-.1.1-.1.1-.1c.3-.1.7-.3.6-.6c0-.4-.4-.6-.8-.6c-.2 0-.4 0-.6.1c-.4.2-.9.4-1.5.4C5.2 1.4 6.6 1 8 1h.8c-.6.1-1.2.3-1.6.5c.6.1.7.4.5.9c-.1.2 0 .4.2.5s.4.1.5-.1c.2-.3.6-.4.9-.5c.4-.1.7-.3 1-.7c0-.1.1-.1.2-.2c.6.2 1.2.6 1.8 1c-.1 0-.1.1-.2.1c-.2.2-.5.3-.2.7c.1.2 0 .3-.1.4c-.2.1-.3 0-.4-.1s-.1-.3-.4-.3c-.1.2-.4.3-.4.6c.5 0 .4.4.5.7c-.6.1-.8.4-.5.9c.1.2-.1.3-.2.4c-.4.6-.8 1-.8 1.7s.5 1.4 1.3 1.3c.9-.1.9-.1 1.2.7c0 .1.1.2.1.3c.1.2.2.4.1.6c-.3.8.1 1.4.4 2c.1.2.2.3.3.4c-1.3 1.4-3 2.2-5 2.2z"/></svg>
 )

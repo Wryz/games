@@ -53,7 +53,10 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
     motor: 'Motor Skills',
     memory: 'Memory',
     perception: 'Perception',
-    computation: 'Computation'
+    computation: 'Computation',
+    spatial: 'Spatial',
+    linguistic: 'Linguistic',
+    geography: 'Geography'
   }
 
   const gamesByCategory = GAMES.reduce((acc, game) => {
@@ -182,6 +185,13 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                         {(game.id === 'pattern-recognition' || game.id === 'stroop-test' || game.id === 'chimp-test') && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                             Beta
+                          </span>
+                        )}
+                        {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
+                          game.id === 'time-estimation' || 
+                          game.id === 'word-search' || game.id === 'maze' || game.id === 'anagrams' || game.id === 'countries') && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            Soon
                           </span>
                         )}
                       </div>
