@@ -22,7 +22,7 @@ export const EDUCATION_LEVELS: Record<number, string> = {
   20: 'Doctorate'
 }
 
-export type GameCategory = 'motor' | 'memory' | 'perception' | 'cognitive'
+export type GameCategory = 'motor' | 'memory' | 'perception' | 'cognitive' | 'computation'
 
 export interface GameLevelInfo {
   currentLevel: number
@@ -293,11 +293,8 @@ function extractScoreValue(gameId: string, score: any): number {
     case 'pattern-recognition':
       return score.patterns_solved || 0
     case 'stroop-test':
-      // Calculate percentage correct
-      if (score.total_questions && score.total_questions > 0) {
-        return (score.correct_answers / score.total_questions) * 100
-      }
-      return 0
+      // Return correct answers count
+      return score.correct_answers || 0
     default:
       return 0
   }
@@ -492,11 +489,7 @@ export function formatUserScore(gameId: string, score: any): string {
     case 'pattern-recognition':
       return `${score.patterns_solved || 0} patterns`
     case 'stroop-test':
-      if (score.total_questions && score.total_questions > 0) {
-        const percentage = ((score.correct_answers || 0) / score.total_questions) * 100
-        return `${percentage.toFixed(1)}% accuracy`
-      }
-      return '0% accuracy'
+      return `${score.correct_answers || 0} correct (${score.average_time || 0}ms)`
     default:
       return 'No score'
   }

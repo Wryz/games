@@ -203,7 +203,6 @@ export type Database = {
           correct_answers: number
           date_submitted: string | null
           id: number
-          total_questions: number
           username: string
         }
         Insert: {
@@ -211,7 +210,6 @@ export type Database = {
           correct_answers: number
           date_submitted?: string | null
           id?: number
-          total_questions: number
           username: string
         }
         Update: {
@@ -219,7 +217,6 @@ export type Database = {
           correct_answers?: number
           date_submitted?: string | null
           id?: number
-          total_questions?: number
           username?: string
         }
         Relationships: []

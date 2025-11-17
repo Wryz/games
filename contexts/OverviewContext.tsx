@@ -8,7 +8,7 @@ interface GameStats {
   id: string
   name: string
   icon: any
-  category: 'cognitive' | 'motor' | 'memory' | 'perception'
+  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation'
   totalGames: number
   topScore: {
     username: string
@@ -103,7 +103,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
             case 'pattern-recognition':
               return `${score.patterns_solved} patterns (${score.time_taken}s)`
             case 'stroop-test':
-              return `${score.correct_answers}/${score.total_questions}`
+              return `${score.correct_answers || 0} correct (${score.average_time || 0}ms)`
             case 'number-memory':
               return `${score.longest_sequence} digits`
             case 'memory':

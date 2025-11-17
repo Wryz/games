@@ -118,7 +118,6 @@ export async function submitStroopTestScore(score: StroopTestScoreInsert) {
     .rpc('submit_stroop_test_score', {
       p_username: score.username,
       p_correct_answers: score.correct_answers,
-      p_total_questions: score.total_questions,
       p_average_time: score.average_time
     })
   

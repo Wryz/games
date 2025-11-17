@@ -88,7 +88,6 @@ CREATE TABLE IF NOT EXISTS stroop_test_scores (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) NOT NULL,
   correct_answers INTEGER NOT NULL,
-  total_questions INTEGER NOT NULL,
   average_time INTEGER NOT NULL, -- in milliseconds
   date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -285,14 +284,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION submit_stroop_test_score(
   p_username VARCHAR(50),
   p_correct_answers INTEGER,
-  p_total_questions INTEGER,
   p_average_time INTEGER
 ) RETURNS stroop_test_scores AS $$
 DECLARE
   new_score stroop_test_scores;
 BEGIN
-  INSERT INTO stroop_test_scores (username, correct_answers, total_questions, average_time)
-  VALUES (p_username, p_correct_answers, p_total_questions, p_average_time)
+  INSERT INTO stroop_test_scores (username, correct_answers, average_time)
+  VALUES (p_username, p_correct_answers, p_average_time)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -594,7 +592,6 @@ BEGIN
       (SELECT json_build_object(
         'username', username,
         'correct_answers', correct_answers,
-        'total_questions', total_questions,
         'average_time', average_time,
         'date_submitted', date_submitted
       ) FROM stroop_test_scores 
@@ -604,7 +601,6 @@ BEGIN
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
             'correct_answers', correct_answers,
-            'total_questions', total_questions,
             'average_time', average_time,
             'date_submitted', date_submitted
           ) FROM stroop_test_scores 
@@ -773,7 +769,7 @@ BEGIN
       'stroop-test' as game_id,
       'Stroop Test' as game_name,
       username,
-      json_build_object('correct_answers', correct_answers, 'total_questions', total_questions) as score_value,
+      json_build_object('correct_answers', correct_answers) as score_value,
       date_submitted
     FROM stroop_test_scores
     

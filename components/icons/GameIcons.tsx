@@ -235,3 +235,55 @@ export const BrainIcon = ({ className = "", size = 24 }: IconProps) => (
     />
   </svg>
 )
+
+export const AlgebraIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 1024 1024"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path fill="currentColor" d="M960 640H640v320q0 27-18.5 45.5T576 1024H448q-27 0-45.5-19T384 960V640H64q-27 0-45.5-19T0 576V448q0-27 18.5-45.5T64 384h320V64q0-27 18.5-45.5T448 0h128q27 0 45.5 18.5T640 64v320h320q27 0 45.5 18.5T1024 448v128q0 26-18.5 45T960 640z"/>
+  </svg>
+)
+
+export const LinearAlgebraIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path fill="currentColor" d="M2 2h4v2H4v16h2v2H2zm18 2h-2V2h4v20h-4v-2h2zM9 5h1v5h1v1H8v-1h1V6l-1 .5v-1zm6 8h1v5h1v1h-3v-1h1v-4l-1 .5v-1zm-6 0c1.1 0 2 1.34 2 3s-.9 3-2 3s-2-1.34-2-3s.9-3 2-3m0 1c-.55 0-1 .9-1 2s.45 2 1 2s1-.9 1-2s-.45-2-1-2m6-9c1.1 0 2 1.34 2 3s-.9 3-2 3s-2-1.34-2-3s.9-3 2-3m0 1c-.55 0-1 .9-1 2s.45 2 1 2s1-.9 1-2s-.45-2-1-2"/>
+  </svg>
+)
+
+export const CalculusIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 384 512"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path fill="currentColor" d="M377.21 73.03l-28-36.17C328.43 9.98 295.87-3.75 262.05.89 221.86 6.41 190.54 40 181.42 80.82l-78.16 334.36-23.95-30.91c-10.69-13.79-30.18-16.03-43.53-4.98l-24.17 20c-13.35 11.05-15.51 31.19-4.82 44.98l21.42 27.65c15.98 20.63 38.53 35.82 63.89 39.21 49.82 6.67 94.4-26.18 105.34-75.22l79.2-339.11 28.03 36.2c10.68 13.8 30.17 16.04 43.52 5l24.18-20c13.36-11.03 15.53-31.17 4.84-44.97z"/>
+  </svg>
+)
+
+export const GeometryIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 21l4-12m2 0l1.48 4.439m.949 2.847L17 21M10 7a2 2 0 1 0 4 0a2 2 0 1 0-4 0m-6 5c1.526 2.955 4.588 5 8 5c3.41 0 6.473-2.048 8-5m-8-7V3"/>
+  </svg>
+)

@@ -47,7 +47,8 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
     cognitive: 'Cognitive',
     motor: 'Motor Skills',
     memory: 'Memory',
-    perception: 'Perception'
+    perception: 'Perception',
+    computation: 'Computation'
   }
 
   const gamesByCategory = GAMES.reduce((acc, game) => {

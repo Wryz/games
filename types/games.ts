@@ -9,7 +9,11 @@ import {
   VisualMemoryIcon,
   StroopTestIcon,
   SequenceMemoryIcon,
-  ChimpTestIcon
+  ChimpTestIcon,
+  AlgebraIcon,
+  LinearAlgebraIcon,
+  CalculusIcon,
+  GeometryIcon
 } from '@/components/icons/GameIcons'
 
 export interface Game {
@@ -17,7 +21,7 @@ export interface Game {
   name: string
   description: string
   icon: ComponentType<{ className?: string; size?: number }>
-  category: 'cognitive' | 'motor' | 'memory' | 'perception'
+  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation'
 }
 
 export const GAMES: Game[] = [
@@ -90,5 +94,33 @@ export const GAMES: Game[] = [
     description: 'Test your working memory like a chimpanzee',
     icon: ChimpTestIcon,
     category: 'cognitive'
+  },
+  {
+    id: 'algebra',
+    name: 'Algebra',
+    description: 'Solve equations and master algebraic concepts',
+    icon: AlgebraIcon,
+    category: 'computation'
+  },
+  {
+    id: 'linear-algebra',
+    name: 'Linear Algebra',
+    description: 'Work with vectors, matrices, and linear transformations',
+    icon: LinearAlgebraIcon,
+    category: 'computation'
+  },
+  {
+    id: 'calculus',
+    name: 'Calculus',
+    description: 'Master derivatives, integrals, and limits',
+    icon: CalculusIcon,
+    category: 'computation'
+  },
+  {
+    id: 'geometry',
+    name: 'Geometry',
+    description: 'Explore shapes, angles, and spatial relationships',
+    icon: GeometryIcon,
+    category: 'computation'
   }
 ]

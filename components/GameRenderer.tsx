@@ -12,6 +12,10 @@ import VisualMemory from './games/VisualMemory'
 import StroopTest from './games/StroopTest'
 import SequenceMemory from './games/SequenceMemory'
 import ChimpTest from './games/ChimpTest'
+import Algebra from './games/Algebra'
+import LinearAlgebra from './games/LinearAlgebra'
+import Calculus from './games/Calculus'
+import Geometry from './games/Geometry'
 import UsernameGate from './UsernameGate'
 
 interface GameRendererProps {
@@ -36,6 +40,10 @@ export default function GameRenderer({ selectedGame, onGameSelect }: GameRendere
     'stroop-test': StroopTest,
     'sequence-memory': SequenceMemory,
     'chimp-test': ChimpTest,
+    'algebra': Algebra,
+    'linear-algebra': LinearAlgebra,
+    'calculus': Calculus,
+    'geometry': Geometry,
   }
 
   const GameComponent = gameComponents[selectedGame as keyof typeof gameComponents]

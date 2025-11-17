@@ -137,7 +137,7 @@ export default function Home({ onGameSelect }: HomeProps) {
               formattedValue = `${scoreValue.patterns_solved} patterns`
               break
             case 'stroop-test':
-              formattedValue = `${scoreValue.correct_answers}/${scoreValue.total_questions}`
+              formattedValue = `${scoreValue.correct_answers || 0} correct (${scoreValue.average_time || 0}ms)`
               break
             case 'number-memory':
               formattedValue = `${scoreValue.longest_sequence} digits`
@@ -244,7 +244,7 @@ export default function Home({ onGameSelect }: HomeProps) {
           <p className="text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-xl">
             Level up your brain through engaging cognitive challenges
           </p>
-          <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 pt-2 flex-wrap">
+            <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 pt-2 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
               <span>Motor Skills</span>
@@ -256,6 +256,10 @@ export default function Home({ onGameSelect }: HomeProps) {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
               <span>Cognition</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: '0.9s' }} />
+              <span>Computation</span>
             </div>
           </div>
         </div>
@@ -325,24 +329,28 @@ export default function Home({ onGameSelect }: HomeProps) {
                     memory: 'from-purple-500 to-purple-600',
                     cognitive: 'from-cyan-500 to-cyan-600',
                     perception: 'from-pink-500 to-pink-600',
+                    computation: 'from-orange-500 to-orange-600',
                   }
                   const categoryBorderColors = {
                     motor: 'border-blue-500 dark:border-blue-400',
                     memory: 'border-purple-500 dark:border-purple-400',
                     cognitive: 'border-cyan-500 dark:border-cyan-400',
                     perception: 'border-pink-500 dark:border-pink-400',
+                    computation: 'border-orange-500 dark:border-orange-400',
                   }
                   const categoryGlow = {
                     motor: 'shadow-glow',
                     memory: 'shadow-glow-purple',
                     cognitive: 'shadow-glow-cyan',
                     perception: 'shadow-glow',
+                    computation: 'shadow-glow',
                   }
                   const categoryBackgrounds = {
                     motor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/50',
                     memory: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/50',
                     cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
                     perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
+                    computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
                   }
                   
                   // Check if current user has the top score

@@ -52,7 +52,8 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
     cognitive: 'Cognitive',
     motor: 'Motor Skills',
     memory: 'Memory',
-    perception: 'Perception'
+    perception: 'Perception',
+    computation: 'Computation'
   }
 
   const gamesByCategory = GAMES.reduce((acc, game) => {

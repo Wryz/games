@@ -63,7 +63,6 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
 
     case 'stroop-test':
       if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: `${score.correct_answers}` })
-      if (score.total_questions !== undefined) details.push({ label: 'Total Questions', value: `${score.total_questions}` })
       if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${score.average_time}ms` })
       break
 
@@ -110,7 +109,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
   }, [username])
 
   const categoryLevels = useMemo(() => {
-    const categories: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive']
+    const categories: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive', 'computation']
     const categoryData: CategoryLevelInfo[] = []
 
     categories.forEach(category => {
@@ -167,6 +166,11 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
       border: 'border-cyan-500',
       text: 'text-cyan-600 dark:text-cyan-400',
       hex: '#06b6d4' // cyan-500
+    },
+    computation: {
+      border: 'border-orange-500',
+      text: 'text-orange-600 dark:text-orange-400',
+      hex: '#f97316' // orange-500
     }
   }
 
@@ -174,7 +178,8 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
     motor: 'Motor Skills',
     memory: 'Memory',
     perception: 'Perception',
-    cognitive: 'Cognitive'
+    cognitive: 'Cognitive',
+    computation: 'Computation'
   }
 
   // Calculate highest level achieved across all games
@@ -210,6 +215,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
     memory: 'from-purple-500 to-purple-600',
     perception: 'from-pink-500 to-pink-600',
     cognitive: 'from-cyan-500 to-cyan-600',
+    computation: 'from-orange-500 to-orange-600',
   }
 
   const categoryBackgrounds = {
@@ -217,6 +223,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
     memory: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/50',
     perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
     cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
+    computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
   }
 
   return (
@@ -384,8 +391,8 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
             const educationLevel = EDUCATION_LEVELS[level] || 'Unknown'
             
             // Use category colors for highlighted badges, gray for unhighlighted
-            const categoryIndex = (level - 1) % 4
-            const categoryKeys: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive']
+            const categoryIndex = (level - 1) % 5
+            const categoryKeys: GameCategory[] = ['motor', 'memory', 'perception', 'cognitive', 'computation']
             const categoryKey = categoryKeys[categoryIndex]
             const gradient = categoryGradients[categoryKey]
             const badgeColor = isHighlighted
