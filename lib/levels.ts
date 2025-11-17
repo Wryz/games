@@ -286,8 +286,9 @@ function extractScoreValue(gameId: string, score: any): number {
     case 'memory':
     case 'visual-memory':
     case 'sequence-memory':
-    case 'chimp-test':
       return score.level_reached || 0
+    case 'chimp-test':
+      return score.patterns_remembered || 0
     case 'number-memory':
       return score.longest_sequence || 0
     case 'pattern-recognition':
@@ -456,8 +457,9 @@ export function formatThreshold(gameId: string, threshold: number): string {
     case 'memory':
     case 'visual-memory':
     case 'sequence-memory':
-    case 'chimp-test':
       return `Level ${threshold}`
+    case 'chimp-test':
+      return `${threshold} correct`
     case 'number-memory':
       return `${threshold} digits`
     case 'pattern-recognition':
@@ -482,8 +484,9 @@ export function formatUserScore(gameId: string, score: any): string {
       return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
     case 'visual-memory':
     case 'sequence-memory':
-    case 'chimp-test':
       return `Level ${score.level_reached || 0}`
+    case 'chimp-test':
+      return `${score.patterns_remembered || 0} correct`
     case 'number-memory':
       return `${score.longest_sequence || 0} digits`
     case 'pattern-recognition':

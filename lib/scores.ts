@@ -141,9 +141,7 @@ export async function submitChimpTestScore(score: ChimpTestScoreInsert) {
   const { data, error } = await supabase
     .rpc('submit_chimp_test_score', {
       p_username: score.username,
-      p_level_reached: score.level_reached,
-      p_patterns_remembered: score.patterns_remembered,
-      p_total_patterns: score.total_patterns
+      p_patterns_remembered: score.patterns_remembered
     })
   
   if (error) throw error

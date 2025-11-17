@@ -77,9 +77,7 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       break
 
     case 'chimp-test':
-      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
-      if (score.numbers_remembered !== undefined) details.push({ label: 'Numbers Remembered', value: `${score.numbers_remembered}` })
-      if (score.attempts !== undefined) details.push({ label: 'Attempts', value: `${score.attempts}` })
+      if (score.patterns_remembered !== undefined) details.push({ label: 'Correct', value: `${score.patterns_remembered}` })
       break
 
     default:

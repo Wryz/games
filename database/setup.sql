@@ -107,9 +107,7 @@ CREATE TABLE IF NOT EXISTS sequence_memory_scores (
 CREATE TABLE IF NOT EXISTS chimp_test_scores (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) NOT NULL,
-  level_reached INTEGER NOT NULL,
   patterns_remembered INTEGER NOT NULL,
-  total_patterns INTEGER NOT NULL,
   date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -317,15 +315,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Function to submit chimp test score
 CREATE OR REPLACE FUNCTION submit_chimp_test_score(
   p_username VARCHAR(50),
-  p_level_reached INTEGER,
-  p_patterns_remembered INTEGER,
-  p_total_patterns INTEGER
+  p_patterns_remembered INTEGER
 ) RETURNS chimp_test_scores AS $$
 DECLARE
   new_score chimp_test_scores;
 BEGIN
-  INSERT INTO chimp_test_scores (username, level_reached, patterns_remembered, total_patterns)
-  VALUES (p_username, p_level_reached, p_patterns_remembered, p_total_patterns)
+  INSERT INTO chimp_test_scores (username, patterns_remembered)
+  VALUES (p_username, p_patterns_remembered)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -645,21 +641,19 @@ BEGIN
       (SELECT COUNT(*) FROM chimp_test_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'level_reached', level_reached,
-        'total_patterns', total_patterns,
+        'patterns_remembered', patterns_remembered,
         'date_submitted', date_submitted
       ) FROM chimp_test_scores 
-      ORDER BY level_reached DESC 
+      ORDER BY patterns_remembered DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'level_reached', level_reached,
-            'total_patterns', total_patterns,
+            'patterns_remembered', patterns_remembered,
             'date_submitted', date_submitted
           ) FROM chimp_test_scores 
           WHERE username = p_username
-          ORDER BY level_reached DESC 
+          ORDER BY patterns_remembered DESC 
           LIMIT 1)
         ELSE NULL
       END as user_best
@@ -789,7 +783,7 @@ BEGIN
       'chimp-test' as game_id,
       'Chimp Test' as game_name,
       username,
-      json_build_object('level_reached', level_reached) as score_value,
+      json_build_object('patterns_remembered', patterns_remembered) as score_value,
       date_submitted
     FROM chimp_test_scores
     

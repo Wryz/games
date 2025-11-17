@@ -48,25 +48,19 @@ export type Database = {
         Row: {
           date_submitted: string | null
           id: number
-          level_reached: number
           patterns_remembered: number
-          total_patterns: number
           username: string
         }
         Insert: {
           date_submitted?: string | null
           id?: number
-          level_reached: number
           patterns_remembered: number
-          total_patterns: number
           username: string
         }
         Update: {
           date_submitted?: string | null
           id?: number
-          level_reached?: number
           patterns_remembered?: number
-          total_patterns?: number
           username?: string
         }
         Relationships: []
@@ -308,17 +302,13 @@ export type Database = {
       }
       submit_chimp_test_score: {
         Args: {
-          p_level_reached: number
           p_patterns_remembered: number
-          p_total_patterns: number
           p_username: string
         }
         Returns: {
           date_submitted: string | null
           id: number
-          level_reached: number
           patterns_remembered: number
-          total_patterns: number
           username: string
         }
         SetofOptions: {

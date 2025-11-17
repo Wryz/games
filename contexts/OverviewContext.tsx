@@ -108,6 +108,8 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${score.longest_sequence} digits`
             case 'memory':
               return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
+            case 'chimp-test':
+              return `${score.patterns_remembered || 0} correct`
             default:
             return `Level ${score.level_reached}`
         }

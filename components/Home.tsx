@@ -142,6 +142,9 @@ export default function Home({ onGameSelect }: HomeProps) {
             case 'number-memory':
               formattedValue = `${scoreValue.longest_sequence} digits`
               break
+            case 'chimp-test':
+              formattedValue = `${scoreValue.patterns_remembered || 0} correct`
+              break
             default:
               formattedValue = `Level ${scoreValue.level_reached}`
           }
