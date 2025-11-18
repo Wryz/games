@@ -104,7 +104,7 @@ const shapes = [
   }
 ]
 
-type PatternType = 'simple' | 'alternating' | 'progressive' | 'repeating' | 'reverse'
+type PatternType = 'simple' | 'alternating' | 'progressive' | 'repeating' | 'reverse' | 'nested' | 'mirror'
 
 // Pattern item with shape and color (null shapeId means gap)
 type PatternItem = {
@@ -217,8 +217,9 @@ export default function PatternRecognition() {
 
   // Get available shapes based on level (more shapes unlock as level increases)
   const getAvailableShapes = useCallback((level: number) => {
-    // Start with 3 shapes, add more as level increases
-    const numShapes = Math.min(3 + Math.floor(level / 5), shapes.length)
+    // Start with 3 shapes, unlock faster to ensure we have enough for complex patterns
+    // All 10 shapes unlocked by level 25
+    const numShapes = Math.min(3 + Math.floor(level / 3), shapes.length)
     return shapes.slice(0, numShapes)
   }, [])
 
@@ -243,31 +244,268 @@ export default function PatternRecognition() {
 
   // Generate pattern based on difficulty
   const generatePattern = useCallback((level: number): { pattern: PatternItem[], type: PatternType, answer: string | string[], colorMap: Record<string, string> } => {
-    // Increase pattern length more gradually - slower growth, but longer for reverse
-    const baseLength = Math.min(3 + Math.floor(level / 3), 8)
-    // Pattern types unlock gradually
-    const allTypes: PatternType[] = ['simple', 'alternating', 'progressive', 'repeating', 'reverse']
-    const unlockLevel = Math.floor(level / 4)
-    // Cycle through types
-    const typeIndex = unlockLevel % allTypes.length
-    const type = allTypes[typeIndex]
+    // Increase pattern length significantly for higher levels - no cap, grows continuously
+    const baseLength = Math.min(3 + Math.floor(level / 2), level >= 20 ? 15 + Math.floor((level - 20) / 3) : 12)
+    // Pattern types unlock gradually, with more complex types at higher levels
+    const basicTypes: PatternType[] = ['simple', 'alternating', 'progressive', 'repeating', 'reverse']
+    const advancedTypes: PatternType[] = ['nested', 'mirror']
+    
+    // At level 15+, start introducing advanced types
+    // At level 20+, only use advanced types and complex variations
+    let availableTypes: PatternType[]
+    if (level >= 20) {
+      // High levels: mix of advanced types and complex variations of basic types
+      availableTypes = [...advancedTypes, 'progressive', 'repeating', 'reverse']
+    } else if (level >= 15) {
+      // Mid-high levels: mix basic and advanced
+      availableTypes = [...basicTypes, ...advancedTypes]
+    } else {
+      // Lower levels: only basic types
+      availableTypes = basicTypes
+    }
     
     // Get available shapes for this level
     const availableShapesForLevel = getAvailableShapes(level)
+    
+    // Ensure we have enough shapes for pattern generation
+    // Minimum requirement: at least 2 shapes for basic patterns, 4+ for advanced patterns
+    if (availableShapesForLevel.length < 2) {
+      // Fallback: use all available shapes if we somehow don't have enough
+      const fallbackShape = availableShapesForLevel[0] || shapes[0]
+      const fallbackPattern: PatternItem[] = Array(Math.min(baseLength, 3)).fill(0).map(() => ({
+        shapeId: fallbackShape.id,
+        color: fallbackShape.color
+      }))
+      return { 
+        pattern: fallbackPattern, 
+        type: 'simple' as PatternType, 
+        answer: fallbackShape.id, 
+        colorMap: { [fallbackShape.id]: fallbackShape.color } 
+      }
+    }
+    
+    // Filter out advanced types if we don't have enough shapes (need at least 4 for nested/mirror)
+    const filteredAdvancedTypes = availableShapesForLevel.length >= 4 
+      ? advancedTypes 
+      : []
+    
+    // Rebuild available types based on shape availability
+    let finalAvailableTypes: PatternType[]
+    if (level >= 20) {
+      // High levels: mix of advanced types (if enough shapes) and complex variations of basic types
+      finalAvailableTypes = [...filteredAdvancedTypes, 'progressive', 'repeating', 'reverse']
+    } else if (level >= 15) {
+      // Mid-high levels: mix basic and advanced (if enough shapes)
+      finalAvailableTypes = [...basicTypes, ...filteredAdvancedTypes]
+    } else {
+      // Lower levels: only basic types
+      finalAvailableTypes = basicTypes
+    }
+    
+    // Select type based on level, avoiding simple patterns at high levels
+    const typeIndex = level >= 20 
+      ? Math.floor(Math.random() * finalAvailableTypes.length) // Random selection for variety at high levels
+      : Math.floor(level / 4) % finalAvailableTypes.length // Cycle through for lower levels
+    const type = finalAvailableTypes[typeIndex]
     
     // Helper to assign random color to a shape
     const assignRandomColor = (): string => {
       return availableColors[Math.floor(Math.random() * availableColors.length)]
     }
     
-    // Helper to introduce gaps in pattern (null means gap)
-    const introduceGaps = (pattern: string[], gapProbability: number): (string | null)[] => {
-      // Don't add gaps to first 2 items or last item (need context)
-      return pattern.map((shapeId, index) => {
-        if (index < 2 || index === pattern.length - 1) return shapeId
-        if (Math.random() < gapProbability) return null
-        return shapeId
+    // Helper to insert gaps at random positions with enough context
+    // Returns pattern with gaps and the positions of the gaps
+    const insertRandomGaps = (
+      pattern: string[], 
+      numGaps: number, 
+      minContextBefore: number = 2, 
+      minContextAfter: number = 2,
+      patternType?: PatternType,
+      patternMetadata?: { groupSize?: number; numShapes?: number }
+    ): { pattern: (string | null)[], gapPositions: number[] } => {
+      const patternWithGaps: (string | null)[] = [...pattern]
+      const gapPositions: number[] = []
+      
+      // Valid positions for gaps (must have enough context before and after)
+      // Start with strict requirements, but relax if needed
+      let validPositions: number[] = []
+      for (let i = minContextBefore; i < pattern.length - minContextAfter; i++) {
+        validPositions.push(i)
+      }
+      
+      // Filter valid positions based on pattern type structure
+      if (patternType === 'nested') {
+        // For nested patterns [A, B, A], [C, D, C], ...
+        // Only allow gaps at outer positions (not inner positions)
+        // Inner positions are at index % 3 === 1 (positions 1, 4, 7, 10, ...)
+        validPositions = validPositions.filter(pos => pos % 3 !== 1)
+      } else if (patternType === 'repeating' && patternMetadata?.groupSize) {
+        // For repeating patterns [A, B], [A, B], ... or [A, B, C], [A, B, C], ...
+        // Avoid gapping the first element of a group (positions 0, groupSize, 2*groupSize, ...)
+        // This makes the pattern more logical - gap within a group, not at group boundaries
+        const groupSize = patternMetadata.groupSize
+        validPositions = validPositions.filter(pos => pos % groupSize !== 0)
+      } else if (patternType === 'reverse' && patternMetadata?.numShapes) {
+        // For reverse patterns A, B, C, D, C, B, A, B, C, D, ...
+        // Avoid gapping at turning points where direction changes
+        // Turning points occur at positions that are multiples of (numShapes - 1)
+        const numShapes = patternMetadata.numShapes
+        const cycleLength = 2 * numShapes - 1 // Full cycle length
+        validPositions = validPositions.filter(pos => {
+          const posInCycle = pos % cycleLength
+          // Avoid positions at the turning points (end of forward, start of backward)
+          // Turning points are at: numShapes - 1, 0 (start of new cycle)
+          return posInCycle !== numShapes - 1 && posInCycle !== 0
+        })
+      } else if (patternType === 'mirror' && patternMetadata?.numShapes) {
+        // For mirror patterns A, B, C, D, D, C, B, A, A, B, C, D, ...
+        // Avoid gapping at mirror points where direction reverses
+        // Mirror points occur at positions that are multiples of numShapes
+        const numShapes = patternMetadata.numShapes
+        const cycleLength = 2 * numShapes // Full cycle: forward + backward
+        validPositions = validPositions.filter(pos => {
+          const posInCycle = pos % cycleLength
+          // Avoid positions at the mirror points (end of forward, start of backward)
+          // Mirror points are at: numShapes - 1, numShapes, 0 (start of new cycle)
+          return posInCycle !== numShapes - 1 && posInCycle !== numShapes && posInCycle !== 0
+        })
+      }
+      
+      // Helper to re-apply pattern type filters
+      const applyPatternFilters = (positions: number[]): number[] => {
+        let filtered = positions
+        if (patternType === 'nested') {
+          filtered = filtered.filter(pos => pos % 3 !== 1)
+        } else if (patternType === 'repeating' && patternMetadata?.groupSize) {
+          filtered = filtered.filter(pos => pos % patternMetadata.groupSize! !== 0)
+        } else if (patternType === 'reverse' && patternMetadata?.numShapes) {
+          const numShapes = patternMetadata.numShapes
+          const cycleLength = 2 * numShapes - 1
+          filtered = filtered.filter(pos => {
+            const posInCycle = pos % cycleLength
+            return posInCycle !== numShapes - 1 && posInCycle !== 0
+          })
+        } else if (patternType === 'mirror' && patternMetadata?.numShapes) {
+          const numShapes = patternMetadata.numShapes
+          const cycleLength = 2 * numShapes
+          filtered = filtered.filter(pos => {
+            const posInCycle = pos % cycleLength
+            return posInCycle !== numShapes - 1 && posInCycle !== numShapes && posInCycle !== 0
+          })
+        }
+        return filtered
+      }
+      
+      // If no valid positions with strict requirements, relax to at least 1 context on each side
+      if (validPositions.length === 0) {
+        for (let i = 1; i < pattern.length - 1; i++) {
+          validPositions.push(i)
+        }
+        validPositions = applyPatternFilters(validPositions)
+      }
+      
+      // If still no valid positions, allow any position except first and last
+      if (validPositions.length === 0 && pattern.length > 2) {
+        for (let i = 1; i < pattern.length - 1; i++) {
+          validPositions.push(i)
+        }
+        validPositions = applyPatternFilters(validPositions)
+      }
+      
+      // If pattern is very short, allow any position (but still respect pattern structure)
+      if (validPositions.length === 0) {
+        for (let i = 0; i < pattern.length; i++) {
+          validPositions.push(i)
+        }
+        validPositions = applyPatternFilters(validPositions)
+      }
+      
+      // Shuffle and select gap positions
+      const shuffled = [...validPositions].sort(() => Math.random() - 0.5)
+      const selectedGaps = shuffled.slice(0, Math.min(numGaps, shuffled.length))
+      
+      // Ensure gaps are not adjacent (need at least 1 shape between gaps for context)
+      const finalGapPositions: number[] = []
+      for (const pos of selectedGaps.sort((a, b) => a - b)) {
+        // Check if this position is too close to existing gaps
+        const tooClose = finalGapPositions.some(gapPos => Math.abs(gapPos - pos) < 2)
+        if (!tooClose) {
+          finalGapPositions.push(pos)
+        }
+      }
+      
+      // If we don't have enough gaps and there are more valid positions, add more
+      while (finalGapPositions.length < numGaps && finalGapPositions.length < validPositions.length) {
+        const remainingPositions = validPositions.filter(pos => {
+          const tooClose = finalGapPositions.some(gapPos => Math.abs(gapPos - pos) < 2)
+          return !tooClose
+        })
+        if (remainingPositions.length > 0) {
+          const randomPos = remainingPositions[Math.floor(Math.random() * remainingPositions.length)]
+          finalGapPositions.push(randomPos)
+          finalGapPositions.sort((a, b) => a - b)
+        } else {
+          // If we can't add more without being too close, just add one more at a random position
+          const availablePositions = validPositions.filter(pos => !finalGapPositions.includes(pos))
+          if (availablePositions.length > 0) {
+            finalGapPositions.push(availablePositions[Math.floor(Math.random() * availablePositions.length)])
+            finalGapPositions.sort((a, b) => a - b)
+          }
+          break
+        }
+      }
+      
+      // Ensure we always have at least 1 gap
+      if (finalGapPositions.length === 0 && pattern.length > 0) {
+        // Insert at a safe position (middle if possible, otherwise any position)
+        // But respect pattern structure
+        let safePos = Math.max(1, Math.min(pattern.length - 2, Math.floor(pattern.length / 2)))
+        
+        // Respect pattern structure when inserting fallback gap
+        if (patternType === 'nested') {
+          // Find the nearest valid outer position
+          while (safePos % 3 === 1 && safePos < pattern.length - 1) {
+            safePos++
+          }
+          // If we went too far, go back
+          if (safePos >= pattern.length) {
+            safePos = Math.max(0, Math.min(pattern.length - 1, Math.floor(pattern.length / 2)))
+            while (safePos % 3 === 1 && safePos > 0) {
+              safePos--
+            }
+          }
+        } else if (patternType === 'repeating' && patternMetadata?.groupSize) {
+          // Avoid first element of a group
+          while (safePos % patternMetadata.groupSize === 0 && safePos < pattern.length - 1) {
+            safePos++
+          }
+        } else if (patternType === 'reverse' && patternMetadata?.numShapes) {
+          const numShapes = patternMetadata.numShapes
+          const cycleLength = 2 * numShapes - 1
+          const posInCycle = safePos % cycleLength
+          // Avoid turning points
+          if (posInCycle === numShapes - 1 || posInCycle === 0) {
+            safePos = (safePos + 1) % pattern.length
+          }
+        } else if (patternType === 'mirror' && patternMetadata?.numShapes) {
+          const numShapes = patternMetadata.numShapes
+          const cycleLength = 2 * numShapes
+          const posInCycle = safePos % cycleLength
+          // Avoid mirror points
+          if (posInCycle === numShapes - 1 || posInCycle === numShapes || posInCycle === 0) {
+            safePos = (safePos + 1) % pattern.length
+          }
+        }
+        
+        finalGapPositions.push(safePos)
+      }
+      
+      // Insert gaps
+      finalGapPositions.forEach(pos => {
+        patternWithGaps[pos] = null
       })
+      
+      return { pattern: patternWithGaps, gapPositions: finalGapPositions.sort((a, b) => a - b) }
     }
     
     let shapePattern: (string | null)[] = []
@@ -286,6 +524,7 @@ export default function PatternRecognition() {
       attempts++
       let tempPattern: string[] = []
       let tempAnswer: string | string[]
+      let patternMetadata: { groupSize?: number; numShapes?: number } = {}
       
       switch (type) {
         case 'simple':
@@ -294,7 +533,7 @@ export default function PatternRecognition() {
             const shape = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
             tempPattern = Array(baseLength).fill(shape.id)
             tempAnswer = shape.id
-          } else {
+          } else if (level <= 10) {
             // After level 2, make it alternating
             const shapePair = [
               availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)],
@@ -304,7 +543,32 @@ export default function PatternRecognition() {
               shapePair[1] = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
             }
             tempPattern = Array(baseLength).fill(0).map((_, i) => shapePair[i % 2].id)
-            tempAnswer = shapePair[baseLength % 2].id
+            if (requiresTwoShapes) {
+              const nextIndex1 = baseLength % 2
+              const nextIndex2 = (baseLength + 1) % 2
+              tempAnswer = [shapePair[nextIndex1].id, shapePair[nextIndex2].id]
+            } else {
+              tempAnswer = shapePair[baseLength % 2].id
+            }
+          } else {
+            // Higher levels: use 3-4 shapes in sequence
+            const numShapes = Math.min(3 + Math.floor((level - 10) / 5), availableShapesForLevel.length)
+            const sequenceShapes: string[] = []
+            const availableForSequence = [...availableShapesForLevel]
+            for (let i = 0; i < numShapes; i++) {
+              const randomIdx = Math.floor(Math.random() * availableForSequence.length)
+              sequenceShapes.push(availableForSequence[randomIdx].id)
+              availableForSequence.splice(randomIdx, 1)
+            }
+            const startIndex = Math.floor(Math.random() * sequenceShapes.length)
+            tempPattern = Array(baseLength).fill(0).map((_, i) => sequenceShapes[(startIndex + i) % sequenceShapes.length])
+            if (requiresTwoShapes) {
+              const nextIndex1 = (startIndex + baseLength) % sequenceShapes.length
+              const nextIndex2 = (startIndex + baseLength + 1) % sequenceShapes.length
+              tempAnswer = [sequenceShapes[nextIndex1], sequenceShapes[nextIndex2]]
+            } else {
+              tempAnswer = sequenceShapes[(startIndex + baseLength) % sequenceShapes.length]
+            }
           }
           break
 
@@ -330,8 +594,11 @@ export default function PatternRecognition() {
 
         case 'progressive':
           // Progressive: sequential shapes in order (A, B, C, A, B, C, ...)
-          // Use exactly 3 shapes for clarity (or available shapes if less)
-          const numProgressiveShapes = Math.min(3, availableShapesForLevel.length)
+          // Use more shapes at higher levels for complexity
+          const numProgressiveShapes = Math.min(
+            level >= 20 ? 5 + Math.floor((level - 20) / 5) : level >= 10 ? 4 : 3,
+            availableShapesForLevel.length
+          )
           const progressiveShapes: string[] = []
           const availableForProgressive = [...availableShapesForLevel]
           for (let i = 0; i < numProgressiveShapes; i++) {
@@ -352,9 +619,10 @@ export default function PatternRecognition() {
           break
 
         case 'repeating':
-          // Repeating group: [A, B], [A, B], ... - always use 2 shapes for clarity
-          const groupSize = 2
-          // Pick 2 distinct shapes
+          // Repeating group: [A, B], [A, B], ... - use larger groups at higher levels
+          const groupSize = level >= 20 ? 3 + Math.floor((level - 20) / 5) : level >= 10 ? 3 : 2
+          patternMetadata.groupSize = groupSize
+          // Pick distinct shapes for the group
           const availableForRepeating = [...availableShapesForLevel]
           const group: string[] = []
           for (let i = 0; i < Math.min(groupSize, availableForRepeating.length); i++) {
@@ -381,9 +649,12 @@ export default function PatternRecognition() {
 
         case 'reverse':
           // Reverse pattern: A, B, C, D, C, B, A, B, C, D, ... (goes forward then backward)
-          // Use 3-4 shapes and make pattern longer to clearly show the reverse
-          // Ensure we show at least one full cycle: forward to end, then backward to start
-          const numReverseShapes = Math.min(4, availableShapesForLevel.length)
+          // Use more shapes at higher levels for complexity
+          const numReverseShapes = Math.min(
+            level >= 20 ? 5 + Math.floor((level - 20) / 5) : level >= 10 ? 5 : 4,
+            availableShapesForLevel.length
+          )
+          patternMetadata.numShapes = numReverseShapes
           // A full cycle needs: forward (numReverseShapes) + backward (numReverseShapes-1) + forward start (1) = 2*numReverseShapes
           const minLengthForCycle = 2 * numReverseShapes
           const reverseLength = Math.max(baseLength, minLengthForCycle) // Ensure at least one full cycle
@@ -461,15 +732,185 @@ export default function PatternRecognition() {
           }
           break
 
+        case 'nested':
+          // Nested pattern: Groups with nested structure where outer shapes wrap inner shapes
+          // Example: [A, B, A], [C, D, C], [A, B, A] - each group has outer-inner-outer structure
+          // Use 4-6 shapes at higher levels
+          // Safety check: nested pattern requires at least 4 shapes
+          if (availableShapesForLevel.length < 4) {
+            // Fallback to progressive pattern if not enough shapes
+            const numProgressiveShapes = Math.min(3, availableShapesForLevel.length)
+            const progressiveShapes: string[] = []
+            const availableForProgressive = [...availableShapesForLevel]
+            for (let i = 0; i < numProgressiveShapes; i++) {
+              const randomIdx = Math.floor(Math.random() * availableForProgressive.length)
+              progressiveShapes.push(availableForProgressive[randomIdx].id)
+              availableForProgressive.splice(randomIdx, 1)
+            }
+            const startIndex = Math.floor(Math.random() * progressiveShapes.length)
+            tempPattern = Array(baseLength).fill(0).map((_, i) => progressiveShapes[(startIndex + i) % progressiveShapes.length])
+            if (requiresTwoShapes) {
+              const nextIndex1 = (startIndex + baseLength) % progressiveShapes.length
+              const nextIndex2 = (startIndex + baseLength + 1) % progressiveShapes.length
+              tempAnswer = [progressiveShapes[nextIndex1], progressiveShapes[nextIndex2]]
+            } else {
+              tempAnswer = progressiveShapes[(startIndex + baseLength) % progressiveShapes.length]
+            }
+            break
+          }
+          const numNestedShapes = Math.min(
+            level >= 20 ? 6 : level >= 15 ? 5 : 4,
+            availableShapesForLevel.length
+          )
+          const nestedShapes: string[] = []
+          const availableForNested = [...availableShapesForLevel]
+          for (let i = 0; i < numNestedShapes; i++) {
+            const randomIdx = Math.floor(Math.random() * availableForNested.length)
+            nestedShapes.push(availableForNested[randomIdx].id)
+            availableForNested.splice(randomIdx, 1)
+          }
+          
+          // Create nested groups: [A, B, A], [C, D, C], [A, B, A], ...
+          // Each group has 3 shapes: outer, inner, outer
+          const nestedGroupSize = 3
+          const numGroups = Math.ceil(baseLength / nestedGroupSize)
+          const numOuterShapes = Math.floor(numNestedShapes / 2)
+          const numInnerShapes = numNestedShapes - numOuterShapes
+          tempPattern = []
+          for (let g = 0; g < numGroups; g++) {
+            const outerIdx = g % numOuterShapes
+            const innerIdx = numOuterShapes + (g % numInnerShapes)
+            tempPattern.push(nestedShapes[outerIdx])
+            tempPattern.push(nestedShapes[innerIdx])
+            tempPattern.push(nestedShapes[outerIdx])
+          }
+          tempPattern = tempPattern.slice(0, baseLength)
+          
+          // Answer is the next group's outer shape
+          const nextGroupIdx = numGroups % numOuterShapes
+          const nextOuterIdx = nextGroupIdx
+          const nextInnerIdx = numOuterShapes + (nextGroupIdx % numInnerShapes)
+          if (requiresTwoShapes) {
+            tempAnswer = [nestedShapes[nextOuterIdx], nestedShapes[nextInnerIdx]]
+          } else {
+            tempAnswer = nestedShapes[nextOuterIdx]
+          }
+          break
+
+        case 'mirror':
+          // Mirror pattern: Goes forward through shapes, then reverses back, then repeats
+          // Example: A, B, C, D, D, C, B, A, A, B, C, D, ... - mirrors then repeats forward
+          // Use 4-6 shapes at higher levels
+          // Safety check: mirror pattern requires at least 4 shapes
+          if (availableShapesForLevel.length < 4) {
+            // Fallback to progressive pattern if not enough shapes
+            const numProgressiveShapes = Math.min(3, availableShapesForLevel.length)
+            const progressiveShapes: string[] = []
+            const availableForProgressive = [...availableShapesForLevel]
+            for (let i = 0; i < numProgressiveShapes; i++) {
+              const randomIdx = Math.floor(Math.random() * availableForProgressive.length)
+              progressiveShapes.push(availableForProgressive[randomIdx].id)
+              availableForProgressive.splice(randomIdx, 1)
+            }
+            const startIndex = Math.floor(Math.random() * progressiveShapes.length)
+            tempPattern = Array(baseLength).fill(0).map((_, i) => progressiveShapes[(startIndex + i) % progressiveShapes.length])
+            if (requiresTwoShapes) {
+              const nextIndex1 = (startIndex + baseLength) % progressiveShapes.length
+              const nextIndex2 = (startIndex + baseLength + 1) % progressiveShapes.length
+              tempAnswer = [progressiveShapes[nextIndex1], progressiveShapes[nextIndex2]]
+            } else {
+              tempAnswer = progressiveShapes[(startIndex + baseLength) % progressiveShapes.length]
+            }
+            break
+          }
+          const numMirrorShapes = Math.min(
+            level >= 20 ? 6 : level >= 15 ? 5 : 4,
+            availableShapesForLevel.length
+          )
+          patternMetadata.numShapes = numMirrorShapes
+          const mirrorShapes: string[] = []
+          const availableForMirror = [...availableShapesForLevel]
+          for (let i = 0; i < numMirrorShapes; i++) {
+            const randomIdx = Math.floor(Math.random() * availableForMirror.length)
+            mirrorShapes.push(availableForMirror[randomIdx].id)
+            availableForMirror.splice(randomIdx, 1)
+          }
+          
+          // Pattern: forward, then reverse, then forward again
+          // A, B, C, D, D, C, B, A, A, B, C, D, ...
+          tempPattern = []
+          let mirrorPos = 0
+          let mirrorDir = 1
+          for (let i = 0; i < baseLength; i++) {
+            tempPattern.push(mirrorShapes[mirrorPos])
+            mirrorPos += mirrorDir
+            if (mirrorPos >= numMirrorShapes) {
+              mirrorDir = -1
+              mirrorPos = numMirrorShapes - 2
+            } else if (mirrorPos < 0) {
+              mirrorDir = 1
+              mirrorPos = 1
+            }
+          }
+          
+          // Calculate next position
+          let nextMirrorPos = mirrorPos + mirrorDir
+          let nextMirrorDir = mirrorDir
+          if (nextMirrorPos >= numMirrorShapes) {
+            nextMirrorDir = -1
+            nextMirrorPos = numMirrorShapes - 2
+          } else if (nextMirrorPos < 0) {
+            nextMirrorDir = 1
+            nextMirrorPos = 1
+          }
+          
+          if (requiresTwoShapes) {
+            const secondNextPos = nextMirrorPos + nextMirrorDir
+            const secondNextDir = nextMirrorDir
+            let finalSecondPos = secondNextPos
+            if (finalSecondPos >= numMirrorShapes) {
+              finalSecondPos = numMirrorShapes - 2
+            } else if (finalSecondPos < 0) {
+              finalSecondPos = 1
+            }
+            tempAnswer = [mirrorShapes[nextMirrorPos], mirrorShapes[finalSecondPos]]
+          } else {
+            tempAnswer = mirrorShapes[nextMirrorPos]
+          }
+          break
+
         default:
           const defaultShape = availableShapesForLevel[Math.floor(Math.random() * availableShapesForLevel.length)]
           tempPattern = Array(baseLength).fill(defaultShape.id)
           tempAnswer = defaultShape.id
       }
       
-      // Don't introduce gaps in the pattern - show all shapes
-      // Keep the pattern as-is without gaps
-      const patternWithGaps: (string | null)[] = tempPattern
+      // Insert gaps at random positions (1-2 gaps based on level)
+      const numGaps = requiresTwoShapes ? 2 : 1
+      const { pattern: patternWithGaps, gapPositions } = insertRandomGaps(tempPattern, numGaps, 2, 2, type, patternMetadata)
+      
+      // Calculate answer based on gap positions
+      // For single gap, answer is what should be at that position
+      // For two gaps, answer is [firstGap, secondGap]
+      if (gapPositions.length === 0) {
+        // This shouldn't happen with the improved insertRandomGaps, but fallback just in case
+        // Force insert a gap at the end
+        if (tempPattern.length > 0) {
+          patternWithGaps[tempPattern.length - 1] = null
+          gapPositions.push(tempPattern.length - 1)
+        }
+        if (requiresTwoShapes && tempPattern.length >= 2) {
+          tempAnswer = [tempPattern[tempPattern.length - 2], tempPattern[tempPattern.length - 1]]
+        } else {
+          tempAnswer = tempPattern[tempPattern.length - 1] || tempPattern[0]
+        }
+      } else if (gapPositions.length === 1) {
+        // Single gap: answer is what should be at that position
+        tempAnswer = tempPattern[gapPositions[0]]
+      } else {
+        // Two gaps: answer is array of what should be at those positions
+        tempAnswer = [tempPattern[gapPositions[0]], tempPattern[gapPositions[1]]]
+      }
       
       // Convert to PatternItem[] with colors
       const uniqueShapeIds = Array.from(new Set(patternWithGaps.filter((id): id is string => id !== null)))
@@ -582,9 +1023,14 @@ export default function PatternRecognition() {
         return // Already have both shapes
       }
       
-      // Don't allow selecting a shape that's already been selected
-      if (selectedShapes.includes(shapeId)) {
-        return // Shape already selected
+      // Allow selecting the same shape if the answer requires it
+      // Only prevent if we've already selected it AND it's not needed again at this position
+      if (currentPosition === 1 && selectedShapes.includes(shapeId)) {
+        // Check if the answer actually requires the same shape twice
+        if (answerArray[0] !== answerArray[1]) {
+          return // Shape already selected and answer doesn't require duplicates
+        }
+        // If answer requires duplicates, allow selecting the same shape again
       }
       
       // Check if this shape is correct for the current position
@@ -617,7 +1063,7 @@ export default function PatternRecognition() {
           setPatternsSolved(newPatternsSolved)
 
           setTimeout(() => {
-            const nextLevel = difficultyLevel + 1
+            const nextLevel = Math.min(difficultyLevel + 1, 100)
             setDifficultyLevel(nextLevel)
             const { pattern, type, answer, colorMap } = generatePattern(nextLevel)
             setPattern(pattern)
@@ -898,121 +1344,105 @@ export default function PatternRecognition() {
                 <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 min-h-[120px]">
                   {pattern.length > 0 ? (
                 <>
-                  {pattern.map((item, index) => {
-                    if (item.shapeId === null) {
-                      return (
-                        <div
-                          key={index}
-                          className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
-                        >
-                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
-                        </div>
-                      )
-                    }
-                    const shape = shapes.find(s => s.id === item.shapeId)
-                    return shape ? (
-                      <div
-                        key={index}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
-                      >
-                        {shape.svg}
-                      </div>
-                    ) : null
-                  })}
-                  {Array.isArray(currentAnswerRef.current) ? (
-                    // Show 2 question marks for 2-shape answers, or selected shapes
-                    <>
-                      {selectedShapes.length > 0 ? (
-                        // Show first selected shape
-                        (() => {
-                          const shape = shapes.find(s => s.id === selectedShapes[0])
+                  {(() => {
+                    // Find gap positions in the pattern
+                    const gapIndices: number[] = []
+                    pattern.forEach((item, idx) => {
+                      if (item.shapeId === null) {
+                        gapIndices.push(idx)
+                      }
+                    })
+                    
+                    return pattern.map((item, index) => {
+                      if (item.shapeId === null) {
+                        // This is a gap - show selected shape if available, otherwise show question mark
+                        const gapIndex = gapIndices.indexOf(index)
+                        const selectedShapeId = selectedShapes[gapIndex] || userAnswer
+                        
+                        if (selectedShapeId) {
+                          const shape = shapes.find(s => s.id === selectedShapeId)
                           return shape ? (
-                            <div className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
+                            <div
+                              key={index}
+                              className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}
+                            >
                               {shape.svg}
                             </div>
                           ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                              <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
+                            <div
+                              key={index}
+                              className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                            >
+                              <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
                             </div>
                           )
-                        })()
-                      ) : (
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                          <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
-                        </div>
-                      )}
-                      {selectedShapes.length > 1 ? (
-                        // Show second selected shape
-                        (() => {
-                          const shape = shapes.find(s => s.id === selectedShapes[1])
-                          return shape ? (
-                            <div className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
-                              {shape.svg}
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                              <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
-                            </div>
-                          )
-                        })()
-                      ) : (
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                          <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    // Single shape answer - show selected shape or question mark
-                    userAnswer ? (
-                      (() => {
-                        const shape = shapes.find(s => s.id === userAnswer)
-                        return shape ? (
-                          <div className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
-                            {shape.svg}
-                          </div>
-                        ) : (
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                            <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
+                        }
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          >
+                            <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
                           </div>
                         )
-                      })()
-                    ) : (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-dashed border-gray-400 dark:border-gray-500 rounded-lg flex items-center justify-center">
-                        <span className="text-2xl text-gray-400 dark:text-gray-500">?</span>
-                      </div>
-                    )
-                  )}
+                      }
+                      const shape = shapes.find(s => s.id === item.shapeId)
+                      return shape ? (
+                        <div
+                          key={index}
+                          className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
+                        >
+                          {shape.svg}
+                        </div>
+                      ) : null
+                    })
+                  })()}
                 </>
               ) : gameState === 'correct' ? (
                 <>
-                  {pattern.map((item, index) => {
-                    if (item.shapeId === null) {
-                      return (
+                  {(() => {
+                    const gapIndices: number[] = []
+                    pattern.forEach((item, idx) => {
+                      if (item.shapeId === null) {
+                        gapIndices.push(idx)
+                      }
+                    })
+                    
+                    return pattern.map((item, index) => {
+                      if (item.shapeId === null) {
+                        // Show user's answer in gap position
+                        const gapIndex = gapIndices.indexOf(index)
+                        const answerIds = userAnswer ? (userAnswer.includes(',') ? userAnswer.split(',') : [userAnswer]) : []
+                        const answerId = answerIds[gapIndex]
+                        
+                        if (answerId) {
+                          const shape = shapes.find(s => s.id === answerId)
+                          return shape ? (
+                            <div
+                              key={index}
+                              className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center animate-pulse`}
+                            >
+                              {shape.svg}
+                            </div>
+                          ) : null
+                        }
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          >
+                            <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                          </div>
+                        )
+                      }
+                      const shape = shapes.find(s => s.id === item.shapeId)
+                      return shape ? (
                         <div
                           key={index}
-                          className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                         >
-                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
-                        </div>
-                      )
-                    }
-                    const shape = shapes.find(s => s.id === item.shapeId)
-                    return shape ? (
-                      <div
-                        key={index}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
-                      >
-                        {shape.svg}
-                      </div>
-                    ) : null
-                  })}
-                  {userAnswer && (() => {
-                    // Handle both single and multiple answers
-                    const answerIds = userAnswer.includes(',') ? userAnswer.split(',') : [userAnswer]
-                    return answerIds.map((answerId, idx) => {
-                      const shape = shapes.find(s => s.id === answerId)
-                      return shape ? (
-                        <div key={idx} className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center animate-pulse`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -1021,63 +1451,76 @@ export default function PatternRecognition() {
                 </>
               ) : gameState === 'wrong' ? (
                 <>
-                  {pattern.map((item, index) => {
-                    if (item.shapeId === null) {
-                      return (
+                  {(() => {
+                    const gapIndices: number[] = []
+                    pattern.forEach((item, idx) => {
+                      if (item.shapeId === null) {
+                        gapIndices.push(idx)
+                      }
+                    })
+                    
+                    const correctAnswer = currentAnswerRef.current
+                    const correctIds = correctAnswer ? (Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer]) : []
+                    const userAnswerIds = userAnswer ? (userAnswer.includes(',') ? userAnswer.split(',') : [userAnswer]) : []
+                    
+                    return pattern.map((item, index) => {
+                      if (item.shapeId === null) {
+                        // Show user's answer and correct answer in gap position
+                        const gapIndex = gapIndices.indexOf(index)
+                        const userAnswerId = userAnswerIds[gapIndex]
+                        const correctId = correctIds[gapIndex]
+                        const isCorrect = userAnswerId === correctId
+                        
+                        // Show user's answer (wrong ones with X)
+                        if (userAnswerId) {
+                          const shape = shapes.find(s => s.id === userAnswerId)
+                          if (shape) {
+                            return (
+                              <div
+                                key={index}
+                                className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center ${isCorrect ? '' : 'opacity-50'} relative`}
+                              >
+                                {shape.svg}
+                                {!isCorrect && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-red-600 dark:text-red-400 text-2xl font-bold">✗</span>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          }
+                        }
+                        
+                        // Show correct answer in green if user was wrong
+                        if (correctId && !isCorrect) {
+                          const shape = shapes.find(s => s.id === correctId)
+                          if (shape) {
+                            return (
+                              <div
+                                key={index}
+                                className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center bg-green-500 dark:bg-green-600`}
+                              >
+                                {shape.svg}
+                              </div>
+                            )
+                          }
+                        }
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          >
+                            <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                          </div>
+                        )
+                      }
+                      const shape = shapes.find(s => s.id === item.shapeId)
+                      return shape ? (
                         <div
                           key={index}
-                          className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                         >
-                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
-                        </div>
-                      )
-                    }
-                    const shape = shapes.find(s => s.id === item.shapeId)
-                    return shape ? (
-                      <div
-                        key={index}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
-                      >
-                        {shape.svg}
-                      </div>
-                    ) : null
-                  })}
-                  {/* Show user's answer(s) - mark wrong ones with X */}
-                  {userAnswer && currentAnswerRef.current && (() => {
-                    const answerIds = userAnswer.includes(',') ? userAnswer.split(',') : [userAnswer]
-                    const correctAnswer = currentAnswerRef.current
-                    const correctIds = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer]
-                    
-                    return answerIds.map((answerId, idx) => {
-                      const shape = shapes.find(s => s.id === answerId)
-                      if (!shape) return null
-                      
-                      // Check if this position was correct
-                      const isCorrect = correctIds[idx] === answerId
-                      
-                      return (
-                        <div 
-                          key={`user-${idx}`} 
-                          className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center ${isCorrect ? '' : 'opacity-50'} relative`}
-                        >
-                          {shape.svg}
-                          {!isCorrect && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-red-600 dark:text-red-400 text-2xl font-bold">✗</span>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })
-                  })()}
-                  {/* Show correct answer in green (like visual memory) */}
-                  {currentAnswerRef.current && (() => {
-                    const correctAnswer = currentAnswerRef.current
-                    const correctIds = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer]
-                    return correctIds.map((answerId, idx) => {
-                      const shape = shapes.find(s => s.id === answerId)
-                      return shape ? (
-                        <div key={`correct-${idx}`} className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center bg-green-500 dark:bg-green-600`}>
                           {shape.svg}
                         </div>
                       ) : null
@@ -1086,34 +1529,55 @@ export default function PatternRecognition() {
                 </>
               ) : (
                 <>
-                  {pattern.map((item, index) => {
-                    if (item.shapeId === null) {
-                      return (
+                  {(() => {
+                    // Find gap positions in the pattern
+                    const gapIndices: number[] = []
+                    pattern.forEach((item, idx) => {
+                      if (item.shapeId === null) {
+                        gapIndices.push(idx)
+                      }
+                    })
+                    
+                    return pattern.map((item, index) => {
+                      if (item.shapeId === null) {
+                        // This is a gap - show selected shape if available, otherwise show question mark
+                        const gapIndex = gapIndices.indexOf(index)
+                        const selectedShapeId = selectedShapes[gapIndex] || userAnswer
+                        
+                        if (selectedShapeId) {
+                          const shape = shapes.find(s => s.id === selectedShapeId)
+                          return shape ? (
+                            <div
+                              key={index}
+                              className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}
+                            >
+                              {shape.svg}
+                            </div>
+                          ) : (
+                            <div
+                              key={index}
+                              className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                            >
+                              <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                            </div>
+                          )
+                        }
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          >
+                            <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
+                          </div>
+                        )
+                      }
+                      const shape = shapes.find(s => s.id === item.shapeId)
+                      return shape ? (
                         <div
                           key={index}
-                          className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800/50"
+                          className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
                         >
-                          <span className="text-gray-400 dark:text-gray-500 text-xs">?</span>
-                        </div>
-                      )
-                    }
-                    const shape = shapes.find(s => s.id === item.shapeId)
-                    return shape ? (
-                      <div
-                        key={index}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 ${item.color} flex items-center justify-center`}
-                      >
-                        {shape.svg}
-                      </div>
-                    ) : null
-                  })}
-                  {userAnswer && (() => {
-                    // Handle both single and multiple answers
-                    const answerIds = userAnswer.includes(',') ? userAnswer.split(',') : [userAnswer]
-                    return answerIds.map((answerId, idx) => {
-                      const shape = shapes.find(s => s.id === answerId)
-                      return shape ? (
-                        <div key={idx} className={`w-16 h-16 sm:w-20 sm:h-20 ${shapeColorMap[shape.id] || shape.color} flex items-center justify-center`}>
                           {shape.svg}
                         </div>
                       ) : null

@@ -182,7 +182,12 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                           : 'text-gray-700 dark:text-gray-100'
                       }`}>
                         {game.name}
-                        {(game.id === 'pattern-recognition' || game.id === 'stroop-test' || game.id === 'chimp-test' || game.id === 'time-estimation') && (
+                        {game.id === 'pattern-recognition' && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            Updated
+                          </span>
+                        )}
+                        {game.id === 'time-estimation' && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                             Beta
                           </span>
