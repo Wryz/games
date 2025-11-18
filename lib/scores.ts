@@ -23,7 +23,11 @@ import type {
   TimeEstimationScore,
   TimeEstimationScoreInsert,
   MazeScore,
-  MazeScoreInsert
+  MazeScoreInsert,
+  AlgebraScore,
+  AlgebraScoreInsert,
+  ArithmeticScore,
+  ArithmeticScoreInsert
 } from './supabase'
 
 // Score submission functions using RPC
@@ -406,6 +410,70 @@ export async function getMazeScores(filters?: { username?: string; limit?: numbe
   return data
 }
 
+export async function submitAlgebraScore(score: AlgebraScoreInsert) {
+  const { data, error } = await supabase
+    .rpc('submit_algebra_score', {
+      p_username: score.username,
+      p_correct_answers: score.correct_answers,
+      p_average_time: score.average_time
+    })
+  
+  if (error) throw error
+  return data
+}
+
+export async function getAlgebraScores(filters?: { username?: string; limit?: number }) {
+  let query = supabase
+    .from('algebra_scores')
+    .select('*')
+    .order('correct_answers', { ascending: false })
+    .order('average_time', { ascending: true })
+
+  if (filters?.username) {
+    query = query.eq('username', filters.username)
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
+export async function submitArithmeticScore(score: ArithmeticScoreInsert) {
+  const { data, error } = await supabase
+    .rpc('submit_arithmetic_score', {
+      p_username: score.username,
+      p_correct_answers: score.correct_answers,
+      p_average_time: score.average_time
+    })
+  
+  if (error) throw error
+  return data
+}
+
+export async function getArithmeticScores(filters?: { username?: string; limit?: number }) {
+  let query = supabase
+    .from('arithmetic_scores')
+    .select('*')
+    .order('correct_answers', { ascending: false })
+    .order('average_time', { ascending: true })
+
+  if (filters?.username) {
+    query = query.eq('username', filters.username)
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
 // Get all scores from all games
 export interface AllScoresEntry {
   gameId: string
@@ -431,7 +499,9 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     sequenceMemoryScores,
     chimpTestScores,
     timeEstimationScores,
-    mazeScores
+    mazeScores,
+    algebraScores,
+    arithmeticScores
   ] = await Promise.all([
     getAimTrainerScores(),
     getTypingTestScores(),
@@ -444,7 +514,9 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     getSequenceMemoryScores(),
     getChimpTestScores(),
     getTimeEstimationScores(),
-    getMazeScores()
+    getMazeScores(),
+    getAlgebraScores(),
+    getArithmeticScores()
   ])
 
   // Map each score to AllScoresEntry format
@@ -562,6 +634,26 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     allScores.push({
       gameId: 'maze',
       gameName: 'Maze',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  algebraScores?.forEach(score => {
+    allScores.push({
+      gameId: 'algebra',
+      gameName: 'Algebra',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  arithmeticScores?.forEach(score => {
+    allScores.push({
+      gameId: 'arithmetic',
+      gameName: 'Arithmetic',
       username: score.username,
       score: score,
       dateSubmitted: score.date_submitted

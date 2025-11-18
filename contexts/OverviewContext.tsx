@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GAMES } from '@/types/games'
+import { formatNumber } from '@/lib/levels'
 
 interface GameStats {
   id: string
@@ -91,33 +92,38 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
         
           switch (gameId) {
             case 'aim-trainer':
-              return `${score.reaction_time}ms (${score.accuracy}%)`
+              return `${formatNumber(score.reaction_time)}ms (${formatNumber(score.accuracy)}%)`
             case 'typing-test':
-              return `${score.wpm} WPM (${score.accuracy}%)`
+              return `${formatNumber(score.wpm)} WPM (${formatNumber(score.accuracy)}%)`
             case 'reaction-time':
-              return `${score.fastest_time}ms (${score.average_time}ms avg)`
+              return `${formatNumber(score.fastest_time)}ms (${formatNumber(score.average_time)}ms avg)`
             case 'visual-memory':
-              return `Level ${score.level_reached} (${score.total_patterns} patterns)`
+              return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.total_patterns)} patterns)`
             case 'sequence-memory':
-              return `Level ${score.level_reached} (${score.longest_sequence} shapes)`
+              return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.longest_sequence)} shapes)`
             case 'pattern-recognition':
-              return `${score.patterns_solved} patterns (${score.time_taken}s)`
+              return `${formatNumber(score.patterns_solved)} patterns (${formatNumber(score.time_taken)}s)`
             case 'stroop-test':
-              return `${score.correct_answers || 0} correct (${score.average_time || 0}ms)`
+              return `${formatNumber(score.correct_answers || 0)} correct (${formatNumber(score.average_time || 0)}ms)`
             case 'number-memory':
-              return `${score.longest_sequence} digits`
+              return `${formatNumber(score.longest_sequence)} digits`
             case 'memory':
-              return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
+              return `${formatNumber(score.total_sequences || 0)} sequences (${formatNumber(score.correct_sequences || 0)} correct)`
             case 'chimp-test':
-              return `${score.patterns_remembered || 0} correct`
+              return `${formatNumber(score.patterns_remembered || 0)} correct`
             case 'time-estimation':
-              return `${score.average_accuracy || 0}ms avg (${score.best_accuracy || 0}ms best)`
+              return `${formatNumber(score.average_accuracy || 0)}ms avg (${formatNumber(score.best_accuracy || 0)}ms best)`
             case 'maze':
               const seconds = Math.floor((score.time_taken || 0) / 1000)
               const milliseconds = Math.floor(((score.time_taken || 0) % 1000) / 100)
-              return `${seconds}.${milliseconds}s`
+              return `${formatNumber(seconds)}.${milliseconds}s`
+            case 'algebra':
+            case 'arithmetic':
+              const correctAnswers = score.correct_answers || 0
+              const avgTime = score.average_time || 0
+              return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`
             default:
-            return `Level ${score.level_reached}`
+            return `Level ${formatNumber(score.level_reached)}`
         }
       }
 

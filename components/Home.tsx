@@ -117,39 +117,44 @@ export default function Home({ onGameSelect }: HomeProps) {
           let formattedValue = ''
           
           // Format based on game type
+          const formatNum = (num: number | null | undefined) => {
+            if (num === null || num === undefined) return '0'
+            return num.toLocaleString('en-US')
+          }
+          
           switch (item.game_id) {
             case 'aim-trainer':
-              formattedValue = `${scoreValue.reaction_time}ms (${scoreValue.accuracy}%)`
+              formattedValue = `${formatNum(scoreValue.reaction_time)}ms (${formatNum(scoreValue.accuracy)}%)`
               break
             case 'typing-test':
-              formattedValue = `${scoreValue.wpm} WPM (${scoreValue.accuracy}%)`
+              formattedValue = `${formatNum(scoreValue.wpm)} WPM (${formatNum(scoreValue.accuracy)}%)`
               break
             case 'reaction-time':
-              formattedValue = `${scoreValue.fastest_time}ms (${scoreValue.average_time}ms avg)`
+              formattedValue = `${formatNum(scoreValue.fastest_time)}ms (${formatNum(scoreValue.average_time)}ms avg)`
               break
             case 'visual-memory':
-              formattedValue = `Level ${scoreValue.level_reached} (${scoreValue.total_patterns} patterns)`
+              formattedValue = `Level ${formatNum(scoreValue.level_reached)} (${formatNum(scoreValue.total_patterns)} patterns)`
               break
             case 'sequence-memory':
-              formattedValue = `Level ${scoreValue.level_reached} (${scoreValue.longest_sequence} shapes)`
+              formattedValue = `Level ${formatNum(scoreValue.level_reached)} (${formatNum(scoreValue.longest_sequence)} shapes)`
               break
             case 'pattern-recognition':
-              formattedValue = `${scoreValue.patterns_solved} patterns`
+              formattedValue = `${formatNum(scoreValue.patterns_solved)} patterns`
               break
             case 'stroop-test':
-              formattedValue = `${scoreValue.correct_answers || 0} correct (${scoreValue.average_time || 0}ms)`
+              formattedValue = `${formatNum(scoreValue.correct_answers || 0)} correct (${formatNum(scoreValue.average_time || 0)}ms)`
               break
             case 'number-memory':
-              formattedValue = `${scoreValue.longest_sequence} digits`
+              formattedValue = `${formatNum(scoreValue.longest_sequence)} digits`
               break
             case 'chimp-test':
-              formattedValue = `${scoreValue.patterns_remembered || 0} correct`
+              formattedValue = `${formatNum(scoreValue.patterns_remembered || 0)} correct`
               break
             case 'time-estimation':
-              formattedValue = `${scoreValue.average_accuracy || 0}ms avg (${scoreValue.best_accuracy || 0}ms best)`
+              formattedValue = `${formatNum(scoreValue.average_accuracy || 0)}ms avg (${formatNum(scoreValue.best_accuracy || 0)}ms best)`
               break
             default:
-              formattedValue = `Level ${scoreValue.level_reached}`
+              formattedValue = `Level ${formatNum(scoreValue.level_reached)}`
           }
 
           formattedScores.push({
@@ -488,7 +493,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
                                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
                                           </svg>
-                                          <span className="text-[10px] font-medium">{game.totalGames}</span>
+                                          <span className="text-[10px] font-medium">{game.totalGames.toLocaleString('en-US')}</span>
                                         </div>
                                       </div>
                                       
@@ -504,16 +509,21 @@ export default function Home({ onGameSelect }: HomeProps) {
                                             </span>
                                           )}
                                           {game.id === 'time-estimation' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              Beta
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              New
                                             </span>
                                           )}
                                           {game.id === 'maze' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              Beta
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              New
                                             </span>
                                           )}
-                                          {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
+                                          {(game.id === 'algebra' || game.id === 'arithmetic') && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              New
+                                            </span>
+                                          )}
+                                          {(game.id === 'linear-algebra' || game.id === 'geometry' || 
                                             game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1 py-0.5 rounded-md shadow-sm">
                                               Soon
@@ -554,16 +564,21 @@ export default function Home({ onGameSelect }: HomeProps) {
                                             </span>
                                           )}
                                           {game.id === 'time-estimation' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              Beta
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              New
                                             </span>
                                           )}
                                           {game.id === 'maze' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              Beta
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              New
                                             </span>
                                           )}
-                                          {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
+                                          {(game.id === 'algebra' || game.id === 'arithmetic') && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              New
+                                            </span>
+                                          )}
+                                          {(game.id === 'linear-algebra' || game.id === 'geometry' || 
                                             game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                                               Soon
@@ -591,7 +606,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
                                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
                                         </svg>
-                                        <span className="text-xs font-medium">{game.totalGames}</span>
+                                        <span className="text-xs font-medium">{game.totalGames.toLocaleString('en-US')}</span>
                                       </div>
                                     </div>
 

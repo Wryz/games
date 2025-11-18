@@ -6,6 +6,7 @@ import {
   calculateGameLevel, 
   formatThreshold,
   formatUserScore,
+  formatNumber,
   EDUCATION_LEVELS,
   type CategoryLevelInfo,
   type GameCategory
@@ -28,77 +29,87 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
 
   switch (gameId) {
     case 'aim-trainer':
-      if (score.accuracy !== undefined) details.push({ label: 'Accuracy', value: `${score.accuracy}%` })
-      if (score.reaction_time !== undefined) details.push({ label: 'Reaction Time', value: `${score.reaction_time}ms` })
-      if (score.targets_hit !== undefined) details.push({ label: 'Targets Hit', value: `${score.targets_hit}` })
-      if (score.total_targets !== undefined) details.push({ label: 'Total Targets', value: `${score.total_targets}` })
+      if (score.accuracy !== undefined) details.push({ label: 'Accuracy', value: `${formatNumber(score.accuracy)}%` })
+      if (score.reaction_time !== undefined) details.push({ label: 'Reaction Time', value: `${formatNumber(score.reaction_time)}ms` })
+      if (score.targets_hit !== undefined) details.push({ label: 'Targets Hit', value: formatNumber(score.targets_hit) })
+      if (score.total_targets !== undefined) details.push({ label: 'Total Targets', value: formatNumber(score.total_targets) })
       break
 
     case 'typing-test':
-      if (score.wpm !== undefined) details.push({ label: 'WPM', value: `${score.wpm}` })
-      if (score.accuracy !== undefined) details.push({ label: 'Accuracy', value: `${score.accuracy}%` })
-      if (score.characters_typed !== undefined) details.push({ label: 'Characters Typed', value: `${score.characters_typed}` })
-      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${score.time_taken}s` })
+      if (score.wpm !== undefined) details.push({ label: 'WPM', value: formatNumber(score.wpm) })
+      if (score.accuracy !== undefined) details.push({ label: 'Accuracy', value: `${formatNumber(score.accuracy)}%` })
+      if (score.characters_typed !== undefined) details.push({ label: 'Characters Typed', value: formatNumber(score.characters_typed) })
+      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${formatNumber(score.time_taken)}s` })
       break
 
     case 'reaction-time':
-      if (score.fastest_time !== undefined) details.push({ label: 'Fastest Time', value: `${score.fastest_time}ms` })
-      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${score.average_time}ms` })
-      if (score.attempts !== undefined) details.push({ label: 'Attempts', value: `${score.attempts}` })
+      if (score.fastest_time !== undefined) details.push({ label: 'Fastest Time', value: `${formatNumber(score.fastest_time)}ms` })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
+      if (score.attempts !== undefined) details.push({ label: 'Attempts', value: formatNumber(score.attempts) })
       break
 
     case 'visual-memory':
-      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
-      if (score.total_patterns !== undefined) details.push({ label: 'Total Patterns', value: `${score.total_patterns}` })
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: formatNumber(score.level_reached) })
+      if (score.total_patterns !== undefined) details.push({ label: 'Total Patterns', value: formatNumber(score.total_patterns) })
       break
 
     case 'sequence-memory':
-      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
-      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: `${score.longest_sequence}` })
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: formatNumber(score.level_reached) })
+      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: formatNumber(score.longest_sequence) })
       break
 
     case 'pattern-recognition':
-      if (score.patterns_solved !== undefined) details.push({ label: 'Patterns Solved', value: `${score.patterns_solved}` })
-      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${score.time_taken}s` })
-      if (score.difficulty_level !== undefined) details.push({ label: 'Difficulty Level', value: `${score.difficulty_level}` })
+      if (score.patterns_solved !== undefined) details.push({ label: 'Patterns Solved', value: formatNumber(score.patterns_solved) })
+      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${formatNumber(score.time_taken)}s` })
+      if (score.difficulty_level !== undefined) details.push({ label: 'Difficulty Level', value: formatNumber(score.difficulty_level) })
       break
 
     case 'stroop-test':
-      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: `${score.correct_answers}` })
-      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${score.average_time}ms` })
+      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
       break
 
     case 'number-memory':
-      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: `${score.longest_sequence} digits` })
+      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: `${formatNumber(score.longest_sequence)} digits` })
       break
 
     case 'memory':
-      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: `${score.level_reached}` })
-      if (score.correct_sequences !== undefined) details.push({ label: 'Correct Sequences', value: `${score.correct_sequences}` })
-      if (score.total_sequences !== undefined) details.push({ label: 'Total Sequences', value: `${score.total_sequences}` })
+      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: formatNumber(score.level_reached) })
+      if (score.correct_sequences !== undefined) details.push({ label: 'Correct Sequences', value: formatNumber(score.correct_sequences) })
+      if (score.total_sequences !== undefined) details.push({ label: 'Total Sequences', value: formatNumber(score.total_sequences) })
       break
 
     case 'chimp-test':
-      if (score.patterns_remembered !== undefined) details.push({ label: 'Correct', value: `${score.patterns_remembered}` })
+      if (score.patterns_remembered !== undefined) details.push({ label: 'Correct', value: formatNumber(score.patterns_remembered) })
       break
 
     case 'time-estimation':
-      if (score.average_accuracy !== undefined) details.push({ label: 'Average Accuracy', value: `${score.average_accuracy}ms` })
-      if (score.best_accuracy !== undefined) details.push({ label: 'Best Accuracy', value: `${score.best_accuracy}ms` })
+      if (score.average_accuracy !== undefined) details.push({ label: 'Average Accuracy', value: `${formatNumber(score.average_accuracy)}ms` })
+      if (score.best_accuracy !== undefined) details.push({ label: 'Best Accuracy', value: `${formatNumber(score.best_accuracy)}ms` })
       break
 
     case 'maze':
       if (score.time_taken !== undefined) {
         const seconds = Math.floor(score.time_taken / 1000)
         const milliseconds = Math.floor((score.time_taken % 1000) / 100)
-        details.push({ label: 'Time Taken', value: `${seconds}.${milliseconds}s` })
+        details.push({ label: 'Time Taken', value: `${formatNumber(seconds)}.${milliseconds}s` })
       }
+      break
+
+    case 'algebra':
+      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
+      break
+
+    case 'arithmetic':
+      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
       break
 
     default:
       // Generic fallback for any other fields
       Object.keys(score).forEach(key => {
-        if (key !== 'id' && key !== 'username' && score[key] !== null && score[key] !== undefined) {
+        if (key !== 'id' && key !== 'username' && key !== 'date_submitted' && score[key] !== null && score[key] !== undefined) {
           const formattedKey = key.split('_').map(word => 
             word.charAt(0).toUpperCase() + word.slice(1)
           ).join(' ')

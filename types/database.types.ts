@@ -44,6 +44,60 @@ export type Database = {
         }
         Relationships: []
       }
+      algebra_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      arithmetic_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
       chimp_test_scores: {
         Row: {
           date_submitted: string | null
@@ -347,6 +401,48 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "aim_trainer_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_algebra_score: {
+        Args: {
+          p_average_time: number
+          p_correct_answers: number
+          p_username: string
+        }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "algebra_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_arithmetic_score: {
+        Args: {
+          p_average_time: number
+          p_correct_answers: number
+          p_username: string
+        }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "arithmetic_scores"
           isOneToOne: true
           isSetofReturn: false
         }

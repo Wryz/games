@@ -1,3 +1,11 @@
+// Helper function to format numbers with commas
+export function formatNumber(num: number | string | null | undefined): string {
+  if (num === null || num === undefined) return '0'
+  const numValue = typeof num === 'string' ? parseFloat(num) : num
+  if (isNaN(numValue)) return '0'
+  return numValue.toLocaleString('en-US')
+}
+
 // Education level mappings
 export const EDUCATION_LEVELS: Record<number, string> = {
   1: 'Pre-School',
@@ -290,6 +298,50 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 18, threshold: [11000] }, // College Senior - 11 seconds
     { level: 19, threshold: [10000] }, // Master's - 10 seconds
     { level: 20, threshold: [9000] } // Doctorate - 9 seconds or faster
+  ],
+  'algebra': [
+    { level: 1, threshold: [1, 20000] }, // Pre-School - 1 correct, 20s avg (correct_answers, average_time)
+    { level: 2, threshold: [2, 18000] }, // Kindergarten - 2 correct, 18s avg
+    { level: 3, threshold: [3, 16000] }, // 1st Grade - 3 correct, 16s avg
+    { level: 4, threshold: [4, 14000] }, // 2nd Grade - 4 correct, 14s avg
+    { level: 5, threshold: [5, 12000] }, // 3rd Grade - 5 correct, 12s avg
+    { level: 6, threshold: [6, 10000] }, // 4th Grade - 6 correct, 10s avg
+    { level: 7, threshold: [7, 8500] }, // 5th Grade - 7 correct, 8.5s avg
+    { level: 8, threshold: [8, 7000] }, // 6th Grade - 8 correct, 7s avg
+    { level: 9, threshold: [9, 6000] }, // 7th Grade - 9 correct, 6s avg
+    { level: 10, threshold: [10, 5000] }, // 8th Grade - 10 correct, 5s avg
+    { level: 11, threshold: [11, 4500] }, // 9th Grade - 11 correct, 4.5s avg
+    { level: 12, threshold: [12, 4000] }, // 10th Grade - 12 correct, 4s avg
+    { level: 13, threshold: [13, 3500] }, // 11th Grade - 13 correct, 3.5s avg
+    { level: 14, threshold: [14, 3200] }, // 12th Grade - 14 correct, 3.2s avg
+    { level: 15, threshold: [15, 2900] }, // College Freshman - 15 correct, 2.9s avg
+    { level: 16, threshold: [16, 2600] }, // College Sophomore - 16 correct, 2.6s avg
+    { level: 17, threshold: [17, 2400] }, // College Junior - 17 correct, 2.4s avg
+    { level: 18, threshold: [18, 2200] }, // College Senior - 18 correct, 2.2s avg
+    { level: 19, threshold: [19, 2100] }, // Master's - 19 correct, 2.1s avg
+    { level: 20, threshold: [20, 2000] } // Doctorate - 20 correct, 2s avg
+  ],
+  'arithmetic': [
+    { level: 1, threshold: [1, 20000] }, // Pre-School - 1 correct, 20s avg (correct_answers, average_time)
+    { level: 2, threshold: [2, 18000] }, // Kindergarten - 2 correct, 18s avg
+    { level: 3, threshold: [3, 16000] }, // 1st Grade - 3 correct, 16s avg
+    { level: 4, threshold: [4, 14000] }, // 2nd Grade - 4 correct, 14s avg
+    { level: 5, threshold: [5, 12000] }, // 3rd Grade - 5 correct, 12s avg
+    { level: 6, threshold: [6, 10000] }, // 4th Grade - 6 correct, 10s avg
+    { level: 7, threshold: [7, 8500] }, // 5th Grade - 7 correct, 8.5s avg
+    { level: 8, threshold: [8, 7000] }, // 6th Grade - 8 correct, 7s avg
+    { level: 9, threshold: [9, 6000] }, // 7th Grade - 9 correct, 6s avg
+    { level: 10, threshold: [10, 5000] }, // 8th Grade - 10 correct, 5s avg
+    { level: 11, threshold: [11, 4500] }, // 9th Grade - 11 correct, 4.5s avg
+    { level: 12, threshold: [12, 4000] }, // 10th Grade - 12 correct, 4s avg
+    { level: 13, threshold: [13, 3500] }, // 11th Grade - 13 correct, 3.5s avg
+    { level: 14, threshold: [14, 3200] }, // 12th Grade - 14 correct, 3.2s avg
+    { level: 15, threshold: [15, 2900] }, // College Freshman - 15 correct, 2.9s avg
+    { level: 16, threshold: [16, 2600] }, // College Sophomore - 16 correct, 2.6s avg
+    { level: 17, threshold: [17, 2400] }, // College Junior - 17 correct, 2.4s avg
+    { level: 18, threshold: [18, 2200] }, // College Senior - 18 correct, 2.2s avg
+    { level: 19, threshold: [19, 2100] }, // Master's - 19 correct, 2.1s avg
+    { level: 20, threshold: [20, 2000] } // Doctorate - 20 correct, 2s avg
   ]
 }
 
@@ -323,6 +375,11 @@ function extractScoreValue(gameId: string, score: any): number {
     case 'maze':
       // For maze, lower is better, so we return time_taken
       return score.time_taken || 60000
+    case 'algebra':
+    case 'arithmetic':
+      // For algebra and arithmetic, we use the score object directly in meetsThreshold
+      // Return correct_answers as the primary value for backward compatibility
+      return score.correct_answers || 0
     default:
       return 0
   }
@@ -337,6 +394,14 @@ function meetsThreshold(gameId: string, score: any, threshold: number[]): boolea
     const reactionTime = score?.reaction_time || 1000
     // Must meet both: accuracy >= threshold[0] AND reaction_time <= threshold[1]
     return accuracy >= threshold[0] && reactionTime <= threshold[1]
+  }
+  
+  // Handle algebra and arithmetic with [correct_answers, average_time]
+  if ((gameId === 'algebra' || gameId === 'arithmetic') && threshold.length >= 2) {
+    const correctAnswers = score?.correct_answers || 0
+    const averageTime = score?.average_time || 10000
+    // Must meet both: correct_answers >= threshold[0] AND average_time <= threshold[1]
+    return correctAnswers >= threshold[0] && averageTime <= threshold[1]
   }
   
   // Handle single metric games (threshold[0] is the value)
@@ -437,6 +502,25 @@ export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
         
         // Average the two progress values
         progress = (accuracyProgress + reactionProgress) / 2
+      } else if ((gameId === 'algebra' || gameId === 'arithmetic') && currentThreshold.threshold.length >= 2 && nextThreshold.threshold.length >= 2) {
+        // Handle algebra and arithmetic with multiple metrics [correct_answers, average_time]
+        const correctAnswers = score?.correct_answers || 0
+        const averageTime = score?.average_time || 10000
+        
+        // Calculate progress for correct answers (higher is better)
+        const answersRange = nextThreshold.threshold[0] - currentThreshold.threshold[0]
+        const answersProgress = answersRange > 0 
+          ? Math.min(100, Math.max(0, ((correctAnswers - currentThreshold.threshold[0]) / answersRange) * 100))
+          : 0
+        
+        // Calculate progress for average time (lower is better)
+        const timeRange = currentThreshold.threshold[1] - nextThreshold.threshold[1]
+        const timeProgress = timeRange > 0
+          ? Math.min(100, Math.max(0, ((currentThreshold.threshold[1] - averageTime) / timeRange) * 100))
+          : 0
+        
+        // Average the two progress values
+        progress = (answersProgress + timeProgress) / 2
       } else if (gameId === 'reaction-time' || gameId === 'maze') {
         // For reaction-time and maze: lower is better, so progress is inverted
         // Example: current=260ms, next=250ms, score=258ms
@@ -517,27 +601,35 @@ export function formatThreshold(gameId: string, threshold: number): string {
   switch (gameId) {
     case 'aim-trainer':
     case 'stroop-test':
-      return `${threshold}% accuracy`
+      return `${formatNumber(threshold)}% accuracy`
     case 'typing-test':
-      return `${threshold} WPM`
+      return `${formatNumber(threshold)} WPM`
     case 'reaction-time':
-      return `${threshold}ms or faster`
+      return `${formatNumber(threshold)}ms or faster`
     case 'memory':
     case 'visual-memory':
     case 'sequence-memory':
-      return `Level ${threshold}`
+      return `Level ${formatNumber(threshold)}`
     case 'chimp-test':
-      return `${threshold} correct`
+      return `${formatNumber(threshold)} correct`
     case 'number-memory':
-      return `${threshold} digits`
+      return `${formatNumber(threshold)} digits`
     case 'pattern-recognition':
-      return `${threshold} patterns`
+      return `${formatNumber(threshold)} patterns`
     case 'maze':
       const seconds = Math.floor(threshold / 1000)
       const milliseconds = Math.floor((threshold % 1000) / 100)
-      return `${seconds}.${milliseconds}s or faster`
+      return `${formatNumber(seconds)}.${milliseconds}s or faster`
+    case 'algebra':
+    case 'arithmetic':
+      // For algebra and arithmetic, threshold is [correct_answers, average_time]
+      if (Array.isArray(threshold) && threshold.length >= 2) {
+        const timeMs = threshold[1]
+        return `${formatNumber(threshold[0])} correct, ${formatNumber(timeMs)}ms avg or faster`
+      }
+      return `${formatNumber(threshold)}`
     default:
-      return `${threshold}`
+      return `${formatNumber(threshold)}`
   }
 }
 
@@ -547,30 +639,35 @@ export function formatUserScore(gameId: string, score: any): string {
   
   switch (gameId) {
     case 'aim-trainer':
-      return `${score.accuracy || 0}% accuracy`
+      return `${formatNumber(score.accuracy || 0)}% accuracy`
     case 'typing-test':
-      return `${score.wpm || 0} WPM`
+      return `${formatNumber(score.wpm || 0)} WPM`
     case 'reaction-time':
-      return `${score.fastest_time || 0}ms`
+      return `${formatNumber(score.fastest_time || 0)}ms`
     case 'memory':
-      return `${score.total_sequences || 0} sequences (${score.correct_sequences || 0} correct)`
+      return `${formatNumber(score.total_sequences || 0)} sequences (${formatNumber(score.correct_sequences || 0)} correct)`
     case 'visual-memory':
     case 'sequence-memory':
-      return `Level ${score.level_reached || 0}`
+      return `Level ${formatNumber(score.level_reached || 0)}`
     case 'chimp-test':
-      return `${score.patterns_remembered || 0} correct`
+      return `${formatNumber(score.patterns_remembered || 0)} correct`
     case 'number-memory':
-      return `${score.longest_sequence || 0} digits`
+      return `${formatNumber(score.longest_sequence || 0)} digits`
     case 'pattern-recognition':
-      return `${score.patterns_solved || 0} patterns`
+      return `${formatNumber(score.patterns_solved || 0)} patterns`
     case 'stroop-test':
-      return `${score.correct_answers || 0} correct (${score.average_time || 0}ms)`
+      return `${formatNumber(score.correct_answers || 0)} correct (${formatNumber(score.average_time || 0)}ms)`
     case 'time-estimation':
-      return `${score.average_accuracy || 0}ms avg (${score.best_accuracy || 0}ms best)`
+      return `${formatNumber(score.average_accuracy || 0)}ms avg (${formatNumber(score.best_accuracy || 0)}ms best)`
     case 'maze':
       const seconds = Math.floor((score.time_taken || 0) / 1000)
       const milliseconds = Math.floor(((score.time_taken || 0) % 1000) / 100)
-      return `${seconds}.${milliseconds}s`
+      return `${formatNumber(seconds)}.${milliseconds}s`
+    case 'algebra':
+    case 'arithmetic':
+      const correctAnswers = score.correct_answers || 0
+      const avgTime = score.average_time || 0
+      return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`
     default:
       return 'No score'
   }

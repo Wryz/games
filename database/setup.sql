@@ -131,6 +131,26 @@ CREATE TABLE IF NOT EXISTS maze_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Algebra scores
+CREATE TABLE IF NOT EXISTS algebra_scores (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  correct_answers INTEGER NOT NULL,
+  average_time INTEGER NOT NULL, -- average response time in milliseconds
+  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Arithmetic scores
+CREATE TABLE IF NOT EXISTS arithmetic_scores (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  correct_answers INTEGER NOT NULL,
+  average_time INTEGER NOT NULL, -- average response time in milliseconds
+  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- =====================================================
 -- 2. CREATE INDEXES
 -- =====================================================
@@ -171,6 +191,12 @@ CREATE INDEX IF NOT EXISTS idx_time_estimation_date ON time_estimation_scores(da
 
 CREATE INDEX IF NOT EXISTS idx_maze_username ON maze_scores(username);
 CREATE INDEX IF NOT EXISTS idx_maze_date ON maze_scores(date_submitted);
+
+CREATE INDEX IF NOT EXISTS idx_algebra_username ON algebra_scores(username);
+CREATE INDEX IF NOT EXISTS idx_algebra_date ON algebra_scores(date_submitted);
+
+CREATE INDEX IF NOT EXISTS idx_arithmetic_username ON arithmetic_scores(username);
+CREATE INDEX IF NOT EXISTS idx_arithmetic_date ON arithmetic_scores(date_submitted);
 
 -- =====================================================
 -- 3. CREATE RPC FUNCTIONS FOR SCORE SUBMISSION
@@ -380,6 +406,40 @@ DECLARE
 BEGIN
   INSERT INTO maze_scores (username, time_taken)
   VALUES (p_username, p_time_taken)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit algebra score
+CREATE OR REPLACE FUNCTION submit_algebra_score(
+  p_username VARCHAR(50),
+  p_correct_answers INTEGER,
+  p_average_time INTEGER
+) RETURNS algebra_scores AS $$
+DECLARE
+  new_score algebra_scores;
+BEGIN
+  INSERT INTO algebra_scores (username, correct_answers, average_time)
+  VALUES (p_username, p_correct_answers, p_average_time)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit arithmetic score
+CREATE OR REPLACE FUNCTION submit_arithmetic_score(
+  p_username VARCHAR(50),
+  p_correct_answers INTEGER,
+  p_average_time INTEGER
+) RETURNS arithmetic_scores AS $$
+DECLARE
+  new_score arithmetic_scores;
+BEGIN
+  INSERT INTO arithmetic_scores (username, correct_answers, average_time)
+  VALUES (p_username, p_correct_answers, p_average_time)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -767,6 +827,60 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+    
+    UNION ALL
+    
+    -- Algebra
+    SELECT 
+      'algebra' as game_id,
+      (SELECT COUNT(*) FROM algebra_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'correct_answers', correct_answers,
+        'average_time', average_time,
+        'date_submitted', date_submitted
+      ) FROM algebra_scores 
+      ORDER BY correct_answers DESC, average_time ASC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'correct_answers', correct_answers,
+            'average_time', average_time,
+            'date_submitted', date_submitted
+          ) FROM algebra_scores 
+          WHERE username = p_username
+          ORDER BY correct_answers DESC, average_time ASC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
+    
+    UNION ALL
+    
+    -- Arithmetic
+    SELECT 
+      'arithmetic' as game_id,
+      (SELECT COUNT(*) FROM arithmetic_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'correct_answers', correct_answers,
+        'average_time', average_time,
+        'date_submitted', date_submitted
+      ) FROM arithmetic_scores 
+      ORDER BY correct_answers DESC, average_time ASC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'correct_answers', correct_answers,
+            'average_time', average_time,
+            'date_submitted', date_submitted
+          ) FROM arithmetic_scores 
+          WHERE username = p_username
+          ORDER BY correct_answers DESC, average_time ASC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;
@@ -918,6 +1032,28 @@ BEGIN
       json_build_object('time_taken', time_taken) as score_value,
       date_submitted
     FROM maze_scores
+    
+    UNION ALL
+    
+    -- Algebra
+    SELECT 
+      'algebra' as game_id,
+      'Algebra' as game_name,
+      username,
+      json_build_object('correct_answers', correct_answers, 'average_time', average_time) as score_value,
+      date_submitted
+    FROM algebra_scores
+    
+    UNION ALL
+    
+    -- Arithmetic
+    SELECT 
+      'arithmetic' as game_id,
+      'Arithmetic' as game_name,
+      username,
+      json_build_object('correct_answers', correct_answers, 'average_time', average_time) as score_value,
+      date_submitted
+    FROM arithmetic_scores
     
     ORDER BY date_submitted DESC
     LIMIT p_limit
@@ -1091,6 +1227,30 @@ CREATE POLICY "Allow public read access on maze_scores" ON maze_scores
 CREATE POLICY "Allow public insert access on maze_scores" ON maze_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on maze_scores" ON maze_scores
+    FOR UPDATE USING (true);
+
+-- Policies for algebra_scores
+DROP POLICY IF EXISTS "Allow public read access on algebra_scores" ON algebra_scores;
+DROP POLICY IF EXISTS "Allow public insert access on algebra_scores" ON algebra_scores;
+DROP POLICY IF EXISTS "Allow public update access on algebra_scores" ON algebra_scores;
+
+CREATE POLICY "Allow public read access on algebra_scores" ON algebra_scores
+    FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on algebra_scores" ON algebra_scores
+    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on algebra_scores" ON algebra_scores
+    FOR UPDATE USING (true);
+
+-- Policies for arithmetic_scores
+DROP POLICY IF EXISTS "Allow public read access on arithmetic_scores" ON arithmetic_scores;
+DROP POLICY IF EXISTS "Allow public insert access on arithmetic_scores" ON arithmetic_scores;
+DROP POLICY IF EXISTS "Allow public update access on arithmetic_scores" ON arithmetic_scores;
+
+CREATE POLICY "Allow public read access on arithmetic_scores" ON arithmetic_scores
+    FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on arithmetic_scores" ON arithmetic_scores
+    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on arithmetic_scores" ON arithmetic_scores
     FOR UPDATE USING (true);
 
 -- =====================================================

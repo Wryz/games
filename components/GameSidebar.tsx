@@ -188,16 +188,21 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                           </span>
                         )}
                         {game.id === 'time-estimation' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            Beta
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            New
                           </span>
                         )}
                         {game.id === 'maze' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            Beta
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            New
                           </span>
                         )}
-                        {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
+                        {(game.id === 'algebra' || game.id === 'arithmetic') && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            New
+                          </span>
+                        )}
+                        {(game.id === 'linear-algebra' || game.id === 'geometry' || 
                           game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                             Soon
