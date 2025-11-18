@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from 'react'
 import { useUser } from '@/contexts/UserContext'
+import { validateUsername, MAX_USERNAME_LENGTH } from '@/lib/username-validation'
 
 interface UsernameGateProps {
   children: ReactNode
@@ -12,6 +13,7 @@ export default function UsernameGate({ children }: UsernameGateProps) {
   const [inputValue, setInputValue] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSkipped, setHasSkipped] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Only show the gate if user doesn't have a username
   // Skip state is session-only (not persisted)
@@ -23,6 +25,14 @@ export default function UsernameGate({ children }: UsernameGateProps) {
     e.preventDefault()
     if (!inputValue.trim()) return
 
+    // Validate username
+    const validation = validateUsername(inputValue.trim())
+    if (!validation.isValid) {
+      setError(validation.error || 'Invalid username')
+      return
+    }
+
+    setError(null)
     setIsSubmitting(true)
     try {
       setUsername(inputValue.trim())
@@ -56,13 +66,28 @@ export default function UsernameGate({ children }: UsernameGateProps) {
               <input
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  setInputValue(e.target.value)
+                  setError(null) // Clear error when user types
+                }}
                 placeholder="Your username"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors"
-                maxLength={20}
+                className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors ${
+                  error 
+                    ? 'border-red-500 dark:border-red-500' 
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
+                maxLength={MAX_USERNAME_LENGTH}
                 disabled={isSubmitting}
                 autoFocus
               />
+              {error && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                  {error}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Maximum {MAX_USERNAME_LENGTH} characters
+              </p>
             </div>
 
             <div className="flex flex-col gap-3">
