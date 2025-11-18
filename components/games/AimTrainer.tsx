@@ -32,6 +32,7 @@ export default function AimTrainer() {
     startTime: 0,
     gameStartTime: 0
   })
+  const [wrongClickTarget, setWrongClickTarget] = useState<number | null>(null)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
 
@@ -162,11 +163,19 @@ export default function AimTrainer() {
       // Clear current target
       setTargets(prev => prev.map(t => ({ ...t, isActive: false })))
       setCurrentTarget(null)
+      setWrongClickTarget(null)
       
       // Spawn next target immediately (no delay)
       setTimeout(() => spawnTarget(), 10)
+    } else {
+      // Wrong target clicked - show feedback
+      setWrongClickTarget(targetId)
+      
+      // Clear feedback after a brief moment
+      setTimeout(() => {
+        setWrongClickTarget(null)
+      }, 500)
     }
-    // If wrong target clicked, do nothing (just counted the click above)
   }, [gameState, currentTarget, gameStats.startTime, spawnTarget])
 
   // Initialize game (show grid with first target)
@@ -237,6 +246,7 @@ export default function AimTrainer() {
   // Reset game
   const resetGame = useCallback(() => {
     hasSubmittedScore.current = false // Reset submission flag
+    setWrongClickTarget(null)
     initializeGame()
   }, [initializeGame])
 
@@ -338,19 +348,25 @@ export default function AimTrainer() {
             <div 
               className="grid grid-cols-8 gap-2 mx-auto w-full max-w-2xl aspect-square"
             >
-              {targets.map((target) => (
-                <button
-                  key={target.id}
-                  onClick={() => handleTargetClick(target.id)}
-                  className={`
-                    aspect-square rounded transition-all duration-150
-                    ${target.isActive 
-                      ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-lg' 
-                      : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500'
-                    }
-                  `}
-                />
-              ))}
+              {targets.map((target) => {
+                const isWrongClick = wrongClickTarget === target.id
+                
+                return (
+                  <button
+                    key={target.id}
+                    onClick={() => handleTargetClick(target.id)}
+                    className={`
+                      aspect-square rounded transition-all duration-150
+                      ${target.isActive 
+                        ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-lg' 
+                        : isWrongClick
+                        ? 'bg-red-300 dark:bg-red-700 ring-4 ring-red-500 animate-shake'
+                        : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500'
+                      }
+                    `}
+                  />
+                )
+              })}
             </div>
         </div>
         )}

@@ -17,6 +17,7 @@ export default function NumberMemory() {
   const [digitCount, setDigitCount] = useState(1)
   const [userInput, setUserInput] = useState('')
   const [longestSequence, setLongestSequence] = useState(0)
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -125,11 +126,13 @@ export default function NumberMemory() {
         setCurrentNumber(number)
       }, 1000)
     } else {
-      // Wrong!
+      // Wrong! Show the correct answer
       setGameState('wrong')
+      setShowCorrectAnswer(true)
       
       setTimeout(() => {
         setGameState('finished')
+        setShowCorrectAnswer(false)
         
         // Submit score
         if (username && !hasSubmittedScore.current && longestSequence > 0) {
@@ -144,7 +147,7 @@ export default function NumberMemory() {
             hasSubmittedScore.current = false
           })
         }
-      }, 2000)
+      }, 3000) // Show correct answer for 3 seconds
     }
   }, [gameState, userInput, currentNumber, digitCount, longestSequence, username, showNumber, loadScores])
 
@@ -162,6 +165,7 @@ export default function NumberMemory() {
     setDigitCount(1)
     setUserInput('')
     setLongestSequence(0)
+    setShowCorrectAnswer(false)
     hasSubmittedScore.current = false
   }, [])
 
@@ -205,6 +209,18 @@ export default function NumberMemory() {
             ) : gameState === 'showing' ? (
               <div className="text-6xl font-bold text-gray-800 dark:text-gray-100 tracking-wider">
                 {currentNumber}
+              </div>
+            ) : gameState === 'wrong' && showCorrectAnswer ? (
+              <div className="w-full flex flex-col items-center justify-center gap-4">
+                <div className="text-2xl text-red-600 dark:text-red-400 font-semibold mb-2">
+                  Wrong Answer!
+                </div>
+                <div className="text-4xl text-gray-600 dark:text-gray-400 mb-2">
+                  Your answer: <span className="text-red-600 dark:text-red-400 font-bold">{userInput}</span>
+                </div>
+                <div className="text-4xl text-gray-600 dark:text-gray-400">
+                  Correct answer: <span className="text-green-600 dark:text-green-400 font-bold">{currentNumber}</span>
+                </div>
               </div>
             ) : (
               <div className="w-full flex flex-col items-center justify-center gap-4">

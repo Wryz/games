@@ -27,6 +27,8 @@ export default function MemoryGame() {
   const [totalSequences, setTotalSequences] = useState(0)
   const [correctClicks, setCorrectClicks] = useState(0)
   const [activeSquare, setActiveSquare] = useState<number | null>(null)
+  const [showCorrectSequence, setShowCorrectSequence] = useState(false)
+  const [wrongSquareId, setWrongSquareId] = useState<number | null>(null)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const isPlayingSequence = useRef(false)
@@ -138,28 +140,38 @@ export default function MemoryGame() {
     const isCorrectSoFar = newPlayerSequence.every((val, idx) => val === sequence[idx])
     
     if (!isCorrectSoFar) {
-      // Wrong sequence
+      // Wrong sequence - mark the wrong square and show the correct sequence
       setGameState('wrong')
       setTotalSequences(prev => prev + 1)
+      setWrongSquareId(colorId) // Mark which square was wrong
       
-      // Submit score and finish
-      setTimeout(() => {
-        setGameState('finished')
-        if (username && !hasSubmittedScore.current) {
-          hasSubmittedScore.current = true
-          submitMemoryScore({
-            username,
-            level_reached: level,
-            correct_sequences: correctClicks,
-            total_sequences: totalSequences + 1
-          }).then(() => {
-            setTimeout(() => loadScores(), 1000)
-          }).catch(error => {
-            console.error('Error submitting score:', error)
-            hasSubmittedScore.current = false
-          })
-        }
-      }, 1500)
+      // Show feedback for wrong click briefly
+      setTimeout(async () => {
+        setShowCorrectSequence(true)
+        // Show correct sequence
+        await playSequence(sequence)
+        setShowCorrectSequence(false)
+        setWrongSquareId(null)
+        
+        // Submit score and finish
+        setTimeout(() => {
+          setGameState('finished')
+          if (username && !hasSubmittedScore.current) {
+            hasSubmittedScore.current = true
+            submitMemoryScore({
+              username,
+              level_reached: level,
+              correct_sequences: correctClicks,
+              total_sequences: totalSequences + 1
+            }).then(() => {
+              setTimeout(() => loadScores(), 1000)
+            }).catch(error => {
+              console.error('Error submitting score:', error)
+              hasSubmittedScore.current = false
+            })
+          }
+        }, 1000)
+      }, 500)
       
     } else {
       // Correct click!
@@ -191,6 +203,8 @@ export default function MemoryGame() {
     setTotalSequences(0)
     setCorrectClicks(0)
     setActiveSquare(null)
+    setShowCorrectSequence(false)
+    setWrongSquareId(null)
     hasSubmittedScore.current = false
     isPlayingSequence.current = false
   }, [])
@@ -230,21 +244,36 @@ export default function MemoryGame() {
 
         {/* Game Board */}
         <div className="w-full max-w-2xl mb-6">
+          {gameState === 'wrong' && showCorrectSequence ? (
+            <div className="text-center mb-4">
+              <div className="text-xl text-red-600 dark:text-red-400 font-semibold mb-2">
+                Wrong! Here's the correct sequence:
+              </div>
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 aspect-square">
-            {COLORS.map((color) => (
-              <button
-                key={color.id}
-                onClick={() => handleSquareClick(color.id)}
-                disabled={gameState !== 'playing'}
-                className={`
-                  ${color.bg}
-                  ${color.border}
-                  border-4 rounded-lg transition-all duration-150
-                  ${gameState === 'playing' ? 'cursor-pointer' : 'cursor-not-allowed'}
-                  ${activeSquare === color.id ? 'opacity-100 shadow-2xl' : 'opacity-40 shadow-lg'}
-                `}
-              />
-            ))}
+            {COLORS.map((color) => {
+              const isWrongSquare = gameState === 'wrong' && wrongSquareId === color.id && !showCorrectSequence
+              const isInCorrectSequence = gameState === 'wrong' && showCorrectSequence && sequence.includes(color.id)
+              
+              return (
+                <button
+                  key={color.id}
+                  onClick={() => handleSquareClick(color.id)}
+                  disabled={gameState !== 'playing'}
+                  className={`
+                    ${color.bg}
+                    ${color.border}
+                    border-4 rounded-lg transition-all duration-150
+                    ${gameState === 'playing' ? 'cursor-pointer' : 'cursor-not-allowed'}
+                    ${isWrongSquare ? 'opacity-100 shadow-2xl ring-4 ring-red-500 animate-shake' : ''}
+                    ${isInCorrectSequence ? 'opacity-100 shadow-2xl ring-4 ring-green-500' : ''}
+                    ${!isWrongSquare && !isInCorrectSequence && activeSquare === color.id ? 'opacity-100 shadow-2xl' : ''}
+                    ${!isWrongSquare && !isInCorrectSequence && activeSquare !== color.id && !isInCorrectSequence ? 'opacity-40 shadow-lg' : ''}
+                  `}
+                />
+              )
+            })}
           </div>
         </div>
 
