@@ -92,11 +92,15 @@ export default function Home({ onGameSelect }: HomeProps) {
 
   const loadAllData = useCallback(async (forceRefresh = false) => {
     setLoading(true)
-    await Promise.all([
-      loadRecentScores(),
-      loadGameStats(forceRefresh, username || undefined)
-    ])
+    // Load recent scores first (faster, less data)
+    await loadRecentScores()
     setLoading(false)
+    
+    // Load game stats in the background without blocking UI
+    // This allows instant navigation while stats load asynchronously
+    loadGameStats(forceRefresh, username || undefined).catch(error => {
+      console.error('Error loading game stats:', error)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username])
 
@@ -152,6 +156,18 @@ export default function Home({ onGameSelect }: HomeProps) {
               break
             case 'time-estimation':
               formattedValue = `${formatNum(scoreValue.average_accuracy || 0)}ms avg (${formatNum(scoreValue.best_accuracy || 0)}ms best)`
+              break
+            case 'maze':
+              const timeTaken = scoreValue.time_taken || 0
+              const seconds = Math.floor(timeTaken / 1000)
+              const milliseconds = Math.floor((timeTaken % 1000) / 100)
+              formattedValue = `${formatNum(seconds)}.${milliseconds}s`
+              break
+            case 'algebra':
+            case 'arithmetic':
+              const correctAnswers = scoreValue.correct_answers || 0
+              const avgTime = scoreValue.average_time || 0
+              formattedValue = `${formatNum(correctAnswers)} correct (${formatNum(avgTime)}ms avg)`
               break
             default:
               formattedValue = `Level ${formatNum(scoreValue.level_reached)}`
@@ -328,24 +344,31 @@ export default function Home({ onGameSelect }: HomeProps) {
               )}
             </div>
             
-            {gameStats.length === 0 ? (
-              // Show skeleton cards only when no data is available (initial load)
-              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {Array.from({ length: GAMES.length }).map((_, index) => (
-                  <GameCardSkeleton key={`skeleton-${index}`} />
-                ))}
-              </div>
-            ) : (
-              (() => {
+            {(() => {
+                // Merge GAMES with gameStats to show games immediately, even if stats haven't loaded
+                // This allows instant navigation while stats load in the background
+                const gamesWithStats = GAMES.map(game => {
+                  const stats = gameStats.find(stat => stat.id === game.id)
+                  return {
+                    id: game.id,
+                    name: game.name,
+                    icon: game.icon,
+                    category: game.category,
+                    totalGames: stats?.totalGames || 0,
+                    topScore: stats?.topScore || null,
+                    userBest: stats?.userBest || null,
+                  }
+                })
+
                 // Group games by category
-                const gamesByCategory = gameStats.reduce((acc, game) => {
+                const gamesByCategory = gamesWithStats.reduce((acc, game) => {
                   const category = game.category || 'other'
                   if (!acc[category]) {
                     acc[category] = []
                   }
                   acc[category].push(game)
                   return acc
-                }, {} as Record<string, typeof gameStats>)
+                }, {} as Record<string, typeof gamesWithStats>)
 
                 // Category display names
                 const categoryNames: Record<string, string> = {
@@ -640,8 +663,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                     })}
                   </div>
                 )
-              })()
-            )}
+              })()}
           </div>
 
           {/* Enhanced Recent Activity */}

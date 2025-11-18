@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Educational cognitive assessment platform
+# This site provides educational brain training exercises
+
+Sitemap: https://brain-benchmark.com/sitemap.xml
+
