@@ -142,7 +142,7 @@ export default function ScoresOverview({ username }: ScoresOverviewProps) {
             <thead className="bg-gray-100 dark:bg-gray-900/50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Game Name
+                  Exercise Name
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Score

@@ -72,7 +72,7 @@ export default function UsernameInput({ username, onUsernameSubmit, onUsernameCh
           </button>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          Playing as: {username}
+          Assessing as: {username}
         </p>
       </div>
     )

@@ -49,12 +49,12 @@ export default function UsernameGate({ children }: UsernameGateProps) {
 
   return (
     <div className="relative">
-      {/* Overlay that blocks the game */}
+      {/* Overlay that blocks the exercise */}
       <div className="absolute inset-0 backdrop-blur-xs z-50 flex items-start justify-center pt-12 sm:pt-16 md:pt-20 rounded-lg">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-md w-full mx-4">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Play with a Username (Optional)
+              Assess with a Username (Optional)
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
               To track your scores on the leaderboard, please enter a username
@@ -96,7 +96,7 @@ export default function UsernameGate({ children }: UsernameGateProps) {
                 disabled={!inputValue.trim() || isSubmitting}
                 className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
               >
-                {isSubmitting ? 'Setting...' : 'Start Playing'}
+                {isSubmitting ? 'Setting...' : 'Start Assessment'}
               </button>
 
               <button
@@ -118,7 +118,7 @@ export default function UsernameGate({ children }: UsernameGateProps) {
         </div>
       </div>
 
-      {/* Blurred game content behind overlay */}
+      {/* Blurred exercise content behind overlay */}
       <div className="blur-sm pointer-events-none">
         {children}
       </div>

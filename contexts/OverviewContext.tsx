@@ -73,7 +73,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
         setGameStatsLoading(true)
       }
 
-      // Use RPC function to fetch all game stats in a single call
+      // Use RPC function to fetch all exercise stats in a single call
       const { data: rpcData, error } = await supabase
         .rpc('get_game_stats_overview', { p_username: username || undefined }) as { data: any[] | null, error: any }
 
@@ -86,7 +86,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
         Array.isArray(rpcData) ? rpcData.map((item: any) => [item.game_id, item]) : []
       )
 
-        // Format scores based on game type
+        // Format scores based on exercise type
         const formatScore = (score: any, gameId: string) => {
         if (!score) return null
         
@@ -160,7 +160,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
       
       setGameStatsLoading(false)
     } catch (error) {
-      console.error('Error loading game stats:', error)
+      console.error('Error loading exercise stats:', error)
       setGameStatsLoading(false)
     }
   }

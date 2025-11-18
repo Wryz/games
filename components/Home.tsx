@@ -7,7 +7,9 @@ import { supabase } from '@/lib/supabase'
 import { GAMES } from '@/types/games'
 import { usePostHog } from 'posthog-js/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import AnimatedBrain from './AnimatedBrain'
+import FeedbackForm from './FeedbackForm'
 
 interface RecentScore {
   id: number
@@ -75,7 +77,7 @@ export default function Home({ onGameSelect }: HomeProps) {
   const router = useRouter()
 
   const handleGameClick = (gameId: string, gameName: string) => {
-    // Track game click event
+    // Track exercise click event
     posthog.capture('game_clicked', {
       game_id: gameId,
       game_name: gameName,
@@ -83,7 +85,7 @@ export default function Home({ onGameSelect }: HomeProps) {
       username: username || 'anonymous'
     })
     
-    // Navigate to the game URL
+    // Navigate to the exercise URL
     router.push(`/games/${gameId}`)
     
     // Call the callback for any additional handling
@@ -96,10 +98,10 @@ export default function Home({ onGameSelect }: HomeProps) {
     await loadRecentScores()
     setLoading(false)
     
-    // Load game stats in the background without blocking UI
+    // Load exercise stats in the background without blocking UI
     // This allows instant navigation while stats load asynchronously
     loadGameStats(forceRefresh, username || undefined).catch(error => {
-      console.error('Error loading game stats:', error)
+      console.error('Error loading exercise stats:', error)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username])
@@ -120,7 +122,7 @@ export default function Home({ onGameSelect }: HomeProps) {
           const scoreValue = item.score_value
           let formattedValue = ''
           
-          // Format based on game type
+          // Format based on exercise type
           const formatNum = (num: number | null | undefined) => {
             if (num === null || num === undefined) return '0'
             return num.toLocaleString('en-US')
@@ -271,23 +273,18 @@ export default function Home({ onGameSelect }: HomeProps) {
           <p className="text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-xl">
             Level up your brain through engaging cognitive challenges
           </p>
-            <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 pt-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
-              <span>Motor Skills</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
-              <span>Memory</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
-              <span>Cognition</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: '0.9s' }} />
-              <span>Computation</span>
-            </div>
+          
+          {/* Learn More Button */}
+          <div className="pt-2">
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105"
+            >
+              Learn More
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
         
@@ -333,8 +330,10 @@ export default function Home({ onGameSelect }: HomeProps) {
         </div>
       ) : (
         <>
-          {/* Enhanced Game Overview Grid - Organized by Category */}
+          {/* Enhanced Exercise Overview Grid - Organized by Category */}
           <div>
+            <FeedbackForm />
+
             <div className="flex items-center justify-between mb-8">
               {gameStatsLoading && gameStats.length > 0 && (
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
@@ -345,7 +344,7 @@ export default function Home({ onGameSelect }: HomeProps) {
             </div>
             
             {(() => {
-                // Merge GAMES with gameStats to show games immediately, even if stats haven't loaded
+                // Merge GAMES with gameStats to show exercises immediately, even if stats haven't loaded
                 // This allows instant navigation while stats load in the background
                 const gamesWithStats = GAMES.map(game => {
                   const stats = gameStats.find(stat => stat.id === game.id)
@@ -421,11 +420,11 @@ export default function Home({ onGameSelect }: HomeProps) {
                             </h2>
                             <div className="flex-1 h-px bg-gradient-to-r from-gray-300 via-gray-200 to-transparent dark:from-gray-600 dark:via-gray-700"></div>
                             <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                              {games.length} {games.length === 1 ? 'game' : 'games'}
+                              {games.length} {games.length === 1 ? 'exercise' : 'exercises'}
                             </span>
                           </div>
                           
-                          {/* Games Grid for this Category */}
+                          {/* Exercises Grid for this Category */}
                           <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 items-stretch">
                             {games.map((game, index) => {
                               const categoryColorsMap = {
@@ -648,7 +647,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                                           </p>
                                         ) : (
                                           <p className={`text-xs md:text-sm font-semibold bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent opacity-60`}>
-                                            Not played yet
+                                            Not assessed yet
                                           </p>
                                         )}
                                       </div>
@@ -676,7 +675,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                 <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700">
                   <div className="text-6xl mb-4 animate-bounce-gentle">🧠</div>
                   <p className="text-gray-600 dark:text-gray-300 font-medium">
-                    No recent scores yet. Start playing games to see activity here!
+                    No recent scores yet. Start assessments to see activity here!
                   </p>
                 </div>
               ) : (

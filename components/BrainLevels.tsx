@@ -21,7 +21,7 @@ interface BrainLevelsProps {
   username?: string
 }
 
-// Helper function to format all score details for each game type
+// Helper function to format all score details for each exercise type
 function formatScoreDetails(gameId: string, score: any): Array<{ label: string; value: string }> {
   if (!score) return []
 
@@ -124,7 +124,7 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
 export default function BrainLevels({ username }: BrainLevelsProps) {
   const { gameStats, loadGameStats } = useOverview()
 
-  // Load game stats with username when component mounts or username changes
+  // Load exercise stats with username when component mounts or username changes
   useEffect(() => {
     if (username) {
       loadGameStats(true, username)
@@ -372,7 +372,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
 
                       {/* Mobile: Two groups side-by-side */}
                       <div className="flex flex-row items-start justify-between gap-4 w-full md:hidden">
-                        {/* Left Group: Game Name + Level */}
+                        {/* Left Group: Exercise Name + Level */}
                         <div className="flex flex-col gap-2 flex-1 relative z-10 overflow-hidden">
                           <p className="text-sm font-medium text-gray-900 dark:text-white transition-transform duration-300">
                             {game.gameName}
@@ -416,7 +416,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                         </div>
                       </div>
 
-                      {/* Desktop: Game Name */}
+                      {/* Desktop: Exercise Name */}
                       <div className="hidden md:block md:col-span-1 relative z-10 overflow-hidden">
                         <p className="text-sm font-medium text-gray-900 dark:text-white transition-transform duration-300">
                           {game.gameName}
@@ -464,10 +464,10 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
         })}
       </div>
 
-      {/* Game Badges Gallery */}
+      {/* Exercise Badges Gallery */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-          Game Badges
+          Exercise Badges
         </h2>
         <div className="space-y-8">
           {BUILT_GAMES.map((gameId, gameIndex) => {
@@ -487,7 +487,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                   animation: `fadeInUp 0.6s ease-out ${gameIndex * 0.1}s both`,
                 }}
               >
-                {/* Game Header */}
+                {/* Exercise Header */}
                 <div className="flex items-center gap-3 mb-4">
                   <game.icon 
                     size={24} 

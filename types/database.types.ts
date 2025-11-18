@@ -119,6 +119,27 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          date_submitted: string | null
+          feedback: string
+          id: number
+          username: string
+        }
+        Insert: {
+          date_submitted?: string | null
+          feedback: string
+          id?: number
+          username: string
+        }
+        Update: {
+          date_submitted?: string | null
+          feedback?: string
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
       maze_scores: {
         Row: {
           created_at: string | null
@@ -483,6 +504,21 @@ export type Database = {
               isSetofReturn: false
             }
           }
+      submit_feedback: {
+        Args: { p_feedback: string; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          feedback: string
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "feedback"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_maze_score: {
         Args: { p_time_taken: number; p_username: string }
         Returns: {

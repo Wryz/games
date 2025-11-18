@@ -1,5 +1,5 @@
-// Badge definitions for each built game
-// Each game has 4 badges: Novice, Adept, Expert, Master
+// Badge definitions for each built exercise
+// Each exercise has 4 badges: Novice, Adept, Expert, Master
 
 export type BadgeTier = 'novice' | 'adept' | 'expert' | 'master'
 
@@ -19,14 +19,14 @@ export interface GameBadges {
   badges: BadgeDefinition[]
 }
 
-// Badge definitions for each built game
+// Badge definitions for each built exercise
 export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
   'aim-trainer': [
     {
       id: 'aim-trainer-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Aim Trainer',
+      description: 'Completed Aim Trainer',
       threshold: [0, 2000] // Any accuracy, 2000ms or slower
     },
     {
@@ -56,7 +56,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'typing-test-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Typing Test',
+      description: 'Completed Typing Test',
       threshold: [0] // Any WPM
     },
     {
@@ -86,7 +86,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'reaction-time-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Reaction Time',
+      description: 'Completed Reaction Time',
       threshold: [1400],
       lowerIsBetter: true
     },
@@ -120,7 +120,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'memory-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Memory Game',
+      description: 'Completed Memory Exercise',
       threshold: [1] // Level 1
     },
     {
@@ -150,7 +150,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'visual-memory-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Visual Memory',
+      description: 'Completed Visual Memory',
       threshold: [1] // Level 1
     },
     {
@@ -180,7 +180,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'sequence-memory-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Sequence Memory',
+      description: 'Completed Sequence Memory',
       threshold: [1] // Level 1
     },
     {
@@ -210,7 +210,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'number-memory-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Number Memory',
+      description: 'Completed Number Memory',
       threshold: [1] // 1 digit
     },
     {
@@ -240,7 +240,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'pattern-recognition-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Pattern Recognition',
+      description: 'Completed Pattern Recognition',
       threshold: [1] // 1 pattern
     },
     {
@@ -270,7 +270,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'stroop-test-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Stroop Test',
+      description: 'Completed Stroop Test',
       threshold: [0] // Any score
     },
     {
@@ -300,7 +300,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'chimp-test-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Chimp Test',
+      description: 'Completed Chimp Test',
       threshold: [1] // 1 pattern
     },
     {
@@ -330,7 +330,7 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'maze-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Played Maze',
+      description: 'Completed Maze',
       threshold: [120000], // 120 seconds (2 minutes) or slower
       lowerIsBetter: true
     },
@@ -429,7 +429,7 @@ export function hasEarnedBadge(gameId: string, badge: BadgeDefinition, score: an
   }
 }
 
-// Get all earned badges for a game
+// Get all earned badges for an exercise
 export function getEarnedBadges(gameId: string, score: any): BadgeDefinition[] {
   const badges = GAME_BADGES[gameId] || []
   return badges.filter(badge => hasEarnedBadge(gameId, badge, score))
