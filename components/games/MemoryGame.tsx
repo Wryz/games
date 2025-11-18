@@ -152,24 +152,24 @@ export default function MemoryGame() {
         await playSequence(sequence)
         setShowCorrectSequence(false)
         setWrongSquareId(null)
-        
-        // Submit score and finish
-        setTimeout(() => {
-          setGameState('finished')
-          if (username && !hasSubmittedScore.current) {
-            hasSubmittedScore.current = true
-            submitMemoryScore({
-              username,
-              level_reached: level,
-              correct_sequences: correctClicks,
-              total_sequences: totalSequences + 1
-            }).then(() => {
-              setTimeout(() => loadScores(), 1000)
-            }).catch(error => {
-              console.error('Error submitting score:', error)
-              hasSubmittedScore.current = false
-            })
-          }
+      
+      // Submit score and finish
+      setTimeout(() => {
+        setGameState('finished')
+        if (username && !hasSubmittedScore.current) {
+          hasSubmittedScore.current = true
+          submitMemoryScore({
+            username,
+            level_reached: level,
+            correct_sequences: correctClicks,
+            total_sequences: totalSequences + 1
+          }).then(() => {
+            setTimeout(() => loadScores(), 1000)
+          }).catch(error => {
+            console.error('Error submitting score:', error)
+            hasSubmittedScore.current = false
+          })
+        }
         }, 1000)
       }, 500)
       
@@ -257,21 +257,21 @@ export default function MemoryGame() {
               const isInCorrectSequence = gameState === 'wrong' && showCorrectSequence && sequence.includes(color.id)
               
               return (
-                <button
-                  key={color.id}
-                  onClick={() => handleSquareClick(color.id)}
-                  disabled={gameState !== 'playing'}
-                  className={`
-                    ${color.bg}
-                    ${color.border}
-                    border-4 rounded-lg transition-all duration-150
-                    ${gameState === 'playing' ? 'cursor-pointer' : 'cursor-not-allowed'}
+              <button
+                key={color.id}
+                onClick={() => handleSquareClick(color.id)}
+                disabled={gameState !== 'playing'}
+                className={`
+                  ${color.bg}
+                  ${color.border}
+                  border-4 rounded-lg transition-all duration-150
+                  ${gameState === 'playing' ? 'cursor-pointer' : 'cursor-not-allowed'}
                     ${isWrongSquare ? 'opacity-100 shadow-2xl ring-4 ring-red-500 animate-shake' : ''}
                     ${isInCorrectSequence ? 'opacity-100 shadow-2xl ring-4 ring-green-500' : ''}
                     ${!isWrongSquare && !isInCorrectSequence && activeSquare === color.id ? 'opacity-100 shadow-2xl' : ''}
                     ${!isWrongSquare && !isInCorrectSequence && activeSquare !== color.id && !isInCorrectSequence ? 'opacity-40 shadow-lg' : ''}
-                  `}
-                />
+                `}
+              />
               )
             })}
           </div>

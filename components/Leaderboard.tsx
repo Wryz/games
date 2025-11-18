@@ -48,6 +48,11 @@ export default function Leaderboard({
     const aVal = a[sortKey]
     const bVal = b[sortKey]
     
+    // Handle null/undefined values
+    if (aVal == null && bVal == null) return 0
+    if (aVal == null) return 1
+    if (bVal == null) return -1
+    
     if (sortDirection === 'asc') {
       return aVal - bVal
     } else {
@@ -55,7 +60,8 @@ export default function Leaderboard({
     }
   })
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',

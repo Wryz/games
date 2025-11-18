@@ -100,7 +100,7 @@ export default function ScoresOverview({ username }: ScoresOverviewProps) {
               title: 'My Brain Benchmark Scores',
               text: 'Check out my scores on Brain Benchmark!',
               files: [file],
-              url: 'https://games-steel-three-73.vercel.app',
+              url: 'https://brain-benchmark.com/',
             })
           } catch (error) {
             // User cancelled or share failed, fallback to download
@@ -168,12 +168,12 @@ export default function ScoresOverview({ username }: ScoresOverviewProps) {
           {/* Footer with URL only (excluded from share image) */}
           <div className="px-4 sm:px-6 py-2 bg-gray-50 dark:bg-gray-900/30 border-t border-gray-200 dark:border-gray-700">
             <a
-              href="https://games-steel-three-73.vercel.app"
+              href="https://brain-benchmark.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <span className="font-medium">games-steel-three-73.vercel.app</span>
+              <span className="font-medium">brain-benchmark.com</span>
             </a>
           </div>
         </div>

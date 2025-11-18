@@ -122,6 +122,15 @@ CREATE TABLE IF NOT EXISTS time_estimation_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Maze scores
+CREATE TABLE IF NOT EXISTS maze_scores (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  time_taken INTEGER NOT NULL, -- in milliseconds
+  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- =====================================================
 -- 2. CREATE INDEXES
 -- =====================================================
@@ -159,6 +168,9 @@ CREATE INDEX IF NOT EXISTS idx_chimp_test_date ON chimp_test_scores(date_submitt
 
 CREATE INDEX IF NOT EXISTS idx_time_estimation_username ON time_estimation_scores(username);
 CREATE INDEX IF NOT EXISTS idx_time_estimation_date ON time_estimation_scores(date_submitted);
+
+CREATE INDEX IF NOT EXISTS idx_maze_username ON maze_scores(username);
+CREATE INDEX IF NOT EXISTS idx_maze_date ON maze_scores(date_submitted);
 
 -- =====================================================
 -- 3. CREATE RPC FUNCTIONS FOR SCORE SUBMISSION
@@ -352,6 +364,22 @@ DECLARE
 BEGIN
   INSERT INTO time_estimation_scores (username, average_accuracy, best_accuracy)
   VALUES (p_username, p_average_accuracy, p_best_accuracy)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit maze score
+CREATE OR REPLACE FUNCTION submit_maze_score(
+  p_username VARCHAR(50),
+  p_time_taken INTEGER
+) RETURNS maze_scores AS $$
+DECLARE
+  new_score maze_scores;
+BEGIN
+  INSERT INTO maze_scores (username, time_taken)
+  VALUES (p_username, p_time_taken)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -714,6 +742,31 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+    
+    UNION ALL
+    
+    -- Maze
+    SELECT 
+      'maze' as game_id,
+      (SELECT COUNT(*) FROM maze_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'time_taken', time_taken,
+        'date_submitted', date_submitted
+      ) FROM maze_scores 
+      ORDER BY time_taken ASC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'time_taken', time_taken,
+            'date_submitted', date_submitted
+          ) FROM maze_scores 
+          WHERE username = p_username
+          ORDER BY time_taken ASC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;
@@ -855,6 +908,17 @@ BEGIN
       date_submitted
     FROM time_estimation_scores
     
+    UNION ALL
+    
+    -- Maze
+    SELECT 
+      'maze' as game_id,
+      'Maze' as game_name,
+      username,
+      json_build_object('time_taken', time_taken) as score_value,
+      date_submitted
+    FROM maze_scores
+    
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;
@@ -879,6 +943,7 @@ ALTER TABLE stroop_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sequence_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chimp_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_estimation_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE maze_scores ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- 4. CREATE RLS POLICIES (PUBLIC ACCESS)
@@ -1014,6 +1079,18 @@ CREATE POLICY "Allow public read access on time_estimation_scores" ON time_estim
 CREATE POLICY "Allow public insert access on time_estimation_scores" ON time_estimation_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on time_estimation_scores" ON time_estimation_scores
+    FOR UPDATE USING (true);
+
+-- Policies for maze_scores
+DROP POLICY IF EXISTS "Allow public read access on maze_scores" ON maze_scores;
+DROP POLICY IF EXISTS "Allow public insert access on maze_scores" ON maze_scores;
+DROP POLICY IF EXISTS "Allow public update access on maze_scores" ON maze_scores;
+
+CREATE POLICY "Allow public read access on maze_scores" ON maze_scores
+    FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on maze_scores" ON maze_scores
+    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on maze_scores" ON maze_scores
     FOR UPDATE USING (true);
 
 -- =====================================================

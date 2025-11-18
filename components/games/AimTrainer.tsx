@@ -352,19 +352,19 @@ export default function AimTrainer() {
                 const isWrongClick = wrongClickTarget === target.id
                 
                 return (
-                  <button
-                    key={target.id}
-                    onClick={() => handleTargetClick(target.id)}
-                    className={`
-                      aspect-square rounded transition-all duration-150
-                      ${target.isActive 
-                        ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-lg' 
+                <button
+                  key={target.id}
+                  onClick={() => handleTargetClick(target.id)}
+                  className={`
+                    aspect-square rounded transition-all duration-150
+                    ${target.isActive 
+                      ? 'bg-red-500 hover:bg-red-600 scale-110 shadow-lg' 
                         : isWrongClick
                         ? 'bg-red-300 dark:bg-red-700 ring-4 ring-red-500 animate-shake'
-                        : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500'
-                      }
-                    `}
-                  />
+                      : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500'
+                    }
+                  `}
+                />
                 )
               })}
             </div>

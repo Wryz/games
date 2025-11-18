@@ -24,6 +24,7 @@ export type StroopTestScore = Database['public']['Tables']['stroop_test_scores']
 export type SequenceMemoryScore = Database['public']['Tables']['sequence_memory_scores']['Row']
 export type ChimpTestScore = Database['public']['Tables']['chimp_test_scores']['Row']
 export type TimeEstimationScore = Database['public']['Tables']['time_estimation_scores']['Row']
+export type MazeScore = Database['public']['Tables']['maze_scores']['Row']
 
 // Insert types for score submission
 export type AimTrainerScoreInsert = Database['public']['Tables']['aim_trainer_scores']['Insert']
@@ -37,3 +38,4 @@ export type StroopTestScoreInsert = Database['public']['Tables']['stroop_test_sc
 export type SequenceMemoryScoreInsert = Database['public']['Tables']['sequence_memory_scores']['Insert']
 export type ChimpTestScoreInsert = Database['public']['Tables']['chimp_test_scores']['Insert']
 export type TimeEstimationScoreInsert = Database['public']['Tables']['time_estimation_scores']['Insert']
+export type MazeScoreInsert = Database['public']['Tables']['maze_scores']['Insert']

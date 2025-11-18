@@ -65,6 +65,30 @@ export type Database = {
         }
         Relationships: []
       }
+      maze_scores: {
+        Row: {
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          time_taken: number
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          time_taken: number
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          time_taken?: number
+          username?: string
+        }
+        Relationships: []
+      }
       memory_scores: {
         Row: {
           correct_sequences: number
@@ -215,6 +239,33 @@ export type Database = {
         }
         Relationships: []
       }
+      time_estimation_scores: {
+        Row: {
+          average_accuracy: number
+          best_accuracy: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_accuracy: number
+          best_accuracy: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_accuracy?: number
+          best_accuracy?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
       typing_test_scores: {
         Row: {
           accuracy: number
@@ -269,30 +320,6 @@ export type Database = {
         }
         Relationships: []
       }
-      time_estimation_scores: {
-        Row: {
-          average_accuracy: number
-          best_accuracy: number
-          date_submitted: string | null
-          id: number
-          username: string
-        }
-        Insert: {
-          average_accuracy: number
-          best_accuracy: number
-          date_submitted?: string | null
-          id?: number
-          username: string
-        }
-        Update: {
-          average_accuracy?: number
-          best_accuracy?: number
-          date_submitted?: string | null
-          id?: number
-          username?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -324,40 +351,54 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_chimp_test_score: {
-        Args: {
-          p_patterns_remembered: number
-          p_username: string
-        }
+      submit_chimp_test_score:
+        | {
+            Args: { p_patterns_remembered: number; p_username: string }
+            Returns: {
+              date_submitted: string | null
+              id: number
+              patterns_remembered: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "chimp_test_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_level_reached: number
+              p_patterns_remembered: number
+              p_total_patterns: number
+              p_username: string
+            }
+            Returns: {
+              date_submitted: string | null
+              id: number
+              patterns_remembered: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "chimp_test_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      submit_maze_score: {
+        Args: { p_time_taken: number; p_username: string }
         Returns: {
+          created_at: string | null
           date_submitted: string | null
           id: number
-          patterns_remembered: number
+          time_taken: number
           username: string
         }
         SetofOptions: {
           from: "*"
-          to: "chimp_test_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      submit_time_estimation_score: {
-        Args: {
-          p_average_accuracy: number
-          p_best_accuracy: number
-          p_username: string
-        }
-        Returns: {
-          average_accuracy: number
-          best_accuracy: number
-          date_submitted: string | null
-          id: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "time_estimation_scores"
+          to: "maze_scores"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -525,6 +566,27 @@ export type Database = {
               isSetofReturn: false
             }
           }
+      submit_time_estimation_score: {
+        Args: {
+          p_average_accuracy: number
+          p_best_accuracy: number
+          p_username: string
+        }
+        Returns: {
+          average_accuracy: number
+          best_accuracy: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "time_estimation_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_typing_test_score: {
         Args: {
           p_accuracy: number

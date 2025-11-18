@@ -324,6 +324,40 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       description: 'Remembered 20 patterns',
       threshold: [20]
     }
+  ],
+  'maze': [
+    {
+      id: 'maze-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Played Maze',
+      threshold: [120000], // 120 seconds (2 minutes) or slower
+      lowerIsBetter: true
+    },
+    {
+      id: 'maze-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: 'Completed in 45 seconds',
+      threshold: [45000], // Level 5 threshold
+      lowerIsBetter: true
+    },
+    {
+      id: 'maze-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: 'Completed in 18 seconds',
+      threshold: [18000], // Level 12 threshold
+      lowerIsBetter: true
+    },
+    {
+      id: 'maze-master',
+      name: 'Master',
+      tier: 'master',
+      description: 'Completed in 9 seconds',
+      threshold: [9000], // Level 20 threshold
+      lowerIsBetter: true
+    }
   ]
 }
 
@@ -338,7 +372,8 @@ export const BUILT_GAMES = [
   'visual-memory',
   'stroop-test',
   'sequence-memory',
-  'chimp-test'
+  'chimp-test',
+  'maze'
 ]
 
 // Check if a user has earned a badge based on their score
@@ -383,6 +418,11 @@ export function hasEarnedBadge(gameId: string, badge: BadgeDefinition, score: an
     case 'chimp-test':
       const patternsRemembered = score.patterns_remembered || 0
       return patternsRemembered >= badge.threshold[0]
+
+    case 'maze':
+      // Lower is better for maze
+      const timeTaken = score.time_taken || 60000
+      return timeTaken <= badge.threshold[0]
 
     default:
       return false

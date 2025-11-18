@@ -21,7 +21,9 @@ import type {
   ChimpTestScore,
   ChimpTestScoreInsert,
   TimeEstimationScore,
-  TimeEstimationScoreInsert
+  TimeEstimationScoreInsert,
+  MazeScore,
+  MazeScoreInsert
 } from './supabase'
 
 // Score submission functions using RPC
@@ -156,6 +158,17 @@ export async function submitTimeEstimationScore(score: TimeEstimationScoreInsert
       p_username: score.username,
       p_average_accuracy: score.average_accuracy,
       p_best_accuracy: score.best_accuracy
+    })
+  
+  if (error) throw error
+  return data
+}
+
+export async function submitMazeScore(score: MazeScoreInsert) {
+  const { data, error } = await supabase
+    .rpc('submit_maze_score', {
+      p_username: score.username,
+      p_time_taken: score.time_taken
     })
   
   if (error) throw error
@@ -374,6 +387,25 @@ export async function getTimeEstimationScores(filters?: { username?: string; lim
   return data
 }
 
+export async function getMazeScores(filters?: { username?: string; limit?: number }) {
+  let query = supabase
+    .from('maze_scores')
+    .select('*')
+    .order('time_taken', { ascending: true })
+
+  if (filters?.username) {
+    query = query.eq('username', filters.username)
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
 // Get all scores from all games
 export interface AllScoresEntry {
   gameId: string
@@ -398,7 +430,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     stroopTestScores,
     sequenceMemoryScores,
     chimpTestScores,
-    timeEstimationScores
+    timeEstimationScores,
+    mazeScores
   ] = await Promise.all([
     getAimTrainerScores(),
     getTypingTestScores(),
@@ -410,7 +443,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     getStroopTestScores(),
     getSequenceMemoryScores(),
     getChimpTestScores(),
-    getTimeEstimationScores()
+    getTimeEstimationScores(),
+    getMazeScores()
   ])
 
   // Map each score to AllScoresEntry format
@@ -518,6 +552,16 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     allScores.push({
       gameId: 'time-estimation',
       gameName: 'Time Estimation',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  mazeScores?.forEach(score => {
+    allScores.push({
+      gameId: 'maze',
+      gameName: 'Maze',
       username: score.username,
       score: score,
       dateSubmitted: score.date_submitted

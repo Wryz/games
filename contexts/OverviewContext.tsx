@@ -112,6 +112,10 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${score.patterns_remembered || 0} correct`
             case 'time-estimation':
               return `${score.average_accuracy || 0}ms avg (${score.best_accuracy || 0}ms best)`
+            case 'maze':
+              const seconds = Math.floor((score.time_taken || 0) / 1000)
+              const milliseconds = Math.floor(((score.time_taken || 0) % 1000) / 100)
+              return `${seconds}.${milliseconds}s`
             default:
             return `Level ${score.level_reached}`
         }

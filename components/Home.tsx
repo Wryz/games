@@ -508,8 +508,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                                               Beta
                                             </span>
                                           )}
+                                          {game.id === 'maze' && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              Beta
+                                            </span>
+                                          )}
                                           {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
-                                            game.id === 'word-search' || game.id === 'maze' || game.id === 'anagrams' || game.id === 'countries') && (
+                                            game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1 py-0.5 rounded-md shadow-sm">
                                               Soon
                                             </span>
@@ -553,8 +558,13 @@ export default function Home({ onGameSelect }: HomeProps) {
                                               Beta
                                             </span>
                                           )}
+                                          {game.id === 'maze' && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              Beta
+                                            </span>
+                                          )}
                                           {(game.id === 'algebra' || game.id === 'linear-algebra' || game.id === 'arithmetic' || game.id === 'geometry' || 
-                                            game.id === 'word-search' || game.id === 'maze' || game.id === 'anagrams' || game.id === 'countries') && (
+                                            game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                                               Soon
                                             </span>

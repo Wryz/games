@@ -87,6 +87,14 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       if (score.best_accuracy !== undefined) details.push({ label: 'Best Accuracy', value: `${score.best_accuracy}ms` })
       break
 
+    case 'maze':
+      if (score.time_taken !== undefined) {
+        const seconds = Math.floor(score.time_taken / 1000)
+        const milliseconds = Math.floor((score.time_taken % 1000) / 100)
+        details.push({ label: 'Time Taken', value: `${seconds}.${milliseconds}s` })
+      }
+      break
+
     default:
       // Generic fallback for any other fields
       Object.keys(score).forEach(key => {

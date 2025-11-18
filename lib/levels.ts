@@ -268,6 +268,28 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 18, threshold: [65] }, // College Senior - level 65
     { level: 19, threshold: [90] }, // Master's - level 90
     { level: 20, threshold: [120] } // Doctorate - level 120
+  ],
+  'maze': [
+    { level: 1, threshold: [120000] }, // Pre-School - 120 seconds (2 minutes) or slower (lower is better)
+    { level: 2, threshold: [90000] }, // Kindergarten - 90 seconds (1.5 minutes)
+    { level: 3, threshold: [70000] }, // 1st Grade - 70 seconds
+    { level: 4, threshold: [55000] }, // 2nd Grade - 55 seconds
+    { level: 5, threshold: [45000] }, // 3rd Grade - 45 seconds
+    { level: 6, threshold: [38000] }, // 4th Grade - 38 seconds
+    { level: 7, threshold: [32000] }, // 5th Grade - 32 seconds
+    { level: 8, threshold: [28000] }, // 6th Grade - 28 seconds
+    { level: 9, threshold: [25000] }, // 7th Grade - 25 seconds
+    { level: 10, threshold: [22000] }, // 8th Grade - 22 seconds
+    { level: 11, threshold: [20000] }, // 9th Grade - 20 seconds
+    { level: 12, threshold: [18000] }, // 10th Grade - 18 seconds
+    { level: 13, threshold: [16000] }, // 11th Grade - 16 seconds
+    { level: 14, threshold: [15000] }, // 12th Grade - 15 seconds
+    { level: 15, threshold: [14000] }, // College Freshman - 14 seconds
+    { level: 16, threshold: [13000] }, // College Sophomore - 13 seconds
+    { level: 17, threshold: [12000] }, // College Junior - 12 seconds
+    { level: 18, threshold: [11000] }, // College Senior - 11 seconds
+    { level: 19, threshold: [10000] }, // Master's - 10 seconds
+    { level: 20, threshold: [9000] } // Doctorate - 9 seconds or faster
   ]
 }
 
@@ -298,6 +320,9 @@ function extractScoreValue(gameId: string, score: any): number {
     case 'stroop-test':
       // Return correct answers count
       return score.correct_answers || 0
+    case 'maze':
+      // For maze, lower is better, so we return time_taken
+      return score.time_taken || 60000
     default:
       return 0
   }
@@ -317,8 +342,8 @@ function meetsThreshold(gameId: string, score: any, threshold: number[]): boolea
   // Handle single metric games (threshold[0] is the value)
   const scoreValue = extractScoreValue(gameId, score)
   
-  // For reaction-time, lower is better (score must be <= threshold[0] to qualify)
-  if (gameId === 'reaction-time') {
+  // For reaction-time and maze, lower is better (score must be <= threshold[0] to qualify)
+  if (gameId === 'reaction-time' || gameId === 'maze') {
     return scoreValue <= threshold[0]
   }
   // For all others, higher is better (score must be >= threshold[0] to qualify)
@@ -412,8 +437,8 @@ export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
         
         // Average the two progress values
         progress = (accuracyProgress + reactionProgress) / 2
-      } else if (gameId === 'reaction-time') {
-        // For reaction-time: lower is better, so progress is inverted
+      } else if (gameId === 'reaction-time' || gameId === 'maze') {
+        // For reaction-time and maze: lower is better, so progress is inverted
         // Example: current=260ms, next=250ms, score=258ms
         // Range = 260 - 250 = 10ms (how much faster you need to be)
         // Progress = (260 - 258) / 10 = 2/10 = 20% (how close you are to next level)
@@ -507,6 +532,10 @@ export function formatThreshold(gameId: string, threshold: number): string {
       return `${threshold} digits`
     case 'pattern-recognition':
       return `${threshold} patterns`
+    case 'maze':
+      const seconds = Math.floor(threshold / 1000)
+      const milliseconds = Math.floor((threshold % 1000) / 100)
+      return `${seconds}.${milliseconds}s or faster`
     default:
       return `${threshold}`
   }
@@ -538,6 +567,10 @@ export function formatUserScore(gameId: string, score: any): string {
       return `${score.correct_answers || 0} correct (${score.average_time || 0}ms)`
     case 'time-estimation':
       return `${score.average_accuracy || 0}ms avg (${score.best_accuracy || 0}ms best)`
+    case 'maze':
+      const seconds = Math.floor((score.time_taken || 0) / 1000)
+      const milliseconds = Math.floor(((score.time_taken || 0) % 1000) / 100)
+      return `${seconds}.${milliseconds}s`
     default:
       return 'No score'
   }
