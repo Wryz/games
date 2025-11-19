@@ -7,6 +7,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { AimTrainerScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'finished'
 
@@ -258,7 +259,7 @@ export default function AimTrainer() {
   }, [gameState, submitScore])
 
   const formatScore = (score: AimTrainerScore) => {
-    return `${score.accuracy}% (${score.reaction_time}ms)`
+    return `${formatNumber(score.accuracy)}% (${formatNumber(score.reaction_time)}ms)`
   }
 
   // Custom sort function for aim trainer: prioritize accuracy, then reaction time

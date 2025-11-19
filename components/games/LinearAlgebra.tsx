@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { LinearAlgebraScore } from '@/lib/supabase'
 import { LinearAlgebraIcon } from '../icons/GameIcons'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'correct' | 'wrong' | 'finished'
 type ProblemType = 'vector_addition' | 'scalar_multiplication' | 'dot_product' | 'matrix_vector'
@@ -226,8 +227,8 @@ export default function LinearAlgebra() {
       setCorrectCount(newCorrectCount)
       setResponseTimes(prev => [...prev, responseTime])
       
-      if (newCorrectCount >= 20) {
-        // Reached 20 correct answers - game finished!
+      if (newCorrectCount >= 10) {
+        // Reached 10 correct answers - game finished!
         setGameState('finished')
         
         // Submit single score for the entire game
@@ -240,7 +241,7 @@ export default function LinearAlgebra() {
           
           submitLinearAlgebraScore({
             username,
-            correct_answers: 20,
+            correct_answers: 10,
             average_time: averageTime
           }).then(() => {
             setTimeout(() => loadScores(), 1000)
@@ -315,7 +316,7 @@ export default function LinearAlgebra() {
   }, [generateProblem])
 
   const formatScore = (score: LinearAlgebraScore) => {
-    return `${score.correct_answers} correct (${score.average_time}ms avg)`
+    return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`
   }
 
   return (
@@ -339,7 +340,7 @@ export default function LinearAlgebra() {
         {/* Stats */}
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
-            Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctCount}</span> / 20
+            Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctCount}</span> / 10
             {currentProblemType && (
               <span className="ml-4 text-xs">
                 Type: <span className="font-semibold">{PROBLEM_TYPE_NAMES[currentProblemType]}</span>
@@ -419,7 +420,7 @@ export default function LinearAlgebra() {
                 Congratulations!
               </div>
               <div className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-                You completed all 20 questions correctly!
+                You completed all 10 questions correctly!
               </div>
               <button
                 onClick={resetGame}

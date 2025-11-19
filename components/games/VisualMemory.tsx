@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { VisualMemoryScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'showing' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -68,7 +69,7 @@ export default function VisualMemory() {
   }, [])
 
   const formatScore = (score: VisualMemoryScore) => {
-    return `Level ${score.level_reached} (${score.total_patterns} correct tiles)`
+    return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.total_patterns)} correct tiles)`
   }
 
   // Initialize grid

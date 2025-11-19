@@ -7,6 +7,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { TimeEstimationScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'waiting' | 'showing-target' | 'countdown' | 'counting' | 'result' | 'failed' | 'finished'
 
@@ -227,7 +228,7 @@ export default function TimeEstimation() {
   }, [])
 
   const formatScore = (score: TimeEstimationScore) => {
-    return `${score.average_accuracy}ms avg (${score.best_accuracy}ms best)`
+    return `${formatNumber(score.average_accuracy)}ms avg (${formatNumber(score.best_accuracy)}ms best)`
   }
 
   // Calculate current stats

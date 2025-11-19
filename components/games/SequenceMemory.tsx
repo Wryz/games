@@ -7,6 +7,7 @@ import GameWrapper from '../GameWrapper'
 import type { SequenceMemoryScore } from '@/lib/supabase'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'showing' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -152,7 +153,7 @@ export default function SequenceMemory() {
   }, [])
 
   const formatScore = (score: SequenceMemoryScore) => {
-    return `Level ${score.level_reached} (${score.longest_sequence} shapes)`
+    return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.longest_sequence)} shapes)`
   }
 
   // Generate new sequence

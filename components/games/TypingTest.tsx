@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { TypingTestScore } from '@/lib/supabase'
 import wordsData from '@/data/typing-words.json'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'finished'
 
@@ -226,7 +227,7 @@ export default function TypingTest() {
   }, [currentWordIndex, gameState])
 
   const formatScore = (score: TypingTestScore) => {
-    return `${score.wpm} WPM (${score.accuracy}%)`
+    return `${formatNumber(score.wpm)} WPM (${formatNumber(score.accuracy)}%)`
   }
 
   const { wpm, accuracy, totalChars } = calculateStats()

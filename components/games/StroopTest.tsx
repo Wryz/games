@@ -7,6 +7,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { StroopTestScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'playing' | 'wrong' | 'finished'
 
@@ -162,7 +163,7 @@ export default function StroopTest() {
   }, [startNewGame])
 
   const formatScore = (score: StroopTestScore) => {
-    return `${score.correct_answers} correct (${score.average_time}ms)`
+    return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms)`
   }
 
   // Calculate current stats

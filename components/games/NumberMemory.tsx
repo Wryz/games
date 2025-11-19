@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { NumberMemoryScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'showing' | 'input' | 'correct' | 'wrong' | 'finished'
 
@@ -60,7 +61,7 @@ export default function NumberMemory() {
   }, [])
 
   const formatScore = (score: NumberMemoryScore) => {
-    return `${score.longest_sequence} digits`
+    return `${formatNumber(score.longest_sequence)} digits`
   }
 
   // Generate random number with specified digit count

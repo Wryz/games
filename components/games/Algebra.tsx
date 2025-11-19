@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { AlgebraScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -207,7 +208,7 @@ export default function Algebra() {
   }, [generateEquation])
 
   const formatScore = (score: AlgebraScore) => {
-    return `${score.correct_answers} correct (${score.average_time}ms avg)`
+    return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`
   }
 
   return (

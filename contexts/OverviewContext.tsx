@@ -120,9 +120,12 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
             case 'algebra':
             case 'arithmetic':
             case 'linear-algebra':
+            case 'geometry':
               const correctAnswers = score.correct_answers || 0
               const avgTime = score.average_time || 0
               return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`
+            case 'word-search':
+              return `${formatNumber(score.words_found || 0)} words`
             default:
             return `Level ${formatNumber(score.level_reached)}`
         }

@@ -209,8 +209,17 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                             New
                           </span>
                         )}
-                        {(game.id === 'geometry' || 
-                          game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
+                        {game.id === 'geometry' && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            New
+                          </span>
+                        )}
+                        {game.id === 'word-search' && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                            New
+                          </span>
+                        )}
+                        {(game.id === 'anagrams' || game.id === 'countries') && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                             Soon
                           </span>

@@ -111,6 +111,15 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
       break
 
+    case 'geometry':
+      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
+      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
+      break
+
+    case 'word-search':
+      if (score.words_found !== undefined) details.push({ label: 'Words Found', value: formatNumber(score.words_found) })
+      break
+
     default:
       // Generic fallback for any other fields
       Object.keys(score).forEach(key => {

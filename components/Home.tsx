@@ -168,9 +168,13 @@ export default function Home({ onGameSelect }: HomeProps) {
             case 'algebra':
             case 'arithmetic':
             case 'linear-algebra':
+            case 'geometry':
               const correctAnswers = scoreValue.correct_answers || 0
               const avgTime = scoreValue.average_time || 0
               formattedValue = `${formatNum(correctAnswers)} correct (${formatNum(avgTime)}ms avg)`
+              break
+            case 'word-search':
+              formattedValue = `${formatNum(scoreValue.words_found || 0)} words`
               break
             default:
               formattedValue = `Level ${formatNum(scoreValue.level_reached)}`
@@ -213,7 +217,9 @@ export default function Home({ onGameSelect }: HomeProps) {
       'maze_scores',
       'algebra_scores',
       'arithmetic_scores',
-      'linear_algebra_scores'
+      'linear_algebra_scores',
+      'geometry_scores',
+      'word_search_scores'
     ].map(tableName => {
       return supabase
         .channel(`${tableName}_changes`)
@@ -536,13 +542,22 @@ export default function Home({ onGameSelect }: HomeProps) {
                                               New
                                             </span>
                                           )}
-                                          {(game.id === 'geometry' || 
-                                            game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
+                                          {game.id === 'word-search' && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              New
+                                            </span>
+                                          )}
+                                          {(game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1 py-0.5 rounded-md shadow-sm">
                                               Soon
                                             </span>
                                           )}
                                           {game.id === 'linear-algebra' && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              New
+                                            </span>
+                                          )}
+                                          {game.id === 'geometry' && (
                                             <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
                                               New
                                             </span>
@@ -581,13 +596,22 @@ export default function Home({ onGameSelect }: HomeProps) {
                                               New
                                             </span>
                                           )}
-                                          {(game.id === 'geometry' || 
-                                            game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
+                                          {game.id === 'word-search' && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              New
+                                            </span>
+                                          )}
+                                          {(game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                                               Soon
                                             </span>
                                           )}
                                           {game.id === 'linear-algebra' && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              New
+                                            </span>
+                                          )}
+                                          {game.id === 'geometry' && (
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                                               New
                                             </span>

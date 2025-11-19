@@ -167,6 +167,57 @@ export type Database = {
         }
         Relationships: []
       }
+      geometry_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      word_search_scores: {
+        Row: {
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+          words_found: number
+        }
+        Insert: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+          words_found: number
+        }
+        Update: {
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+          words_found?: number
+        }
+        Relationships: []
+      }
       maze_scores: {
         Row: {
           created_at: string | null
@@ -563,6 +614,46 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "linear_algebra_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_geometry_score: {
+        Args: {
+          p_average_time: number
+          p_correct_answers: number
+          p_username: string
+        }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "geometry_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_word_search_score: {
+        Args: {
+          p_username: string
+          p_words_found: number
+        }
+        Returns: {
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+          words_found: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "word_search_scores"
           isOneToOne: true
           isSetofReturn: false
         }

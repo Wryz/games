@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { MazeScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'finished'
 
@@ -91,7 +92,7 @@ export default function Maze() {
     }
     const seconds = Math.floor(score.time_taken / 1000)
     const milliseconds = Math.floor((score.time_taken % 1000) / 100)
-    return `${seconds}.${milliseconds}s`
+    return `${formatNumber(seconds)}.${milliseconds}s`
   }
 
   // Initialize empty maze grid

@@ -7,6 +7,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { ChimpTestScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'showing' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -77,7 +78,7 @@ export default function ChimpTest() {
   }, [])
 
   const formatScore = (score: ChimpTestScore) => {
-    return `${score.patterns_remembered} correct`
+    return `${formatNumber(score.patterns_remembered)} correct`
   }
 
   // Initialize grid

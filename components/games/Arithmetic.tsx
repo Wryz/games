@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { ArithmeticScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -232,7 +233,7 @@ export default function Arithmetic() {
   }, [generateProblem])
 
   const formatScore = (score: ArithmeticScore) => {
-    return `${score.correct_answers} correct (${score.average_time}ms avg)`
+    return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`
   }
 
   return (

@@ -161,6 +161,25 @@ CREATE TABLE IF NOT EXISTS linear_algebra_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Geometry scores
+CREATE TABLE IF NOT EXISTS geometry_scores (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  correct_answers INTEGER NOT NULL,
+  average_time INTEGER NOT NULL, -- average response time in milliseconds
+  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Word Search scores
+CREATE TABLE IF NOT EXISTS word_search_scores (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  words_found INTEGER NOT NULL,
+  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- =====================================================
 -- 2. CREATE INDEXES
 -- =====================================================
@@ -210,6 +229,12 @@ CREATE INDEX IF NOT EXISTS idx_arithmetic_date ON arithmetic_scores(date_submitt
 
 CREATE INDEX IF NOT EXISTS idx_linear_algebra_username ON linear_algebra_scores(username);
 CREATE INDEX IF NOT EXISTS idx_linear_algebra_date ON linear_algebra_scores(date_submitted);
+
+CREATE INDEX IF NOT EXISTS idx_geometry_username ON geometry_scores(username);
+CREATE INDEX IF NOT EXISTS idx_geometry_date ON geometry_scores(date_submitted);
+
+CREATE INDEX IF NOT EXISTS idx_word_search_username ON word_search_scores(username);
+CREATE INDEX IF NOT EXISTS idx_word_search_date ON word_search_scores(date_submitted);
 
 -- =====================================================
 -- 3. CREATE RPC FUNCTIONS FOR SCORE SUBMISSION
@@ -470,6 +495,39 @@ DECLARE
 BEGIN
   INSERT INTO linear_algebra_scores (username, correct_answers, average_time)
   VALUES (p_username, p_correct_answers, p_average_time)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit geometry score
+CREATE OR REPLACE FUNCTION submit_geometry_score(
+  p_username VARCHAR(50),
+  p_correct_answers INTEGER,
+  p_average_time INTEGER
+) RETURNS geometry_scores AS $$
+DECLARE
+  new_score geometry_scores;
+BEGIN
+  INSERT INTO geometry_scores (username, correct_answers, average_time)
+  VALUES (p_username, p_correct_answers, p_average_time)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit word search score
+CREATE OR REPLACE FUNCTION submit_word_search_score(
+  p_username VARCHAR(50),
+  p_words_found INTEGER
+) RETURNS word_search_scores AS $$
+DECLARE
+  new_score word_search_scores;
+BEGIN
+  INSERT INTO word_search_scores (username, words_found)
+  VALUES (p_username, p_words_found)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -938,6 +996,58 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+    
+    UNION ALL
+    
+    -- Geometry
+    SELECT 
+      'geometry' as game_id,
+      (SELECT COUNT(*) FROM geometry_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'correct_answers', correct_answers,
+        'average_time', average_time,
+        'date_submitted', date_submitted
+      ) FROM geometry_scores 
+      ORDER BY correct_answers DESC, average_time ASC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'correct_answers', correct_answers,
+            'average_time', average_time,
+            'date_submitted', date_submitted
+          ) FROM geometry_scores 
+          WHERE username = p_username
+          ORDER BY correct_answers DESC, average_time ASC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
+    
+    UNION ALL
+    
+    -- Word Search
+    SELECT 
+      'word-search' as game_id,
+      (SELECT COUNT(*) FROM word_search_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'words_found', words_found,
+        'date_submitted', date_submitted
+      ) FROM word_search_scores 
+      ORDER BY words_found DESC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'words_found', words_found,
+            'date_submitted', date_submitted
+          ) FROM word_search_scores 
+          WHERE username = p_username
+          ORDER BY words_found DESC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;
@@ -1123,6 +1233,28 @@ BEGIN
       date_submitted
     FROM linear_algebra_scores
     
+    UNION ALL
+    
+    -- Geometry
+    SELECT 
+      'geometry' as game_id,
+      'Geometry' as game_name,
+      username,
+      json_build_object('correct_answers', correct_answers, 'average_time', average_time) as score_value,
+      date_submitted
+    FROM geometry_scores
+    
+    UNION ALL
+    
+    -- Word Search
+    SELECT 
+      'word-search' as game_id,
+      'Word Search' as game_name,
+      username,
+      json_build_object('words_found', words_found) as score_value,
+      date_submitted
+    FROM word_search_scores
+    
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;
@@ -1149,6 +1281,8 @@ ALTER TABLE chimp_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_estimation_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maze_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE linear_algebra_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE geometry_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE word_search_scores ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- 4. CREATE RLS POLICIES (PUBLIC ACCESS)
@@ -1332,6 +1466,30 @@ CREATE POLICY "Allow public read access on linear_algebra_scores" ON linear_alge
 CREATE POLICY "Allow public insert access on linear_algebra_scores" ON linear_algebra_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on linear_algebra_scores" ON linear_algebra_scores
+    FOR UPDATE USING (true);
+
+-- Policies for geometry_scores
+DROP POLICY IF EXISTS "Allow public read access on geometry_scores" ON geometry_scores;
+DROP POLICY IF EXISTS "Allow public insert access on geometry_scores" ON geometry_scores;
+DROP POLICY IF EXISTS "Allow public update access on geometry_scores" ON geometry_scores;
+
+CREATE POLICY "Allow public read access on geometry_scores" ON geometry_scores
+    FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on geometry_scores" ON geometry_scores
+    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on geometry_scores" ON geometry_scores
+    FOR UPDATE USING (true);
+
+-- Policies for word_search_scores
+DROP POLICY IF EXISTS "Allow public read access on word_search_scores" ON word_search_scores;
+DROP POLICY IF EXISTS "Allow public insert access on word_search_scores" ON word_search_scores;
+DROP POLICY IF EXISTS "Allow public update access on word_search_scores" ON word_search_scores;
+
+CREATE POLICY "Allow public read access on word_search_scores" ON word_search_scores
+    FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on word_search_scores" ON word_search_scores
+    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on word_search_scores" ON word_search_scores
     FOR UPDATE USING (true);
 
 -- =====================================================

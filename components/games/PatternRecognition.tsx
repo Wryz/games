@@ -7,6 +7,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { PatternRecognitionScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -212,7 +213,7 @@ export default function PatternRecognition() {
   }, [gameState, gameStartTime])
 
   const formatScore = (score: PatternRecognitionScore) => {
-    return `${score.patterns_solved} patterns (${score.time_taken}s)`
+    return `${formatNumber(score.patterns_solved)} patterns (${formatNumber(score.time_taken)}s)`
   }
 
   // Get available shapes based on level (more shapes unlock as level increases)

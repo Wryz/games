@@ -358,6 +358,190 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       threshold: [9000], // Level 20 threshold
       lowerIsBetter: true
     }
+  ],
+  'algebra': [
+    {
+      id: 'algebra-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Completed Algebra',
+      threshold: [1, 20000] // 1 correct, 20s avg
+    },
+    {
+      id: 'algebra-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: '5 correct, 12s avg',
+      threshold: [5, 12000] // Level 5 threshold
+    },
+    {
+      id: 'algebra-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: '12 correct, 4s avg',
+      threshold: [12, 4000] // Level 12 threshold
+    },
+    {
+      id: 'algebra-master',
+      name: 'Master',
+      tier: 'master',
+      description: '20 correct, 2s avg',
+      threshold: [20, 2000] // Level 20 threshold
+    }
+  ],
+  'arithmetic': [
+    {
+      id: 'arithmetic-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Completed Arithmetic',
+      threshold: [1, 20000] // 1 correct, 20s avg
+    },
+    {
+      id: 'arithmetic-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: '5 correct, 12s avg',
+      threshold: [5, 12000] // Level 5 threshold
+    },
+    {
+      id: 'arithmetic-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: '12 correct, 4s avg',
+      threshold: [12, 4000] // Level 12 threshold
+    },
+    {
+      id: 'arithmetic-master',
+      name: 'Master',
+      tier: 'master',
+      description: '20 correct, 2s avg',
+      threshold: [20, 2000] // Level 20 threshold
+    }
+  ],
+  'linear-algebra': [
+    {
+      id: 'linear-algebra-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Completed Linear Algebra',
+      threshold: [1, 20000] // 1 correct, 20s avg
+    },
+    {
+      id: 'linear-algebra-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: '5 correct, 12s avg',
+      threshold: [5, 12000] // Level 5 threshold
+    },
+    {
+      id: 'linear-algebra-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: '12 correct, 4s avg',
+      threshold: [12, 4000] // Level 12 threshold
+    },
+    {
+      id: 'linear-algebra-master',
+      name: 'Master',
+      tier: 'master',
+      description: '20 correct, 2s avg',
+      threshold: [20, 2000] // Level 20 threshold
+    }
+  ],
+  'geometry': [
+    {
+      id: 'geometry-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Completed Geometry',
+      threshold: [1, 20000] // 1 correct, 20s avg
+    },
+    {
+      id: 'geometry-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: '5 correct, 12s avg',
+      threshold: [5, 12000] // Level 5 threshold
+    },
+    {
+      id: 'geometry-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: '12 correct, 4s avg',
+      threshold: [12, 4000] // Level 12 threshold
+    },
+    {
+      id: 'geometry-master',
+      name: 'Master',
+      tier: 'master',
+      description: '20 correct, 2s avg',
+      threshold: [20, 2000] // Level 20 threshold
+    }
+  ],
+  'word-search': [
+    {
+      id: 'word-search-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Completed Word Search',
+      threshold: [1] // 1 word
+    },
+    {
+      id: 'word-search-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: 'Found 5 words',
+      threshold: [5] // Level 5 threshold
+    },
+    {
+      id: 'word-search-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: 'Found 12 words',
+      threshold: [12] // Level 12 threshold
+    },
+    {
+      id: 'word-search-master',
+      name: 'Master',
+      tier: 'master',
+      description: 'Found 20 words',
+      threshold: [20] // Level 20 threshold
+    }
+  ],
+  'time-estimation': [
+    {
+      id: 'time-estimation-novice',
+      name: 'Novice',
+      tier: 'novice',
+      description: 'Completed Time Estimation',
+      threshold: [5000], // 5000ms error or more
+      lowerIsBetter: true
+    },
+    {
+      id: 'time-estimation-adept',
+      name: 'Adept',
+      tier: 'adept',
+      description: '2500ms error',
+      threshold: [2500], // Level 5 threshold
+      lowerIsBetter: true
+    },
+    {
+      id: 'time-estimation-expert',
+      name: 'Expert',
+      tier: 'expert',
+      description: '800ms error',
+      threshold: [800], // Level 12 threshold
+      lowerIsBetter: true
+    },
+    {
+      id: 'time-estimation-master',
+      name: 'Master',
+      tier: 'master',
+      description: '250ms error',
+      threshold: [250], // Level 20 threshold
+      lowerIsBetter: true
+    }
   ]
 }
 
@@ -373,7 +557,13 @@ export const BUILT_GAMES = [
   'stroop-test',
   'sequence-memory',
   'chimp-test',
-  'maze'
+  'maze',
+  'algebra',
+  'arithmetic',
+  'linear-algebra',
+  'geometry',
+  'word-search',
+  'time-estimation'
 ]
 
 // Check if a user has earned a badge based on their score
@@ -423,6 +613,24 @@ export function hasEarnedBadge(gameId: string, badge: BadgeDefinition, score: an
       // Lower is better for maze
       const timeTaken = score.time_taken || 60000
       return timeTaken <= badge.threshold[0]
+
+    case 'algebra':
+    case 'arithmetic':
+    case 'linear-algebra':
+    case 'geometry':
+      // Check both correct_answers and average_time
+      const algCorrectAnswers = score.correct_answers || 0
+      const algAverageTime = score.average_time || 10000
+      return algCorrectAnswers >= badge.threshold[0] && algAverageTime <= badge.threshold[1]
+
+    case 'word-search':
+      const wordsFound = score.words_found || 0
+      return wordsFound >= badge.threshold[0]
+
+    case 'time-estimation':
+      // Lower is better for time estimation
+      const bestAccuracy = score.best_accuracy || 5000
+      return bestAccuracy <= badge.threshold[0]
 
     default:
       return false

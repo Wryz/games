@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { MemoryScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'showing' | 'waiting' | 'playing' | 'correct' | 'wrong' | 'finished'
 
@@ -71,7 +72,7 @@ export default function MemoryGame() {
   }, [])
 
   const formatScore = (score: MemoryScore) => {
-    return `Level ${score.level_reached} (${score.correct_sequences} correct)`
+    return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.correct_sequences)} correct)`
   }
 
   // Generate new sequence

@@ -28,6 +28,8 @@ export type MazeScore = Database['public']['Tables']['maze_scores']['Row']
 export type AlgebraScore = Database['public']['Tables']['algebra_scores']['Row']
 export type ArithmeticScore = Database['public']['Tables']['arithmetic_scores']['Row']
 export type LinearAlgebraScore = Database['public']['Tables']['linear_algebra_scores']['Row']
+export type GeometryScore = Database['public']['Tables']['geometry_scores']['Row']
+export type WordSearchScore = Database['public']['Tables']['word_search_scores']['Row']
 
 // Insert types for score submission
 export type AimTrainerScoreInsert = Database['public']['Tables']['aim_trainer_scores']['Insert']
@@ -45,3 +47,5 @@ export type MazeScoreInsert = Database['public']['Tables']['maze_scores']['Inser
 export type AlgebraScoreInsert = Database['public']['Tables']['algebra_scores']['Insert']
 export type ArithmeticScoreInsert = Database['public']['Tables']['arithmetic_scores']['Insert']
 export type LinearAlgebraScoreInsert = Database['public']['Tables']['linear_algebra_scores']['Insert']
+export type GeometryScoreInsert = Database['public']['Tables']['geometry_scores']['Insert']
+export type WordSearchScoreInsert = Database['public']['Tables']['word_search_scores']['Insert']

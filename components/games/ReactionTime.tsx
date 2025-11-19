@@ -7,6 +7,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
 import type { ReactionTimeScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'waiting' | 'ready' | 'click' | 'too-early' | 'finished'
 
@@ -162,7 +163,7 @@ export default function ReactionTime() {
   }, [])
 
   const formatScore = (score: ReactionTimeScore) => {
-    return `${score.average_time}ms avg (${score.fastest_time}ms best)`
+    return `${formatNumber(score.average_time)}ms avg (${formatNumber(score.fastest_time)}ms best)`
   }
 
   // Calculate current stats
