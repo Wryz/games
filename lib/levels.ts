@@ -388,26 +388,26 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 20, threshold: [20, 2000] } // Doctorate - 20 correct, 2s avg
   ],
   'word-search': [
-    { level: 1, threshold: [1] }, // Pre-School - 1 word
-    { level: 2, threshold: [2] }, // Kindergarten - 2 words
-    { level: 3, threshold: [3] }, // 1st Grade - 3 words
-    { level: 4, threshold: [4] }, // 2nd Grade - 4 words
-    { level: 5, threshold: [5] }, // 3rd Grade - 5 words
-    { level: 6, threshold: [6] }, // 4th Grade - 6 words
-    { level: 7, threshold: [7] }, // 5th Grade - 7 words
-    { level: 8, threshold: [8] }, // 6th Grade - 8 words
-    { level: 9, threshold: [9] }, // 7th Grade - 9 words
-    { level: 10, threshold: [10] }, // 8th Grade - 10 words
-    { level: 11, threshold: [11] }, // 9th Grade - 11 words
-    { level: 12, threshold: [12] }, // 10th Grade - 12 words
-    { level: 13, threshold: [13] }, // 11th Grade - 13 words
-    { level: 14, threshold: [14] }, // 12th Grade - 14 words
-    { level: 15, threshold: [15] }, // College Freshman - 15 words
-    { level: 16, threshold: [16] }, // College Sophomore - 16 words
-    { level: 17, threshold: [17] }, // College Junior - 17 words
-    { level: 18, threshold: [18] }, // College Senior - 18 words
-    { level: 19, threshold: [19] }, // Master's - 19 words
-    { level: 20, threshold: [20] } // Doctorate - 20+ words
+    { level: 1, threshold: [10] }, // Pre-School - 10 characters
+    { level: 2, threshold: [15] }, // Kindergarten - 15 characters
+    { level: 3, threshold: [20] }, // 1st Grade - 20 characters
+    { level: 4, threshold: [25] }, // 2nd Grade - 25 characters
+    { level: 5, threshold: [30] }, // 3rd Grade - 30 characters
+    { level: 6, threshold: [40] }, // 4th Grade - 40 characters
+    { level: 7, threshold: [50] }, // 5th Grade - 50 characters
+    { level: 8, threshold: [60] }, // 6th Grade - 60 characters
+    { level: 9, threshold: [70] }, // 7th Grade - 70 characters
+    { level: 10, threshold: [80] }, // 8th Grade - 80 characters
+    { level: 11, threshold: [90] }, // 9th Grade - 90 characters
+    { level: 12, threshold: [100] }, // 10th Grade - 100 characters
+    { level: 13, threshold: [110] }, // 11th Grade - 110 characters
+    { level: 14, threshold: [120] }, // 12th Grade - 120 characters
+    { level: 15, threshold: [130] }, // College Freshman - 130 characters
+    { level: 16, threshold: [140] }, // College Sophomore - 140 characters
+    { level: 17, threshold: [150] }, // College Junior - 150 characters
+    { level: 18, threshold: [160] }, // College Senior - 160 characters
+    { level: 19, threshold: [170] }, // Master's - 170 characters
+    { level: 20, threshold: [180] } // Doctorate - 180+ characters
   ],
   'time-estimation': [
     { level: 1, threshold: [5000] }, // Pre-School - 5000ms error or more (lower is better)
@@ -471,7 +471,7 @@ function extractScoreValue(gameId: string, score: any): number {
       // Return correct_answers as the primary value for backward compatibility
       return score.correct_answers || 0
     case 'word-search':
-      return score.words_found || 0
+      return score.characters_found || 0
     case 'time-estimation':
       // For time-estimation, lower is better (best_accuracy)
       return score.best_accuracy || 5000
@@ -726,7 +726,7 @@ export function formatThreshold(gameId: string, threshold: number): string {
       }
       return `${formatNumber(threshold)}`
     case 'word-search':
-      return `${formatNumber(threshold)} words`
+      return `${formatNumber(threshold)} characters`
     case 'time-estimation':
       return `${formatNumber(threshold)}ms error or less`
     default:
@@ -772,7 +772,7 @@ export function formatUserScore(gameId: string, score: any): string {
       const avgTime = score.average_time || 0
       return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`
     case 'word-search':
-      return `${formatNumber(score.words_found || 0)} words`
+      return `${formatNumber(score.characters_found || 0)} characters`
     default:
       return 'No score'
   }

@@ -548,7 +548,7 @@ export async function submitWordSearchScore(score: WordSearchScoreInsert) {
   const { data, error } = await supabase
     .rpc('submit_word_search_score', {
       p_username: score.username,
-      p_words_found: score.words_found
+      p_characters_found: score.characters_found
     })
   
   if (error) throw error
@@ -559,7 +559,7 @@ export async function getWordSearchScores(filters?: { username?: string; limit?:
   let query = supabase
     .from('word_search_scores')
     .select('*')
-    .order('words_found', { ascending: false })
+    .order('characters_found', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)

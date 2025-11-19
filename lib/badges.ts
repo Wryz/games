@@ -484,29 +484,29 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       id: 'word-search-novice',
       name: 'Novice',
       tier: 'novice',
-      description: 'Completed Word Search',
-      threshold: [1] // 1 word
+      description: 'Found 10 characters',
+      threshold: [10] // 10 characters
     },
     {
       id: 'word-search-adept',
       name: 'Adept',
       tier: 'adept',
-      description: 'Found 5 words',
-      threshold: [5] // Level 5 threshold
+      description: 'Found 30 characters',
+      threshold: [30] // Level 5 threshold
     },
     {
       id: 'word-search-expert',
       name: 'Expert',
       tier: 'expert',
-      description: 'Found 12 words',
-      threshold: [12] // Level 12 threshold
+      description: 'Found 60 characters',
+      threshold: [60] // Level 12 threshold
     },
     {
       id: 'word-search-master',
       name: 'Master',
       tier: 'master',
-      description: 'Found 20 words',
-      threshold: [20] // Level 20 threshold
+      description: 'Found 100 characters',
+      threshold: [100] // Level 20 threshold
     }
   ],
   'time-estimation': [
@@ -624,8 +624,8 @@ export function hasEarnedBadge(gameId: string, badge: BadgeDefinition, score: an
       return algCorrectAnswers >= badge.threshold[0] && algAverageTime <= badge.threshold[1]
 
     case 'word-search':
-      const wordsFound = score.words_found || 0
-      return wordsFound >= badge.threshold[0]
+      const charactersFound = score.characters_found || 0
+      return charactersFound >= badge.threshold[0]
 
     case 'time-estimation':
       // Lower is better for time estimation

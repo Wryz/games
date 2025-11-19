@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS geometry_scores (
 CREATE TABLE IF NOT EXISTS word_search_scores (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) NOT NULL,
-  words_found INTEGER NOT NULL,
+  characters_found INTEGER NOT NULL,
   date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -521,13 +521,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Function to submit word search score
 CREATE OR REPLACE FUNCTION submit_word_search_score(
   p_username VARCHAR(50),
-  p_words_found INTEGER
+  p_characters_found INTEGER
 ) RETURNS word_search_scores AS $$
 DECLARE
   new_score word_search_scores;
 BEGIN
-  INSERT INTO word_search_scores (username, words_found)
-  VALUES (p_username, p_words_found)
+  INSERT INTO word_search_scores (username, characters_found)
+  VALUES (p_username, p_characters_found)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -1032,19 +1032,19 @@ BEGIN
       (SELECT COUNT(*) FROM word_search_scores) as total_games,
       (SELECT json_build_object(
         'username', username,
-        'words_found', words_found,
+        'characters_found', characters_found,
         'date_submitted', date_submitted
       ) FROM word_search_scores 
-      ORDER BY words_found DESC 
+      ORDER BY characters_found DESC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
           (SELECT json_build_object(
-            'words_found', words_found,
+            'characters_found', characters_found,
             'date_submitted', date_submitted
           ) FROM word_search_scores 
           WHERE username = p_username
-          ORDER BY words_found DESC 
+          ORDER BY characters_found DESC 
           LIMIT 1)
         ELSE NULL
       END as user_best
@@ -1251,7 +1251,7 @@ BEGIN
       'word-search' as game_id,
       'Word Search' as game_name,
       username,
-      json_build_object('words_found', words_found) as score_value,
+      json_build_object('characters_found', characters_found) as score_value,
       date_submitted
     FROM word_search_scores
     

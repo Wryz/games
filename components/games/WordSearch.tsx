@@ -612,9 +612,12 @@ export default function WordSearch() {
         timerRef.current = null
       }
       
+      // Calculate total characters found
+      const totalCharacters = Array.from(foundWords).reduce((sum, word) => sum + word.length, 0)
+      
       submitWordSearchScore({
         username,
-        words_found: foundWords.size
+        characters_found: totalCharacters
       }).then(() => {
         setTimeout(() => loadScores(), 1000)
       }).catch(error => {
@@ -622,7 +625,7 @@ export default function WordSearch() {
         hasSubmittedScore.current = false
       })
     }
-  }, [gameState, foundWords.size, username, loadScores])
+  }, [gameState, foundWords, username, loadScores])
 
   // Cleanup timer
   useEffect(() => {
@@ -667,7 +670,7 @@ export default function WordSearch() {
   }, [generateGrid])
 
   const formatScore = (score: WordSearchScore) => {
-    return `${formatNumber(score.words_found)} words`
+    return `${formatNumber(score.characters_found)} characters`
   }
 
   return (
@@ -677,14 +680,16 @@ export default function WordSearch() {
       loading={loading}
       onRefresh={loadScores}
       formatScore={formatScore}
-      sortKey="words_found"
+      sortKey="characters_found"
       sortDirection="desc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         {/* Stats */}
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
-            Words Found: <span className="font-bold text-green-600 dark:text-green-400">{foundWords.size}</span>
+            Characters: <span className="font-bold text-green-600 dark:text-green-400">
+              {formatNumber(Array.from(foundWords).reduce((sum, word) => sum + word.length, 0))}
+            </span>
           </div>
           <div className="text-gray-600 dark:text-gray-400">
             Time: <span className={`font-bold ${timeLeft <= 10 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>

@@ -125,7 +125,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               const avgTime = score.average_time || 0
               return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`
             case 'word-search':
-              return `${formatNumber(score.words_found || 0)} words`
+              return `${formatNumber(score.characters_found || 0)} characters`
             default:
             return `Level ${formatNumber(score.level_reached)}`
         }

@@ -140,33 +140,6 @@ export type Database = {
         }
         Relationships: []
       }
-      linear_algebra_scores: {
-        Row: {
-          average_time: number
-          correct_answers: number
-          created_at: string | null
-          date_submitted: string | null
-          id: number
-          username: string
-        }
-        Insert: {
-          average_time: number
-          correct_answers: number
-          created_at?: string | null
-          date_submitted?: string | null
-          id?: number
-          username: string
-        }
-        Update: {
-          average_time?: number
-          correct_answers?: number
-          created_at?: string | null
-          date_submitted?: string | null
-          id?: number
-          username?: string
-        }
-        Relationships: []
-      }
       geometry_scores: {
         Row: {
           average_time: number
@@ -194,27 +167,30 @@ export type Database = {
         }
         Relationships: []
       }
-      word_search_scores: {
+      linear_algebra_scores: {
         Row: {
+          average_time: number
+          correct_answers: number
           created_at: string | null
           date_submitted: string | null
           id: number
           username: string
-          words_found: number
         }
         Insert: {
+          average_time: number
+          correct_answers: number
           created_at?: string | null
           date_submitted?: string | null
           id?: number
           username: string
-          words_found: number
         }
         Update: {
+          average_time?: number
+          correct_answers?: number
           created_at?: string | null
           date_submitted?: string | null
           id?: number
           username?: string
-          words_found?: number
         }
         Relationships: []
       }
@@ -473,6 +449,30 @@ export type Database = {
         }
         Relationships: []
       }
+      word_search_scores: {
+        Row: {
+          characters_found: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          characters_found: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          characters_found?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -597,27 +597,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_linear_algebra_score: {
-        Args: {
-          p_average_time: number
-          p_correct_answers: number
-          p_username: string
-        }
-        Returns: {
-          average_time: number
-          correct_answers: number
-          created_at: string | null
-          date_submitted: string | null
-          id: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "linear_algebra_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       submit_geometry_score: {
         Args: {
           p_average_time: number
@@ -639,25 +618,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_word_search_score: {
-        Args: {
-          p_username: string
-          p_words_found: number
-        }
-        Returns: {
-          created_at: string | null
-          date_submitted: string | null
-          id: number
-          username: string
-          words_found: number
-        }
-        SetofOptions: {
-          from: "*"
-          to: "word_search_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      submit_linear_algebra_score:
+        | {
+            Args: {
+              p_average_time: number
+              p_correct_answers: number
+              p_problem_type: string
+              p_username: string
+            }
+            Returns: {
+              average_time: number
+              correct_answers: number
+              created_at: string | null
+              date_submitted: string | null
+              id: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "linear_algebra_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_average_time: number
+              p_correct_answers: number
+              p_username: string
+            }
+            Returns: {
+              average_time: number
+              correct_answers: number
+              created_at: string | null
+              date_submitted: string | null
+              id: number
+              username: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "linear_algebra_scores"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       submit_maze_score: {
         Args: { p_time_taken: number; p_username: string }
         Returns: {
@@ -924,6 +928,22 @@ export type Database = {
               isSetofReturn: false
             }
           }
+      submit_word_search_score: {
+        Args: { p_characters_found: number; p_username: string }
+        Returns: {
+          characters_found: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "word_search_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

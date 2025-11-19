@@ -117,7 +117,7 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       break
 
     case 'word-search':
-      if (score.words_found !== undefined) details.push({ label: 'Words Found', value: formatNumber(score.words_found) })
+      if (score.characters_found !== undefined) details.push({ label: 'Characters Found', value: formatNumber(score.characters_found) })
       break
 
     default:

@@ -174,7 +174,7 @@ export default function Home({ onGameSelect }: HomeProps) {
               formattedValue = `${formatNum(correctAnswers)} correct (${formatNum(avgTime)}ms avg)`
               break
             case 'word-search':
-              formattedValue = `${formatNum(scoreValue.words_found || 0)} words`
+              formattedValue = `${formatNum(scoreValue.characters_found || 0)} characters`
               break
             default:
               formattedValue = `Level ${formatNum(scoreValue.level_reached)}`
