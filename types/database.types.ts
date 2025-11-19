@@ -140,6 +140,33 @@ export type Database = {
         }
         Relationships: []
       }
+      linear_algebra_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
       maze_scores: {
         Row: {
           created_at: string | null
@@ -515,6 +542,27 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "feedback"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_linear_algebra_score: {
+        Args: {
+          p_average_time: number
+          p_correct_answers: number
+          p_username: string
+        }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          created_at: string | null
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "linear_algebra_scores"
           isOneToOne: true
           isSetofReturn: false
         }

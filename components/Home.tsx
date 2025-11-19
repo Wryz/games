@@ -167,6 +167,7 @@ export default function Home({ onGameSelect }: HomeProps) {
               break
             case 'algebra':
             case 'arithmetic':
+            case 'linear-algebra':
               const correctAnswers = scoreValue.correct_answers || 0
               const avgTime = scoreValue.average_time || 0
               formattedValue = `${formatNum(correctAnswers)} correct (${formatNum(avgTime)}ms avg)`
@@ -207,7 +208,12 @@ export default function Home({ onGameSelect }: HomeProps) {
       'visual_memory_scores',
       'stroop_test_scores',
       'sequence_memory_scores',
-      'chimp_test_scores'
+      'chimp_test_scores',
+      'time_estimation_scores',
+      'maze_scores',
+      'algebra_scores',
+      'arithmetic_scores',
+      'linear_algebra_scores'
     ].map(tableName => {
       return supabase
         .channel(`${tableName}_changes`)
@@ -545,10 +551,15 @@ export default function Home({ onGameSelect }: HomeProps) {
                                               New
                                             </span>
                                           )}
-                                          {(game.id === 'linear-algebra' || game.id === 'geometry' || 
+                                          {(game.id === 'geometry' || 
                                             game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1 py-0.5 rounded-md shadow-sm">
                                               Soon
+                                            </span>
+                                          )}
+                                          {game.id === 'linear-algebra' && (
+                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
+                                              New
                                             </span>
                                           )}
                                         </div>
@@ -600,10 +611,15 @@ export default function Home({ onGameSelect }: HomeProps) {
                                               New
                                             </span>
                                           )}
-                                          {(game.id === 'linear-algebra' || game.id === 'geometry' || 
+                                          {(game.id === 'geometry' || 
                                             game.id === 'word-search' || game.id === 'anagrams' || game.id === 'countries') && (
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                                               Soon
+                                            </span>
+                                          )}
+                                          {game.id === 'linear-algebra' && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                              New
                                             </span>
                                           )}
                                         </div>

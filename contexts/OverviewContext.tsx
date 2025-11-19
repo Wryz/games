@@ -119,6 +119,7 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${formatNumber(seconds)}.${milliseconds}s`
             case 'algebra':
             case 'arithmetic':
+            case 'linear-algebra':
               const correctAnswers = score.correct_answers || 0
               const avgTime = score.average_time || 0
               return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`

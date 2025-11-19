@@ -27,7 +27,9 @@ import type {
   AlgebraScore,
   AlgebraScoreInsert,
   ArithmeticScore,
-  ArithmeticScoreInsert
+  ArithmeticScoreInsert,
+  LinearAlgebraScore,
+  LinearAlgebraScoreInsert
 } from './supabase'
 
 // Score submission functions using RPC
@@ -474,6 +476,38 @@ export async function getArithmeticScores(filters?: { username?: string; limit?:
   return data
 }
 
+export async function submitLinearAlgebraScore(score: LinearAlgebraScoreInsert) {
+  const { data, error } = await supabase
+    .rpc('submit_linear_algebra_score', {
+      p_username: score.username,
+      p_correct_answers: score.correct_answers,
+      p_average_time: score.average_time
+    })
+  
+  if (error) throw error
+  return data
+}
+
+export async function getLinearAlgebraScores(filters?: { username?: string; limit?: number }) {
+  let query = supabase
+    .from('linear_algebra_scores')
+    .select('*')
+    .order('correct_answers', { ascending: false })
+    .order('average_time', { ascending: true })
+
+  if (filters?.username) {
+    query = query.eq('username', filters.username)
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
 // Get all scores from all games
 export interface AllScoresEntry {
   gameId: string
@@ -501,7 +535,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     timeEstimationScores,
     mazeScores,
     algebraScores,
-    arithmeticScores
+    arithmeticScores,
+    linearAlgebraScores
   ] = await Promise.all([
     getAimTrainerScores(),
     getTypingTestScores(),
@@ -516,7 +551,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     getTimeEstimationScores(),
     getMazeScores(),
     getAlgebraScores(),
-    getArithmeticScores()
+    getArithmeticScores(),
+    getLinearAlgebraScores()
   ])
 
   // Map each score to AllScoresEntry format
@@ -654,6 +690,16 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     allScores.push({
       gameId: 'arithmetic',
       gameName: 'Arithmetic',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  linearAlgebraScores?.forEach(score => {
+    allScores.push({
+      gameId: 'linear-algebra',
+      gameName: 'Linear Algebra',
       username: score.username,
       score: score,
       dateSubmitted: score.date_submitted

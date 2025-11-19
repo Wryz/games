@@ -27,6 +27,7 @@ export type TimeEstimationScore = Database['public']['Tables']['time_estimation_
 export type MazeScore = Database['public']['Tables']['maze_scores']['Row']
 export type AlgebraScore = Database['public']['Tables']['algebra_scores']['Row']
 export type ArithmeticScore = Database['public']['Tables']['arithmetic_scores']['Row']
+export type LinearAlgebraScore = Database['public']['Tables']['linear_algebra_scores']['Row']
 
 // Insert types for score submission
 export type AimTrainerScoreInsert = Database['public']['Tables']['aim_trainer_scores']['Insert']
@@ -43,3 +44,4 @@ export type TimeEstimationScoreInsert = Database['public']['Tables']['time_estim
 export type MazeScoreInsert = Database['public']['Tables']['maze_scores']['Insert']
 export type AlgebraScoreInsert = Database['public']['Tables']['algebra_scores']['Insert']
 export type ArithmeticScoreInsert = Database['public']['Tables']['arithmetic_scores']['Insert']
+export type LinearAlgebraScoreInsert = Database['public']['Tables']['linear_algebra_scores']['Insert']
