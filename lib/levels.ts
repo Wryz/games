@@ -35,7 +35,7 @@ export type GameCategory = 'motor' | 'memory' | 'perception' | 'cognitive' | 'co
 export interface GameLevelInfo {
   currentLevel: number
   educationLevel: string
-  nextLevelThreshold: number | null
+  nextLevelThreshold: number | number[] | null
   progress: number // 0-100
 }
 
@@ -306,20 +306,20 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 4, threshold: [4, 14000] }, // 2nd Grade - 4 correct, 14s avg
     { level: 5, threshold: [5, 12000] }, // 3rd Grade - 5 correct, 12s avg
     { level: 6, threshold: [6, 10000] }, // 4th Grade - 6 correct, 10s avg
-    { level: 7, threshold: [7, 8500] }, // 5th Grade - 7 correct, 8.5s avg
-    { level: 8, threshold: [8, 7000] }, // 6th Grade - 8 correct, 7s avg
-    { level: 9, threshold: [9, 6000] }, // 7th Grade - 9 correct, 6s avg
-    { level: 10, threshold: [10, 5000] }, // 8th Grade - 10 correct, 5s avg
-    { level: 11, threshold: [11, 4500] }, // 9th Grade - 11 correct, 4.5s avg
-    { level: 12, threshold: [12, 4000] }, // 10th Grade - 12 correct, 4s avg
-    { level: 13, threshold: [13, 3500] }, // 11th Grade - 13 correct, 3.5s avg
-    { level: 14, threshold: [14, 3200] }, // 12th Grade - 14 correct, 3.2s avg
-    { level: 15, threshold: [15, 2900] }, // College Freshman - 15 correct, 2.9s avg
-    { level: 16, threshold: [16, 2600] }, // College Sophomore - 16 correct, 2.6s avg
-    { level: 17, threshold: [17, 2400] }, // College Junior - 17 correct, 2.4s avg
-    { level: 18, threshold: [18, 2200] }, // College Senior - 18 correct, 2.2s avg
-    { level: 19, threshold: [19, 2100] }, // Master's - 19 correct, 2.1s avg
-    { level: 20, threshold: [20, 2000] } // Doctorate - 20 correct, 2s avg
+    { level: 7, threshold: [7, 9000] }, // 5th Grade - 7 correct, 9s avg
+    { level: 8, threshold: [8, 8000] }, // 6th Grade - 8 correct, 8s avg
+    { level: 9, threshold: [9, 7200] }, // 7th Grade - 9 correct, 7.2s avg
+    { level: 10, threshold: [10, 6500] }, // 8th Grade - 10 correct, 6.5s avg
+    { level: 11, threshold: [11, 5800] }, // 9th Grade - 11 correct, 5.8s avg
+    { level: 12, threshold: [12, 5200] }, // 10th Grade - 12 correct, 5.2s avg
+    { level: 13, threshold: [13, 4800] }, // 11th Grade - 13 correct, 4.8s avg
+    { level: 14, threshold: [14, 4500] }, // 12th Grade - 14 correct, 4.5s avg
+    { level: 15, threshold: [15, 4300] }, // College Freshman - 15 correct, 4.3s avg
+    { level: 16, threshold: [16, 4150] }, // College Sophomore - 16 correct, 4.15s avg
+    { level: 17, threshold: [17, 4075] }, // College Junior - 17 correct, 4.075s avg
+    { level: 18, threshold: [18, 4038] }, // College Senior - 18 correct, 4.038s avg
+    { level: 19, threshold: [19, 4019] }, // Master's - 19 correct, 4.019s avg
+    { level: 20, threshold: [20, 4000] } // Doctorate - 20 correct, 4s avg
   ],
   'arithmetic': [
     { level: 1, threshold: [1, 20000] }, // Pre-School - 1 correct, 20s avg (correct_answers, average_time)
@@ -336,12 +336,12 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 12, threshold: [12, 4000] }, // 10th Grade - 12 correct, 4s avg
     { level: 13, threshold: [13, 3500] }, // 11th Grade - 13 correct, 3.5s avg
     { level: 14, threshold: [14, 3200] }, // 12th Grade - 14 correct, 3.2s avg
-    { level: 15, threshold: [15, 2900] }, // College Freshman - 15 correct, 2.9s avg
-    { level: 16, threshold: [16, 2600] }, // College Sophomore - 16 correct, 2.6s avg
-    { level: 17, threshold: [17, 2400] }, // College Junior - 17 correct, 2.4s avg
-    { level: 18, threshold: [18, 2200] }, // College Senior - 18 correct, 2.2s avg
-    { level: 19, threshold: [19, 2100] }, // Master's - 19 correct, 2.1s avg
-    { level: 20, threshold: [20, 2000] } // Doctorate - 20 correct, 2s avg
+    { level: 15, threshold: [15, 3000] }, // College Freshman - 15 correct, 3s avg
+    { level: 16, threshold: [16, 2800] }, // College Sophomore - 16 correct, 2.8s avg
+    { level: 17, threshold: [17, 2700] }, // College Junior - 17 correct, 2.7s avg
+    { level: 18, threshold: [18, 2600] }, // College Senior - 18 correct, 2.6s avg
+    { level: 19, threshold: [19, 2550] }, // Master's - 19 correct, 2.55s avg
+    { level: 20, threshold: [20, 2500] } // Doctorate - 20 correct, 2.5s avg
   ],
   'linear-algebra': [
     { level: 1, threshold: [1, 20000] }, // Pre-School - 1 correct, 20s avg (correct_answers, average_time)
@@ -640,8 +640,19 @@ export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
     progress = 100
   }
 
-  // Format nextLevelThreshold for return (always use first value from array)
-  const nextLevelThresholdValue = nextThreshold ? nextThreshold.threshold[0] : null
+  // Format nextLevelThreshold for return
+  // For aim-trainer, return the full array to show reaction time
+  // For other games, return the appropriate value
+  let nextLevelThresholdValue: number | number[] | null = null
+  if (nextThreshold) {
+    if (gameId === 'aim-trainer' && nextThreshold.threshold.length >= 2) {
+      // Return full array for aim-trainer so we can show reaction time
+      nextLevelThresholdValue = nextThreshold.threshold
+    } else {
+      // For other games, return first value (or the value itself if it's a single number)
+      nextLevelThresholdValue = nextThreshold.threshold[0]
+    }
+  }
 
   return {
     currentLevel,
@@ -692,28 +703,48 @@ export function getGameThreshold(gameId: string, level: number): number[] | null
 }
 
 // Format threshold for display
-export function formatThreshold(gameId: string, threshold: number): string {
+export function formatThreshold(gameId: string, threshold: number | number[]): string {
   switch (gameId) {
     case 'aim-trainer':
+      // For aim-trainer, threshold is [accuracy, reaction_time] - show reaction time
+      if (Array.isArray(threshold) && threshold.length >= 2) {
+        return `${formatNumber(threshold[1])}ms or faster`
+      }
+      const aimThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(aimThreshold)}% accuracy`
     case 'stroop-test':
-      return `${formatNumber(threshold)}% accuracy`
+      const stroopThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(stroopThreshold)}% accuracy`
     case 'typing-test':
-      return `${formatNumber(threshold)} WPM`
+      const typingThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(typingThreshold)} WPM`
     case 'reaction-time':
-      return `${formatNumber(threshold)}ms or faster`
+      const reactionThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(reactionThreshold)}ms or faster`
     case 'memory':
+      // For memory, threshold represents correct sequences needed
+      const memoryThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(memoryThreshold)} correct sequences`
     case 'visual-memory':
+      const visualThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `Level ${formatNumber(visualThreshold)}`
     case 'sequence-memory':
-      return `Level ${formatNumber(threshold)}`
+      // For sequence-memory, threshold represents longest sequence needed
+      const seqThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(seqThreshold)} sequence length`
     case 'chimp-test':
-      return `${formatNumber(threshold)} correct`
+      const chimpThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(chimpThreshold)} correct`
     case 'number-memory':
-      return `${formatNumber(threshold)} digits`
+      const numThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(numThreshold)} digits`
     case 'pattern-recognition':
-      return `${formatNumber(threshold)} patterns`
+      const patternThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(patternThreshold)} patterns`
     case 'maze':
-      const seconds = Math.floor(threshold / 1000)
-      const milliseconds = Math.floor((threshold % 1000) / 100)
+      const mazeThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      const seconds = Math.floor(mazeThreshold / 1000)
+      const milliseconds = Math.floor((mazeThreshold % 1000) / 100)
       return `${formatNumber(seconds)}.${milliseconds}s or faster`
     case 'algebra':
     case 'arithmetic':
@@ -724,13 +755,17 @@ export function formatThreshold(gameId: string, threshold: number): string {
         const timeMs = threshold[1]
         return `${formatNumber(threshold[0])} correct, ${formatNumber(timeMs)}ms avg or faster`
       }
-      return `${formatNumber(threshold)}`
+      const mathThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(mathThreshold)}`
     case 'word-search':
-      return `${formatNumber(threshold)} characters`
+      const wordThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(wordThreshold)} characters`
     case 'time-estimation':
-      return `${formatNumber(threshold)}ms error or less`
+      const timeThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(timeThreshold)}ms error or less`
     default:
-      return `${formatNumber(threshold)}`
+      const defaultThreshold = Array.isArray(threshold) ? threshold[0] : threshold
+      return `${formatNumber(defaultThreshold)}`
   }
 }
 
