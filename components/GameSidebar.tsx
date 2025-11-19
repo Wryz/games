@@ -2,6 +2,7 @@
 
 import { Game, GAMES } from '@/types/games'
 import { useUser } from '@/contexts/UserContext'
+import { useSidebar } from '@/contexts/SidebarContext'
 import { HomeIcon, MemoryIcon } from './icons/GameIcons'
 import ThemeToggle from './ThemeToggle'
 import UsernameInput from './UsernameInput'
@@ -15,6 +16,7 @@ interface GameSidebarProps {
 
 export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarProps) {
   const { username, setUsername, clearUsername } = useUser()
+  const { toggleCategory, isCategoryCollapsed } = useSidebar()
   const posthog = usePostHog()
   const router = useRouter()
   
@@ -151,13 +153,28 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
         </div>
         
         <div className="space-y-6">
-          {Object.entries(gamesByCategory).map(([category, games]) => (
+          {Object.entries(gamesByCategory).map(([category, games]) => {
+            const isCollapsed = isCategoryCollapsed(category)
+            return (
             <div key={category} className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                {categories[category as keyof typeof categories]}
-              </h3>
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg p-1 -ml-1 transition-colors"
+              >
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                  {categories[category as keyof typeof categories]}
+                </h3>
+                <svg
+                  className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
               
-              <div className="space-y-1">
+              <div className={`space-y-1 overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}>
                 {games.map((game) => (
                   <button
                     key={game.id}
@@ -204,7 +221,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                 ))}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </div>

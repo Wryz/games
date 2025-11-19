@@ -4,6 +4,7 @@ import './tailwind.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { UserProvider } from '@/contexts/UserContext'
 import { OverviewProvider } from '@/contexts/OverviewContext'
+import { SidebarProvider } from '@/contexts/SidebarContext'
 import { PostHogProvider } from './providers'
 
 const fredoka = Fredoka({ 
@@ -99,7 +100,9 @@ export default function RootLayout({
           <ThemeProvider>
             <UserProvider>
               <OverviewProvider>
-                {children}
+                <SidebarProvider>
+                  {children}
+                </SidebarProvider>
               </OverviewProvider>
             </UserProvider>
           </ThemeProvider>
