@@ -17,7 +17,7 @@ export default function AboutPage() {
           <GameHeader />
           
           <main className="mt-8 mb-16 max-w-4xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 md:p-12 space-y-8">
+            <div className="space-y-8">
               {/* Header */}
               <div className="text-start space-y-4">
                 <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent">
