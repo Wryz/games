@@ -182,22 +182,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                           : 'text-gray-700 dark:text-gray-100'
                       }`}>
                         {game.name}
-                        {game.id === 'pattern-recognition' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            Updated
-                          </span>
-                        )}
-                        {game.id === 'time-estimation' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            New
-                          </span>
-                        )}
                         {game.id === 'maze' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            New
-                          </span>
-                        )}
-                        {(game.id === 'algebra' || game.id === 'arithmetic') && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                             New
                           </span>

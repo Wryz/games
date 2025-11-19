@@ -531,22 +531,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                                           <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
                                             {game.name}
                                           </h3>
-                                          {game.id === 'pattern-recognition' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              Updated
-                                            </span>
-                                          )}
-                                          {game.id === 'time-estimation' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
                                           {game.id === 'maze' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {(game.id === 'algebra' || game.id === 'arithmetic') && (
                                             <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
                                               New
                                             </span>
@@ -591,22 +576,7 @@ export default function Home({ onGameSelect }: HomeProps) {
                                           <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
                                             {game.name}
                                           </h3>
-                                          {game.id === 'pattern-recognition' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              Updated
-                                            </span>
-                                          )}
-                                          {game.id === 'time-estimation' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
                                           {game.id === 'maze' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {(game.id === 'algebra' || game.id === 'arithmetic') && (
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
                                               New
                                             </span>
