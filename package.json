@@ -30,6 +30,6 @@
   "devDependencies": {
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
-    "supabase": "^2.54.11"
+    "supabase": "^2.72.8"
   }
 }
