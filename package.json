@@ -28,8 +28,8 @@
     "typescript": "^5"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "14.0.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
     "supabase": "^2.54.11"
   }
 }
