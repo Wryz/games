@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useUser } from '@/contexts/UserContext'
 import { useOverview } from '@/contexts/OverviewContext'
 import { supabase } from '@/lib/supabase'
@@ -52,54 +52,229 @@ const PeopleIcon = ({ className = '', size = 14 }: { className?: string; size?: 
   </svg>
 )
 
-const GAME_STATUS_BADGES: Record<string, { label: string; className: string }> = {
-  maze: { label: 'New', className: 'bg-emerald-500' },
-  'word-search': { label: 'New', className: 'bg-emerald-500' },
-  'linear-algebra': { label: 'New', className: 'bg-emerald-500' },
-  geometry: { label: 'New', className: 'bg-emerald-500' },
-  anagrams: { label: 'Soon', className: 'bg-indigo-500' },
-  countries: { label: 'Soon', className: 'bg-indigo-500' },
+const CATEGORY_BG: Record<string, string> = {
+  motor: 'bg-blue-100 dark:bg-transparent',
+  memory: 'bg-purple-100 dark:bg-transparent',
+  cognitive: 'bg-cyan-100 dark:bg-transparent',
+  perception: 'bg-pink-100 dark:bg-transparent',
+  computation: 'bg-orange-100 dark:bg-transparent',
+  linguistic: 'bg-green-100 dark:bg-transparent',
+  geography: 'bg-teal-100 dark:bg-transparent',
+  attention: 'bg-yellow-100 dark:bg-transparent',
+  language: 'bg-indigo-100 dark:bg-transparent',
+  social: 'bg-rose-100 dark:bg-transparent',
+  creative: 'bg-violet-100 dark:bg-transparent',
+  spatial: 'bg-emerald-100 dark:bg-transparent',
+  other: 'bg-gray-100 dark:bg-transparent',
 }
 
-const CATEGORY_SOLID: Record<string, string> = {
-  motor: 'bg-blue-500',
-  memory: 'bg-purple-500',
-  cognitive: 'bg-cyan-500',
-  perception: 'bg-pink-500',
-  computation: 'bg-orange-500',
-  linguistic: 'bg-green-500',
-  geography: 'bg-teal-500',
-  attention: 'bg-yellow-500',
-  language: 'bg-indigo-500',
-  social: 'bg-rose-500',
-  creative: 'bg-violet-500',
-  spatial: 'bg-emerald-500',
-  other: 'bg-gray-500',
+const CATEGORY_ACCENT: Record<string, string> = {
+  motor: 'text-blue-500',
+  memory: 'text-purple-500',
+  cognitive: 'text-cyan-500',
+  perception: 'text-pink-500',
+  computation: 'text-orange-500',
+  linguistic: 'text-green-500',
+  geography: 'text-teal-500',
+  attention: 'text-yellow-500',
+  language: 'text-indigo-500',
+  social: 'text-rose-500',
+  creative: 'text-violet-500',
+  spatial: 'text-emerald-500',
+  other: 'text-gray-500',
+}
+
+const CATEGORY_BORDER: Record<string, string> = {
+  motor: 'border-blue-200 dark:border-blue-500',
+  memory: 'border-purple-200 dark:border-purple-500',
+  cognitive: 'border-cyan-200 dark:border-cyan-500',
+  perception: 'border-pink-200 dark:border-pink-500',
+  computation: 'border-orange-200 dark:border-orange-500',
+  linguistic: 'border-green-200 dark:border-green-500',
+  geography: 'border-teal-200 dark:border-teal-500',
+  attention: 'border-yellow-200 dark:border-yellow-500',
+  language: 'border-indigo-200 dark:border-indigo-500',
+  social: 'border-rose-200 dark:border-rose-500',
+  creative: 'border-violet-200 dark:border-violet-500',
+  spatial: 'border-emerald-200 dark:border-emerald-500',
+  other: 'border-gray-200 dark:border-gray-500',
+}
+
+interface SelectableGameCardProps {
+  game: {
+    id: string
+    name: string
+    icon: any
+    category: string
+    totalGames: number
+    topScore: { username: string; value: string } | null
+    userBest: { value: string } | null
+  }
+  hasTopScore: boolean
+  index: number
+  onSelect: () => void
+}
+
+const SelectableGameCard = ({ game, hasTopScore, index, onSelect }: SelectableGameCardProps) => {
+  const [showBest, setShowBest] = useState(false)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const skipClickRef = useRef(false)
+  const hasUserBest = Boolean(game.userBest)
+  const category = game.category || 'other'
+  const bgClass = CATEGORY_BG[category] || CATEGORY_BG.other
+  const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other
+  const borderClass = CATEGORY_BORDER[category] || CATEGORY_BORDER.other
+  const revealBest = hasUserBest && showBest
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  const handleTouchStart = () => {
+    if (!hasUserBest) return
+    clearLongPress()
+    longPressTimer.current = setTimeout(() => {
+      setShowBest(true)
+      skipClickRef.current = true
+    }, 400)
+  }
+
+  const handleTouchEnd = () => {
+    clearLongPress()
+    setShowBest(false)
+  }
+
+  const handleClick = () => {
+    if (skipClickRef.current) {
+      skipClickRef.current = false
+      return
+    }
+    onSelect()
+  }
+
+  return (
+    <div
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      onTouchMove={clearLongPress}
+      onMouseEnter={() => hasUserBest && setShowBest(true)}
+      onMouseLeave={() => setShowBest(false)}
+      className="group relative cursor-pointer select-none"
+      style={{
+        animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
+      }}
+    >
+      {hasTopScore && (
+        <div className="pointer-events-none absolute -left-2 -top-2.5 z-20 -rotate-[28deg] transition-transform duration-300 group-hover:-rotate-[16deg] group-hover:scale-110">
+          <CrownIcon
+            size={32}
+            className="w-7 h-7 sm:w-8 sm:h-8 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
+          />
+        </div>
+      )}
+
+      <div
+        className={`game-card-badge relative aspect-square overflow-hidden rounded-lg border-2 ${bgClass} ${borderClass} p-2 sm:p-2.5 flex flex-col shadow-sm dark:shadow-none`}
+      >
+        <div
+          className={`relative z-10 flex flex-col h-full min-h-0 transition duration-200 ${
+            revealBest ? 'blur-sm opacity-40' : ''
+          }`}
+        >
+          <div className="flex items-start justify-between gap-1">
+            <div className="min-w-0 max-w-full">
+              {game.topScore ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <CrownIcon
+                      size={20}
+                      className="w-4 h-4 flex-shrink-0 text-amber-500"
+                    />
+                    <span className="truncate text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-100 leading-tight">
+                      {game.topScore.username}
+                    </span>
+                  </div>
+                  <p className="truncate text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300 leading-tight mt-0.5 pl-5">
+                    {game.topScore.value}
+                  </p>
+                </>
+              ) : (
+                <span className="truncate text-[11px] italic text-gray-400 dark:text-gray-500 leading-tight">
+                  —
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center gap-1 min-h-0 py-1">
+            <div className="game-card-icon transform transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
+              <game.icon className={`w-8 h-8 sm:w-9 sm:h-9 ${accentClass} drop-shadow-sm`} />
+            </div>
+            <div className="flex items-center justify-center gap-1 flex-wrap px-0.5">
+              <h3 className={`font-bold text-lg sm:text-xl text-center leading-tight line-clamp-2 ${accentClass}`}>
+                {game.name}
+              </h3>
+            </div>
+            <div className="flex items-center gap-0.5 text-gray-500 dark:text-gray-400">
+              <PeopleIcon size={14} className="w-3.5 h-3.5" />
+              <span className="text-[11px] sm:text-xs font-medium tabular-nums leading-tight">
+                {game.totalGames.toLocaleString('en-US')} played
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {hasUserBest && (
+          <div
+            className={`pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 px-2 transition-opacity duration-200 ${
+              revealBest ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-wide ${accentClass}`}>
+              Your Best
+            </p>
+            <p className="font-extrabold text-base sm:text-lg text-center text-gray-900 dark:text-white leading-tight line-clamp-2">
+              {game.userBest!.value}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 // Enhanced skeleton component for loading state
 const GameCardSkeleton = () => {
-  const solidColors = ['bg-blue-400', 'bg-purple-400', 'bg-cyan-400', 'bg-pink-400']
-  const color = solidColors[Math.floor(Math.random() * solidColors.length)]
+  const colors = [
+    'bg-blue-100 dark:bg-transparent border-blue-200 dark:border-blue-500',
+    'bg-purple-100 dark:bg-transparent border-purple-200 dark:border-purple-500',
+    'bg-cyan-100 dark:bg-transparent border-cyan-200 dark:border-cyan-500',
+    'bg-pink-100 dark:bg-transparent border-pink-200 dark:border-pink-500',
+  ]
+  const color = colors[Math.floor(Math.random() * colors.length)]
 
   return (
     <div
-      className={`relative ${color} rounded-lg p-2 aspect-square flex flex-col overflow-hidden opacity-70`}
+      className={`relative ${color} rounded-lg p-2 aspect-square flex flex-col overflow-hidden opacity-70 border-2`}
     >
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
       <div className="relative z-10 flex flex-col h-full animate-pulse">
         <div className="flex items-start justify-between gap-1">
           <div className="space-y-1">
-            <div className="h-2.5 bg-white/40 rounded w-12" />
-            <div className="h-2 bg-white/30 rounded w-10 ml-3" />
+            <div className="h-2.5 bg-gray-300 dark:bg-gray-600 rounded w-12" />
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-10 ml-3" />
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-1">
-          <div className="w-8 h-8 bg-white/30 rounded-md" />
-          <div className="h-3 bg-white/40 rounded w-2/3" />
-          <div className="h-2.5 bg-white/30 rounded w-1/2" />
+          <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-md" />
+          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-2/3" />
+          <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
         </div>
-        <div className="h-6 bg-white/25 rounded w-full" />
       </div>
     </div>
   )
@@ -428,9 +603,17 @@ export default function Home({ onGameSelect }: HomeProps) {
             )}
           </div>
 
-          {/* Enhanced Exercise Overview Grid - Organized by Category */}
+          {/* Games Overview - sorted by popularity */}
           <div>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold flex items-baseline gap-2 flex-wrap">
+                <span className="bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                  Games
+                </span>
+                <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                  (by popularity)
+                </span>
+              </h2>
               {gameStatsLoading && gameStats.length > 0 && (
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
@@ -438,200 +621,35 @@ export default function Home({ onGameSelect }: HomeProps) {
                 </div>
               )}
             </div>
-            
+
             {(() => {
-                // Merge GAMES with gameStats to show exercises immediately, even if stats haven't loaded
-                // This allows instant navigation while stats load in the background
-                const gamesWithStats = GAMES.map(game => {
-                  const stats = gameStats.find(stat => stat.id === game.id)
-                  return {
-                    id: game.id,
-                    name: game.name,
-                    icon: game.icon,
-                    category: game.category,
-                    totalGames: stats?.totalGames || 0,
-                    topScore: stats?.topScore || null,
-                    userBest: stats?.userBest || null,
-                  }
-                })
-
-                // Group games by category
-                const gamesByCategory = gamesWithStats.reduce((acc, game) => {
-                  const category = game.category || 'other'
-                  if (!acc[category]) {
-                    acc[category] = []
-                  }
-                  acc[category].push(game)
-                  return acc
-                }, {} as Record<string, typeof gamesWithStats>)
-
-                // Category display names
-                const categoryNames: Record<string, string> = {
-                  motor: 'Motor Skills',
-                  memory: 'Memory',
-                  cognitive: 'Cognitive',
-                  perception: 'Perception',
-                  computation: 'Computation',
-                  linguistic: 'Linguistic',
-                  geography: 'Geography',
-                  attention: 'Attention',
-                  language: 'Language',
-                  social: 'Social',
-                  creative: 'Creative',
-                  spatial: 'Spatial',
-                  other: 'Other'
+              const gamesByPopularity = GAMES.map(game => {
+                const stats = gameStats.find(stat => stat.id === game.id)
+                return {
+                  id: game.id,
+                  name: game.name,
+                  icon: game.icon,
+                  category: game.category,
+                  totalGames: stats?.totalGames || 0,
+                  topScore: stats?.topScore || null,
+                  userBest: stats?.userBest || null,
                 }
+              }).sort((a, b) => b.totalGames - a.totalGames)
 
-                // Category order (you can customize this)
-                const categoryOrder = ['motor', 'memory', 'cognitive', 'perception', 'computation', 'linguistic', 'geography', 'attention', 'language', 'social', 'creative', 'spatial', 'other']
-
-                return (
-                  <div className="space-y-12">
-                    {categoryOrder.map((category) => {
-                      const games = gamesByCategory[category]
-                      if (!games || games.length === 0) return null
-
-                      const categoryColors = {
-                        motor: 'from-blue-500 to-blue-600',
-                        memory: 'from-purple-500 to-purple-600',
-                        cognitive: 'from-cyan-500 to-cyan-600',
-                        perception: 'from-pink-500 to-pink-600',
-                        computation: 'from-orange-500 to-orange-600',
-                        linguistic: 'from-green-500 to-green-600',
-                        geography: 'from-teal-500 to-teal-600',
-                        attention: 'from-yellow-500 to-yellow-600',
-                        language: 'from-indigo-500 to-indigo-600',
-                        social: 'from-rose-500 to-rose-600',
-                        creative: 'from-violet-500 to-violet-600',
-                        spatial: 'from-emerald-500 to-emerald-600',
-                        other: 'from-gray-500 to-gray-600',
-                      }
-
-                      return (
-                        <div key={category} className="space-y-4">
-                          {/* Category Header */}
-                          <div className="flex items-center gap-3">
-                            <h2 className={`text-2xl font-bold bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]} bg-clip-text text-transparent`}>
-                              {categoryNames[category] || category.charAt(0).toUpperCase() + category.slice(1)}
-                            </h2>
-                            <div className="flex-1 h-px bg-gradient-to-r from-gray-300 via-gray-200 to-transparent dark:from-gray-600 dark:via-gray-700"></div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                              {games.length} {games.length === 1 ? 'exercise' : 'exercises'}
-                            </span>
-                          </div>
-                          
-                          {/* Exercises Grid for this Category */}
-                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 pt-2 items-stretch">
-                            {games.map((game, index) => {
-                              const hasTopScore = Boolean(username && game.topScore?.username === username)
-                              const statusBadge = GAME_STATUS_BADGES[game.id]
-                              const solidBg =
-                                CATEGORY_SOLID[game.category] || CATEGORY_SOLID.other
-
-                              return (
-                                <div
-                                  key={game.id}
-                                  onClick={() => handleGameClick(game.id, game.name)}
-                                  className="group relative cursor-pointer transform transition-all duration-200 hover:scale-105"
-                                  style={{
-                                    animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
-                                  }}
-                                >
-                                  {/* Tilted crown covering top-left edge when user holds #1 */}
-                                  {hasTopScore && (
-                                    <div className="pointer-events-none absolute -left-2 -top-2.5 z-20 -rotate-[28deg] transition-transform duration-300 group-hover:-rotate-[16deg] group-hover:scale-110">
-                                      <CrownIcon
-                                        size={32}
-                                        className="w-7 h-7 sm:w-8 sm:h-8 text-amber-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
-                                      />
-                                    </div>
-                                  )}
-
-                                  {/* Icon badge as the card container */}
-                                  <div
-                                    className={`relative aspect-square overflow-hidden rounded-lg ${solidBg} p-2 sm:p-2.5 flex flex-col text-white shadow-sm`}
-                                  >
-                                    <div className="relative z-10 flex flex-col h-full min-h-0">
-                                      {/* Top row: high scorer */}
-                                      <div className="flex items-start justify-between gap-1">
-                                        <div className="min-w-0 max-w-full">
-                                          {game.topScore ? (
-                                            <>
-                                              <div className="flex items-center gap-1">
-                                                <CrownIcon
-                                                  size={14}
-                                                  className="w-3.5 h-3.5 flex-shrink-0 text-amber-200"
-                                                />
-                                                <span className="truncate text-[11px] sm:text-xs font-semibold text-white/95 leading-tight">
-                                                  {game.topScore.username}
-                                                </span>
-                                              </div>
-                                              <p className="truncate text-[10px] sm:text-[11px] font-medium text-white/75 leading-tight mt-0.5 pl-[18px]">
-                                                {game.topScore.value}
-                                              </p>
-                                            </>
-                                          ) : (
-                                            <span className="truncate text-[11px] italic text-white/60 leading-tight">
-                                              —
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      {/* Center: game icon + name + play count */}
-                                      <div className="flex-1 flex flex-col items-center justify-center gap-1 min-h-0 py-1">
-                                        <div className="transform transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
-                                          <game.icon className="w-8 h-8 sm:w-9 sm:h-9 text-white drop-shadow-sm" />
-                                        </div>
-                                        <div className="flex items-center justify-center gap-1 flex-wrap px-0.5">
-                                          <h3 className="font-bold text-xs sm:text-sm text-center text-white leading-tight line-clamp-2">
-                                            {game.name}
-                                          </h3>
-                                          {statusBadge && (
-                                            <span
-                                              className={`text-[9px] font-bold uppercase tracking-wider ${statusBadge.className} text-white px-1 py-0.5 rounded shadow-sm`}
-                                            >
-                                              {statusBadge.label}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-0.5 text-white/80">
-                                          <PeopleIcon size={14} className="w-3.5 h-3.5" />
-                                          <span className="text-[11px] sm:text-xs font-medium tabular-nums leading-tight">
-                                            {game.totalGames.toLocaleString('en-US')} played
-                                          </span>
-                                        </div>
-                                      </div>
-
-                                      {/* Bottom: user stats */}
-                                      {username && (
-                                        <div className="mt-auto rounded border border-white/25 bg-black/20 px-1.5 py-1.5">
-                                          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-white/70 leading-none mb-0.5">
-                                            Your Best
-                                          </p>
-                                          {game.userBest ? (
-                                            <p className="font-bold text-xs sm:text-sm text-white leading-tight line-clamp-1">
-                                              {game.userBest.value}
-                                            </p>
-                                          ) : (
-                                            <p className="text-[11px] font-medium text-white/60 leading-tight">
-                                              Not yet
-                                            </p>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })()}
+              return (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 pt-2 items-stretch">
+                  {gamesByPopularity.map((game, index) => (
+                    <SelectableGameCard
+                      key={game.id}
+                      game={game}
+                      hasTopScore={Boolean(username && game.topScore?.username === username)}
+                      index={index}
+                      onSelect={() => handleGameClick(game.id, game.name)}
+                    />
+                  ))}
+                </div>
+              )
+            })()}
           </div>
         </>
       )}
