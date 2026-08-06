@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide game icon when the card is too small for text + icon */
+.game-card-badge {
+  container-type: size;
+}
+
+@container (max-width: 168px) {
+  .game-card-icon {
+    display: none;
+  }
+}
+
+@container (max-height: 168px) {
+  .game-card-icon {
+    display: none;
+  }
+}
