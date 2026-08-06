@@ -40,17 +40,6 @@ CREATE TABLE IF NOT EXISTS memory_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Pattern Recognition scores
-CREATE TABLE IF NOT EXISTS pattern_recognition_scores (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL,
-  patterns_solved INTEGER NOT NULL,
-  time_taken INTEGER NOT NULL, -- in seconds
-  difficulty_level INTEGER NOT NULL,
-  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Reaction Time scores
 CREATE TABLE IF NOT EXISTS reaction_time_scores (
   id SERIAL PRIMARY KEY,
@@ -89,16 +78,6 @@ CREATE TABLE IF NOT EXISTS stroop_test_scores (
   username VARCHAR(50) NOT NULL,
   correct_answers INTEGER NOT NULL,
   average_time INTEGER NOT NULL, -- in milliseconds
-  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Sequence Memory scores
-CREATE TABLE IF NOT EXISTS sequence_memory_scores (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL,
-  level_reached INTEGER NOT NULL,
-  longest_sequence INTEGER NOT NULL,
   date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -194,9 +173,6 @@ CREATE INDEX IF NOT EXISTS idx_typing_test_date ON typing_test_scores(date_submi
 CREATE INDEX IF NOT EXISTS idx_memory_username ON memory_scores(username);
 CREATE INDEX IF NOT EXISTS idx_memory_date ON memory_scores(date_submitted);
 
-CREATE INDEX IF NOT EXISTS idx_pattern_recognition_username ON pattern_recognition_scores(username);
-CREATE INDEX IF NOT EXISTS idx_pattern_recognition_date ON pattern_recognition_scores(date_submitted);
-
 CREATE INDEX IF NOT EXISTS idx_reaction_time_username ON reaction_time_scores(username);
 CREATE INDEX IF NOT EXISTS idx_reaction_time_date ON reaction_time_scores(date_submitted);
 
@@ -208,9 +184,6 @@ CREATE INDEX IF NOT EXISTS idx_visual_memory_date ON visual_memory_scores(date_s
 
 CREATE INDEX IF NOT EXISTS idx_stroop_test_username ON stroop_test_scores(username);
 CREATE INDEX IF NOT EXISTS idx_stroop_test_date ON stroop_test_scores(date_submitted);
-
-CREATE INDEX IF NOT EXISTS idx_sequence_memory_username ON sequence_memory_scores(username);
-CREATE INDEX IF NOT EXISTS idx_sequence_memory_date ON sequence_memory_scores(date_submitted);
 
 CREATE INDEX IF NOT EXISTS idx_chimp_test_username ON chimp_test_scores(username);
 CREATE INDEX IF NOT EXISTS idx_chimp_test_date ON chimp_test_scores(date_submitted);
@@ -296,24 +269,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to submit pattern recognition score
-CREATE OR REPLACE FUNCTION submit_pattern_recognition_score(
-  p_username VARCHAR(50),
-  p_patterns_solved INTEGER,
-  p_time_taken INTEGER,
-  p_difficulty_level INTEGER
-) RETURNS pattern_recognition_scores AS $$
-DECLARE
-  new_score pattern_recognition_scores;
-BEGIN
-  INSERT INTO pattern_recognition_scores (username, patterns_solved, time_taken, difficulty_level)
-  VALUES (p_username, p_patterns_solved, p_time_taken, p_difficulty_level)
-  RETURNING * INTO new_score;
-  
-  RETURN new_score;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
 -- Function to submit reaction time score
 CREATE OR REPLACE FUNCTION submit_reaction_time_score(
   p_username VARCHAR(50),
@@ -378,23 +333,6 @@ DECLARE
 BEGIN
   INSERT INTO stroop_test_scores (username, correct_answers, average_time)
   VALUES (p_username, p_correct_answers, p_average_time)
-  RETURNING * INTO new_score;
-  
-  RETURN new_score;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Function to submit sequence memory score
-CREATE OR REPLACE FUNCTION submit_sequence_memory_score(
-  p_username VARCHAR(50),
-  p_level_reached INTEGER,
-  p_longest_sequence INTEGER
-) RETURNS sequence_memory_scores AS $$
-DECLARE
-  new_score sequence_memory_scores;
-BEGIN
-  INSERT INTO sequence_memory_scores (username, level_reached, longest_sequence)
-  VALUES (p_username, p_level_reached, p_longest_sequence)
   RETURNING * INTO new_score;
   
   RETURN new_score;
@@ -677,35 +615,6 @@ BEGIN
     
     UNION ALL
     
-    -- Pattern Recognition
-    SELECT 
-      'pattern-recognition' as game_id,
-      (SELECT COUNT(*) FROM pattern_recognition_scores) as total_games,
-      (SELECT json_build_object(
-        'username', username,
-        'patterns_solved', patterns_solved,
-        'time_taken', time_taken,
-        'difficulty_level', difficulty_level,
-        'date_submitted', date_submitted
-      ) FROM pattern_recognition_scores 
-      ORDER BY patterns_solved DESC, time_taken ASC 
-      LIMIT 1) as top_score,
-      CASE 
-        WHEN p_username IS NOT NULL THEN
-          (SELECT json_build_object(
-            'patterns_solved', patterns_solved,
-            'time_taken', time_taken,
-            'difficulty_level', difficulty_level,
-            'date_submitted', date_submitted
-          ) FROM pattern_recognition_scores 
-          WHERE username = p_username
-          ORDER BY patterns_solved DESC, time_taken ASC 
-          LIMIT 1)
-        ELSE NULL
-      END as user_best
-    
-    UNION ALL
-    
     -- Reaction Time
     SELECT 
       'reaction-time' as game_id,
@@ -808,33 +717,6 @@ BEGIN
           ) FROM stroop_test_scores 
           WHERE username = p_username
           ORDER BY correct_answers DESC 
-          LIMIT 1)
-        ELSE NULL
-      END as user_best
-    
-    UNION ALL
-    
-    -- Sequence Memory
-    SELECT 
-      'sequence-memory' as game_id,
-      (SELECT COUNT(*) FROM sequence_memory_scores) as total_games,
-      (SELECT json_build_object(
-        'username', username,
-        'level_reached', level_reached,
-        'longest_sequence', longest_sequence,
-        'date_submitted', date_submitted
-      ) FROM sequence_memory_scores 
-      ORDER BY level_reached DESC 
-      LIMIT 1) as top_score,
-      CASE 
-        WHEN p_username IS NOT NULL THEN
-          (SELECT json_build_object(
-            'level_reached', level_reached,
-            'longest_sequence', longest_sequence,
-            'date_submitted', date_submitted
-          ) FROM sequence_memory_scores 
-          WHERE username = p_username
-          ORDER BY level_reached DESC 
           LIMIT 1)
         ELSE NULL
       END as user_best
@@ -1103,17 +985,6 @@ BEGIN
     
     UNION ALL
     
-    -- Pattern Recognition
-    SELECT 
-      'pattern-recognition' as game_id,
-      'Pattern Recognition' as game_name,
-      username,
-      json_build_object('patterns_solved', patterns_solved) as score_value,
-      date_submitted
-    FROM pattern_recognition_scores
-    
-    UNION ALL
-    
     -- Reaction Time
     SELECT 
       'reaction-time' as game_id,
@@ -1155,17 +1026,6 @@ BEGIN
       json_build_object('correct_answers', correct_answers) as score_value,
       date_submitted
     FROM stroop_test_scores
-    
-    UNION ALL
-    
-    -- Sequence Memory
-    SELECT 
-      'sequence-memory' as game_id,
-      'Sequence Memory' as game_name,
-      username,
-      json_build_object('level_reached', level_reached, 'longest_sequence', longest_sequence) as score_value,
-      date_submitted
-    FROM sequence_memory_scores
     
     UNION ALL
     
@@ -1271,12 +1131,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ALTER TABLE aim_trainer_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE typing_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memory_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pattern_recognition_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reaction_time_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE number_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visual_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stroop_test_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sequence_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chimp_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_estimation_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maze_scores ENABLE ROW LEVEL SECURITY;
@@ -1322,18 +1180,6 @@ CREATE POLICY "Allow public read access on memory_scores" ON memory_scores
 CREATE POLICY "Allow public insert access on memory_scores" ON memory_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on memory_scores" ON memory_scores
-    FOR UPDATE USING (true);
-
--- Policies for pattern_recognition_scores
-DROP POLICY IF EXISTS "Allow public read access on pattern_recognition_scores" ON pattern_recognition_scores;
-DROP POLICY IF EXISTS "Allow public insert access on pattern_recognition_scores" ON pattern_recognition_scores;
-DROP POLICY IF EXISTS "Allow public update access on pattern_recognition_scores" ON pattern_recognition_scores;
-
-CREATE POLICY "Allow public read access on pattern_recognition_scores" ON pattern_recognition_scores
-    FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on pattern_recognition_scores" ON pattern_recognition_scores
-    FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update access on pattern_recognition_scores" ON pattern_recognition_scores
     FOR UPDATE USING (true);
 
 -- Policies for reaction_time_scores
@@ -1382,18 +1228,6 @@ CREATE POLICY "Allow public read access on stroop_test_scores" ON stroop_test_sc
 CREATE POLICY "Allow public insert access on stroop_test_scores" ON stroop_test_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on stroop_test_scores" ON stroop_test_scores
-    FOR UPDATE USING (true);
-
--- Policies for sequence_memory_scores
-DROP POLICY IF EXISTS "Allow public read access on sequence_memory_scores" ON sequence_memory_scores;
-DROP POLICY IF EXISTS "Allow public insert access on sequence_memory_scores" ON sequence_memory_scores;
-DROP POLICY IF EXISTS "Allow public update access on sequence_memory_scores" ON sequence_memory_scores;
-
-CREATE POLICY "Allow public read access on sequence_memory_scores" ON sequence_memory_scores
-    FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on sequence_memory_scores" ON sequence_memory_scores
-    FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update access on sequence_memory_scores" ON sequence_memory_scores
     FOR UPDATE USING (true);
 
 -- Policies for chimp_test_scores

@@ -6,8 +6,6 @@ import type {
   TypingTestScoreInsert,
   MemoryScore,
   MemoryScoreInsert,
-  PatternRecognitionScore,
-  PatternRecognitionScoreInsert,
   ReactionTimeScore,
   ReactionTimeScoreInsert,
   NumberMemoryScore,
@@ -16,8 +14,6 @@ import type {
   VisualMemoryScoreInsert,
   StroopTestScore,
   StroopTestScoreInsert,
-  SequenceMemoryScore,
-  SequenceMemoryScoreInsert,
   ChimpTestScore,
   ChimpTestScoreInsert,
   TimeEstimationScore,
@@ -78,19 +74,6 @@ export async function submitMemoryScore(score: MemoryScoreInsert) {
   return data
 }
 
-export async function submitPatternRecognitionScore(score: PatternRecognitionScoreInsert) {
-  const { data, error } = await supabase
-    .rpc('submit_pattern_recognition_score', {
-      p_username: score.username,
-      p_patterns_solved: score.patterns_solved,
-      p_time_taken: score.time_taken,
-      p_difficulty_level: score.difficulty_level
-    })
-  
-  if (error) throw error
-  return data
-}
-
 export async function submitReactionTimeScore(score: ReactionTimeScoreInsert) {
   const { data, error } = await supabase
     .rpc('submit_reaction_time_score', {
@@ -133,18 +116,6 @@ export async function submitStroopTestScore(score: StroopTestScoreInsert) {
       p_username: score.username,
       p_correct_answers: score.correct_answers,
       p_average_time: score.average_time
-    })
-  
-  if (error) throw error
-  return data
-}
-
-export async function submitSequenceMemoryScore(score: SequenceMemoryScoreInsert) {
-  const { data, error } = await supabase
-    .rpc('submit_sequence_memory_score', {
-      p_username: score.username,
-      p_level_reached: score.level_reached,
-      p_longest_sequence: score.longest_sequence
     })
   
   if (error) throw error
@@ -243,27 +214,6 @@ export async function getMemoryScores(filters?: { username?: string; limit?: num
   return data
 }
 
-export async function getPatternRecognitionScores(filters?: { username?: string; limit?: number }) {
-  let query = supabase
-    .from('pattern_recognition_scores')
-    .select('*')
-    // Sort by patterns_solved DESC, then time_taken ASC (best score = high patterns, low time)
-    .order('patterns_solved', { ascending: false })
-    .order('time_taken', { ascending: true })
-
-  if (filters?.username) {
-    query = query.eq('username', filters.username)
-  }
-
-  if (filters?.limit) {
-    query = query.limit(filters.limit)
-  }
-
-  const { data, error } = await query
-  if (error) throw error
-  return data
-}
-
 export async function getReactionTimeScores(filters?: { username?: string; limit?: number }) {
   let query = supabase
     .from('reaction_time_scores')
@@ -324,25 +274,6 @@ export async function getVisualMemoryScores(filters?: { username?: string; limit
 export async function getStroopTestScores(filters?: { username?: string; limit?: number }) {
   let query = supabase
     .from('stroop_test_scores')
-    .select('*')
-    .order('date_submitted', { ascending: false })
-
-  if (filters?.username) {
-    query = query.eq('username', filters.username)
-  }
-
-  if (filters?.limit) {
-    query = query.limit(filters.limit)
-  }
-
-  const { data, error } = await query
-  if (error) throw error
-  return data
-}
-
-export async function getSequenceMemoryScores(filters?: { username?: string; limit?: number }) {
-  let query = supabase
-    .from('sequence_memory_scores')
     .select('*')
     .order('date_submitted', { ascending: false })
 
@@ -591,12 +522,10 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     aimTrainerScores,
     typingTestScores,
     memoryScores,
-    patternRecognitionScores,
     reactionTimeScores,
     numberMemoryScores,
     visualMemoryScores,
     stroopTestScores,
-    sequenceMemoryScores,
     chimpTestScores,
     timeEstimationScores,
     mazeScores,
@@ -609,12 +538,10 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     getAimTrainerScores(),
     getTypingTestScores(),
     getMemoryScores(),
-    getPatternRecognitionScores(),
     getReactionTimeScores(),
     getNumberMemoryScores(),
     getVisualMemoryScores(),
     getStroopTestScores(),
-    getSequenceMemoryScores(),
     getChimpTestScores(),
     getTimeEstimationScores(),
     getMazeScores(),
@@ -656,16 +583,6 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     })
   })
 
-  patternRecognitionScores?.forEach(score => {
-    allScores.push({
-      gameId: 'pattern-recognition',
-      gameName: 'Pattern Recognition',
-      username: score.username,
-      score: score,
-      dateSubmitted: score.date_submitted
-    })
-  })
-
   reactionTimeScores?.forEach(score => {
     allScores.push({
       gameId: 'reaction-time',
@@ -700,16 +617,6 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     allScores.push({
       gameId: 'stroop-test',
       gameName: 'Stroop Test',
-      username: score.username,
-      score: score,
-      dateSubmitted: score.date_submitted
-    })
-  })
-
-  sequenceMemoryScores?.forEach(score => {
-    allScores.push({
-      gameId: 'sequence-memory',
-      gameName: 'Sequence Memory',
       username: score.username,
       score: score,
       dateSubmitted: score.date_submitted

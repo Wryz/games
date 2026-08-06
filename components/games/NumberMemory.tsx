@@ -92,11 +92,19 @@ export default function NumberMemory() {
     
     setCurrentNumber('')
     setGameState('input')
-    // Focus input after a short delay
-    setTimeout(() => inputRef.current?.focus(), 100)
+    setUserInput('')
+    // Focus immediately when input phase starts
+    inputRef.current?.focus()
     
     return number
   }, [generateNumber])
+
+  // Keep the input focused whenever the input phase is active (esp. on mobile)
+  useEffect(() => {
+    if (gameState === 'input') {
+      inputRef.current?.focus()
+    }
+  }, [gameState])
 
   // Start new game
   const startGame = useCallback(async () => {
@@ -238,6 +246,8 @@ export default function NumberMemory() {
                   className="w-full text-4xl text-center rounded-lg border-4 border-blue-500 dark:border-blue-400 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-600 disabled:opacity-50"
                 />
                 <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSubmit}
                   disabled={gameState !== 'input' || !userInput.trim()}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"

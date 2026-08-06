@@ -3,12 +3,10 @@ import {
   AimTrainerIcon,
   TypingTestIcon,
   MemoryIcon,
-  PatternRecognitionIcon,
   ReactionTimeIcon,
   NumberMemoryIcon,
   VisualMemoryIcon,
   StroopTestIcon,
-  SequenceMemoryIcon,
   ChimpTestIcon,
   AlgebraIcon,
   LinearAlgebraIcon,
@@ -52,13 +50,6 @@ export const GAMES: Game[] = [
     category: 'memory'
   },
   {
-    id: 'pattern-recognition',
-    name: 'Pattern Recognition',
-    description: 'Identify and complete visual patterns',
-    icon: PatternRecognitionIcon,
-    category: 'perception'
-  },
-  {
     id: 'reaction-time',
     name: 'Reaction Time',
     description: 'Test how fast you can respond to stimuli',
@@ -85,13 +76,6 @@ export const GAMES: Game[] = [
     description: 'Test your cognitive flexibility and attention',
     icon: StroopTestIcon,
     category: 'cognitive'
-  },
-  {
-    id: 'sequence-memory',
-    name: 'Sequence Memory',
-    description: 'Remember the order of highlighted squares',
-    icon: SequenceMemoryIcon,
-    category: 'memory'
   },
   {
     id: 'chimp-test',

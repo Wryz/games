@@ -99,10 +99,6 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
               return `${formatNumber(score.fastest_time)}ms (${formatNumber(score.average_time)}ms avg)`
             case 'visual-memory':
               return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.total_patterns)} patterns)`
-            case 'sequence-memory':
-              return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.longest_sequence)} shapes)`
-            case 'pattern-recognition':
-              return `${formatNumber(score.patterns_solved)} patterns (${formatNumber(score.time_taken)}s)`
             case 'stroop-test':
               return `${formatNumber(score.correct_answers || 0)} correct (${formatNumber(score.average_time || 0)}ms)`
             case 'number-memory':

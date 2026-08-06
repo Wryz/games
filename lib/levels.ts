@@ -167,28 +167,6 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 19, threshold: [25] }, // Master's - level 25
     { level: 20, threshold: [30] } // Doctorate - level 30+
   ],
-  'sequence-memory': [
-    { level: 1, threshold: [1] }, // Pre-School - level 1
-    { level: 2, threshold: [2] }, // Kindergarten - level 2
-    { level: 3, threshold: [3] }, // 1st Grade - level 3
-    { level: 4, threshold: [4] }, // 2nd Grade - level 4
-    { level: 5, threshold: [5] }, // 3rd Grade - level 5
-    { level: 6, threshold: [6] }, // 4th Grade - level 6
-    { level: 7, threshold: [7] }, // 5th Grade - level 7
-    { level: 8, threshold: [8] }, // 6th Grade - level 8
-    { level: 9, threshold: [9] }, // 7th Grade - level 9
-    { level: 10, threshold: [10] }, // 8th Grade - level 10
-    { level: 11, threshold: [11] }, // 9th Grade - level 11
-    { level: 12, threshold: [12] }, // 10th Grade - level 12
-    { level: 13, threshold: [13] }, // 11th Grade - level 13
-    { level: 14, threshold: [14] }, // 12th Grade - level 14
-    { level: 15, threshold: [16] }, // College Freshman - level 16
-    { level: 16, threshold: [18] }, // College Sophomore - level 18
-    { level: 17, threshold: [20] }, // College Junior - level 20
-    { level: 18, threshold: [22] }, // College Senior - level 22
-    { level: 19, threshold: [25] }, // Master's - level 25
-    { level: 20, threshold: [30] } // Doctorate - level 30+
-  ],
   'number-memory': [
     { level: 1, threshold: [2] }, // Pre-School - 2 digits
     { level: 2, threshold: [3] }, // Kindergarten - 3 digits
@@ -210,28 +188,6 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 18, threshold: [22] }, // College Senior - 22 digits
     { level: 19, threshold: [25] }, // Master's - 25 digits
     { level: 20, threshold: [30] } // Doctorate - 30+ digits
-  ],
-  'pattern-recognition': [
-    { level: 1, threshold: [1] }, // Pre-School - 1 pattern
-    { level: 2, threshold: [3] }, // Kindergarten - 2 patterns
-    { level: 3, threshold: [5] }, // 1st Grade - 3 patterns
-    { level: 4, threshold: [7] }, // 2nd Grade - 5 patterns
-    { level: 5, threshold: [9] }, // 3rd Grade - 8 patterns
-    { level: 6, threshold: [11] }, // 4th Grade - 12 patterns
-    { level: 7, threshold: [13] }, // 5th Grade - 15 patterns
-    { level: 8, threshold: [15] }, // 6th Grade - 20 patterns
-    { level: 9, threshold: [17] }, // 7th Grade - 25 patterns
-    { level: 10, threshold: [19] }, // 8th Grade - 30 patterns
-    { level: 11, threshold: [20] }, // 9th Grade - 35 patterns
-    { level: 12, threshold: [22] }, // 10th Grade - 40 patterns
-    { level: 13, threshold: [24] }, // 11th Grade - 50 patterns
-    { level: 14, threshold: [26] }, // 12th Grade - 60 patterns
-    { level: 15, threshold: [28] }, // College Freshman - 75 patterns
-    { level: 16, threshold: [31] }, // College Sophomore - 90 patterns
-    { level: 17, threshold: [34] }, // College Junior - 110 patterns
-    { level: 18, threshold: [37] }, // College Senior - 130 patterns
-    { level: 19, threshold: [40] }, // Master's - 150 patterns
-    { level: 20, threshold: [45] } // Doctorate - 200+ patterns
   ],
   'stroop-test': [
     { level: 1, threshold: [0] }, // Pre-School - any score
@@ -449,14 +405,11 @@ function extractScoreValue(gameId: string, score: any): number {
       return score.fastest_time || 1000
     case 'memory':
     case 'visual-memory':
-    case 'sequence-memory':
       return score.level_reached || 0
     case 'chimp-test':
       return score.patterns_remembered || 0
     case 'number-memory':
       return score.longest_sequence || 0
-    case 'pattern-recognition':
-      return score.patterns_solved || 0
     case 'stroop-test':
       // Return correct answers count
       return score.correct_answers || 0
@@ -728,19 +681,12 @@ export function formatThreshold(gameId: string, threshold: number | number[]): s
     case 'visual-memory':
       const visualThreshold = Array.isArray(threshold) ? threshold[0] : threshold
       return `Level ${formatNumber(visualThreshold)}`
-    case 'sequence-memory':
-      // For sequence-memory, threshold represents longest sequence needed
-      const seqThreshold = Array.isArray(threshold) ? threshold[0] : threshold
-      return `${formatNumber(seqThreshold)} sequence length`
     case 'chimp-test':
       const chimpThreshold = Array.isArray(threshold) ? threshold[0] : threshold
       return `${formatNumber(chimpThreshold)} correct`
     case 'number-memory':
       const numThreshold = Array.isArray(threshold) ? threshold[0] : threshold
       return `${formatNumber(numThreshold)} digits`
-    case 'pattern-recognition':
-      const patternThreshold = Array.isArray(threshold) ? threshold[0] : threshold
-      return `${formatNumber(patternThreshold)} patterns`
     case 'maze':
       const mazeThreshold = Array.isArray(threshold) ? threshold[0] : threshold
       const seconds = Math.floor(mazeThreshold / 1000)
@@ -783,14 +729,11 @@ export function formatUserScore(gameId: string, score: any): string {
     case 'memory':
       return `${formatNumber(score.total_sequences || 0)} sequences (${formatNumber(score.correct_sequences || 0)} correct)`
     case 'visual-memory':
-    case 'sequence-memory':
       return `Level ${formatNumber(score.level_reached || 0)}`
     case 'chimp-test':
       return `${formatNumber(score.patterns_remembered || 0)} correct`
     case 'number-memory':
       return `${formatNumber(score.longest_sequence || 0)} digits`
-    case 'pattern-recognition':
-      return `${formatNumber(score.patterns_solved || 0)} patterns`
     case 'stroop-test':
       return `${formatNumber(score.correct_answers || 0)} correct (${formatNumber(score.average_time || 0)}ms)`
     case 'time-estimation':

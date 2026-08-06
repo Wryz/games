@@ -5,12 +5,10 @@ import Home from './Home'
 import AimTrainer from './games/AimTrainer'
 import TypingTest from './games/TypingTest'
 import MemoryGame from './games/MemoryGame'
-import PatternRecognition from './games/PatternRecognition'
 import ReactionTime from './games/ReactionTime'
 import NumberMemory from './games/NumberMemory'
 import VisualMemory from './games/VisualMemory'
 import StroopTest from './games/StroopTest'
-import SequenceMemory from './games/SequenceMemory'
 import ChimpTest from './games/ChimpTest'
 import Algebra from './games/Algebra'
 import LinearAlgebra from './games/LinearAlgebra'
@@ -38,12 +36,10 @@ export default function GameRenderer({ selectedGame, onGameSelect }: GameRendere
     'aim-trainer': AimTrainer,
     'typing-test': TypingTest,
     'memory': MemoryGame,
-    'pattern-recognition': PatternRecognition,
     'reaction-time': ReactionTime,
     'number-memory': NumberMemory,
     'visual-memory': VisualMemory,
     'stroop-test': StroopTest,
-    'sequence-memory': SequenceMemory,
     'chimp-test': ChimpTest,
     'algebra': Algebra,
     'linear-algebra': LinearAlgebra,
