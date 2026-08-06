@@ -245,33 +245,6 @@ export type Database = {
         }
         Relationships: []
       }
-      pattern_recognition_scores: {
-        Row: {
-          date_submitted: string | null
-          difficulty_level: number
-          id: number
-          patterns_solved: number
-          time_taken: number
-          username: string
-        }
-        Insert: {
-          date_submitted?: string | null
-          difficulty_level: number
-          id?: number
-          patterns_solved: number
-          time_taken: number
-          username: string
-        }
-        Update: {
-          date_submitted?: string | null
-          difficulty_level?: number
-          id?: number
-          patterns_solved?: number
-          time_taken?: number
-          username?: string
-        }
-        Relationships: []
-      }
       reaction_time_scores: {
         Row: {
           attempts: number
@@ -295,30 +268,6 @@ export type Database = {
           date_submitted?: string | null
           fastest_time?: number
           id?: number
-          username?: string
-        }
-        Relationships: []
-      }
-      sequence_memory_scores: {
-        Row: {
-          date_submitted: string | null
-          id: number
-          level_reached: number
-          longest_sequence: number
-          username: string
-        }
-        Insert: {
-          date_submitted?: string | null
-          id?: number
-          level_reached: number
-          longest_sequence: number
-          username: string
-        }
-        Update: {
-          date_submitted?: string | null
-          id?: number
-          level_reached?: number
-          longest_sequence?: number
           username?: string
         }
         Relationships: []
@@ -699,28 +648,6 @@ export type Database = {
               isSetofReturn: false
             }
           }
-      submit_pattern_recognition_score: {
-        Args: {
-          p_difficulty_level: number
-          p_patterns_solved: number
-          p_time_taken: number
-          p_username: string
-        }
-        Returns: {
-          date_submitted: string | null
-          difficulty_level: number
-          id: number
-          patterns_solved: number
-          time_taken: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "pattern_recognition_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       submit_reaction_time_score: {
         Args: {
           p_attempts: number
@@ -739,26 +666,6 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "reaction_time_scores"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      submit_sequence_memory_score: {
-        Args: {
-          p_level_reached: number
-          p_longest_sequence: number
-          p_username: string
-        }
-        Returns: {
-          date_submitted: string | null
-          id: number
-          level_reached: number
-          longest_sequence: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "sequence_memory_scores"
           isOneToOne: true
           isSetofReturn: false
         }

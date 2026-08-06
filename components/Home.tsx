@@ -170,10 +170,10 @@ const SelectableGameCard = ({ game, hasTopScore, index, onSelect }: SelectableGa
       }}
     >
       {hasTopScore && (
-        <div className="pointer-events-none absolute -left-2 -top-2.5 z-20 -rotate-[28deg] transition-transform duration-300 group-hover:-rotate-[16deg] group-hover:scale-110">
+        <div className="pointer-events-none absolute -left-3 -top-3.5 z-20 -rotate-[28deg] transition-transform duration-300 group-hover:-rotate-[16deg] group-hover:scale-110">
           <CrownIcon
-            size={32}
-            className="w-7 h-7 sm:w-8 sm:h-8 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
+            size={56}
+            className="w-11 h-11 sm:w-14 sm:h-14 text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]"
           />
         </div>
       )}
@@ -353,12 +353,6 @@ export default function Home({ onGameSelect }: HomeProps) {
             case 'visual-memory':
               formattedValue = `Level ${formatNum(scoreValue.level_reached)} (${formatNum(scoreValue.total_patterns)} patterns)`
               break
-            case 'sequence-memory':
-              formattedValue = `Level ${formatNum(scoreValue.level_reached)} (${formatNum(scoreValue.longest_sequence)} shapes)`
-              break
-            case 'pattern-recognition':
-              formattedValue = `${formatNum(scoreValue.patterns_solved)} patterns`
-              break
             case 'stroop-test':
               formattedValue = `${formatNum(scoreValue.correct_answers || 0)} correct (${formatNum(scoreValue.average_time || 0)}ms)`
               break
@@ -418,12 +412,10 @@ export default function Home({ onGameSelect }: HomeProps) {
       'aim_trainer_scores',
       'typing_test_scores', 
       'memory_scores',
-      'pattern_recognition_scores',
       'reaction_time_scores',
       'number_memory_scores',
       'visual_memory_scores',
       'stroop_test_scores',
-      'sequence_memory_scores',
       'chimp_test_scores',
       'time_estimation_scores',
       'maze_scores',

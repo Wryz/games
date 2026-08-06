@@ -86,21 +86,6 @@ export default function AboutPage() {
                     </p>
                   </div>
 
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border-l-4 border-green-500">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                      Pattern Recognition and Visual Processing
-                    </h3>
-                    <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
-                      Pattern recognition tasks measure visual-spatial processing and have been linked to mathematical ability 
-                      and general intelligence. Research suggests that pattern recognition training can improve visual processing 
-                      skills and may transfer to other cognitive domains (Halpern et al., 2013).
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                      Reference: Halpern, D. F., et al. (2013). Enhancing and assessing critical thinking skills in the 
-                      classroom. In Critical thinking: A model of intelligence for solving real-world problems (pp. 1-24).
-                    </p>
-                  </div>
-
                   <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-6 border-l-4 border-orange-500">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                       Spatial Navigation and Maze Tasks

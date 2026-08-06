@@ -101,27 +101,6 @@ l-81 -67 -80 5 c-103 7 -196 -9 -300 -52 -243 -101 -521 -321 -834 -660 -164
   </svg>
 )
 
-export const PatternRecognitionIcon = ({ className = "", size = 24 }: IconProps) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <circle cx="6" cy="6" r="2" fill="currentColor"/>
-    <circle cx="12" cy="6" r="2" fill="currentColor"/>
-    <circle cx="18" cy="6" r="2" fill="currentColor"/>
-    <circle cx="6" cy="12" r="2" fill="currentColor"/>
-    <rect x="10" y="10" width="4" height="4" fill="currentColor"/>
-    <circle cx="18" cy="12" r="2" fill="currentColor"/>
-    <circle cx="6" cy="18" r="2" fill="currentColor"/>
-    <circle cx="12" cy="18" r="2" fill="currentColor"/>
-    <rect x="16" y="16" width="4" height="4" stroke="currentColor" strokeWidth="2" fill="none"/>
-  </svg>
-)
-
 export const ReactionTimeIcon = ({ className = "", size = 24 }: IconProps) => (
   <svg
     width={size}
@@ -182,22 +161,6 @@ export const StroopTestIcon = ({ className = "", size = 24 }: IconProps) => (
     <circle cx="16" cy="8" r="4" fill="#22c55e"/>
     <circle cx="8" cy="16" r="4" fill="#3b82f6"/>
     <circle cx="16" cy="16" r="4" fill="#f59e0b"/>
-  </svg>
-)
-
-export const SequenceMemoryIcon = ({ className = "", size = 24 }: IconProps) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <path
-      d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z"
-      fill="currentColor"
-    />
   </svg>
 )
 

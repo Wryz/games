@@ -2,12 +2,10 @@
 ALTER TABLE aim_trainer_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE typing_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memory_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pattern_recognition_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reaction_time_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE number_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visual_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stroop_test_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sequence_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chimp_test_scores ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for aim_trainer_scores
@@ -38,16 +36,6 @@ CREATE POLICY "Allow public insert access on memory_scores" ON memory_scores
     FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public update access on memory_scores" ON memory_scores
-    FOR UPDATE USING (true);
-
--- Create policies for pattern_recognition_scores
-CREATE POLICY "Allow public read access on pattern_recognition_scores" ON pattern_recognition_scores
-    FOR SELECT USING (true);
-
-CREATE POLICY "Allow public insert access on pattern_recognition_scores" ON pattern_recognition_scores
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow public update access on pattern_recognition_scores" ON pattern_recognition_scores
     FOR UPDATE USING (true);
 
 -- Create policies for reaction_time_scores
@@ -88,16 +76,6 @@ CREATE POLICY "Allow public insert access on stroop_test_scores" ON stroop_test_
     FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public update access on stroop_test_scores" ON stroop_test_scores
-    FOR UPDATE USING (true);
-
--- Create policies for sequence_memory_scores
-CREATE POLICY "Allow public read access on sequence_memory_scores" ON sequence_memory_scores
-    FOR SELECT USING (true);
-
-CREATE POLICY "Allow public insert access on sequence_memory_scores" ON sequence_memory_scores
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow public update access on sequence_memory_scores" ON sequence_memory_scores
     FOR UPDATE USING (true);
 
 -- Create policies for chimp_test_scores

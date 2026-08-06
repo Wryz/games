@@ -175,36 +175,6 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       threshold: [15]
     }
   ],
-  'sequence-memory': [
-    {
-      id: 'sequence-memory-novice',
-      name: 'Novice',
-      tier: 'novice',
-      description: 'Completed Sequence Memory',
-      threshold: [1] // Level 1
-    },
-    {
-      id: 'sequence-memory-adept',
-      name: 'Adept',
-      tier: 'adept',
-      description: 'Reached Level 5',
-      threshold: [5]
-    },
-    {
-      id: 'sequence-memory-expert',
-      name: 'Expert',
-      tier: 'expert',
-      description: 'Reached Level 10',
-      threshold: [10]
-    },
-    {
-      id: 'sequence-memory-master',
-      name: 'Master',
-      tier: 'master',
-      description: 'Reached Level 15',
-      threshold: [15]
-    }
-  ],
   'number-memory': [
     {
       id: 'number-memory-novice',
@@ -233,36 +203,6 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       tier: 'master',
       description: 'Remembered 25 digits',
       threshold: [25]
-    }
-  ],
-  'pattern-recognition': [
-    {
-      id: 'pattern-recognition-novice',
-      name: 'Novice',
-      tier: 'novice',
-      description: 'Completed Pattern Recognition',
-      threshold: [1] // 1 pattern
-    },
-    {
-      id: 'pattern-recognition-adept',
-      name: 'Adept',
-      tier: 'adept',
-      description: 'Solved 9 patterns',
-      threshold: [9]
-    },
-    {
-      id: 'pattern-recognition-expert',
-      name: 'Expert',
-      tier: 'expert',
-      description: 'Solved 19 patterns',
-      threshold: [19]
-    },
-    {
-      id: 'pattern-recognition-master',
-      name: 'Master',
-      tier: 'master',
-      description: 'Solved 28 patterns',
-      threshold: [28]
     }
   ],
   'stroop-test': [
@@ -550,12 +490,10 @@ export const BUILT_GAMES = [
   'aim-trainer',
   'typing-test',
   'memory',
-  'pattern-recognition',
   'reaction-time',
   'number-memory',
   'visual-memory',
   'stroop-test',
-  'sequence-memory',
   'chimp-test',
   'maze',
   'algebra',
@@ -588,17 +526,12 @@ export function hasEarnedBadge(gameId: string, badge: BadgeDefinition, score: an
 
     case 'memory':
     case 'visual-memory':
-    case 'sequence-memory':
       const level = score.level_reached || 0
       return level >= badge.threshold[0]
 
     case 'number-memory':
       const digits = score.longest_sequence || 0
       return digits >= badge.threshold[0]
-
-    case 'pattern-recognition':
-      const patterns = score.patterns_solved || 0
-      return patterns >= badge.threshold[0]
 
     case 'stroop-test':
       // Stroop test uses correct_answers count directly

@@ -53,17 +53,6 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       if (score.total_patterns !== undefined) details.push({ label: 'Total Patterns', value: formatNumber(score.total_patterns) })
       break
 
-    case 'sequence-memory':
-      if (score.level_reached !== undefined) details.push({ label: 'Level Reached', value: formatNumber(score.level_reached) })
-      if (score.longest_sequence !== undefined) details.push({ label: 'Longest Sequence', value: formatNumber(score.longest_sequence) })
-      break
-
-    case 'pattern-recognition':
-      if (score.patterns_solved !== undefined) details.push({ label: 'Patterns Solved', value: formatNumber(score.patterns_solved) })
-      if (score.time_taken !== undefined) details.push({ label: 'Time Taken', value: `${formatNumber(score.time_taken)}s` })
-      if (score.difficulty_level !== undefined) details.push({ label: 'Difficulty Level', value: formatNumber(score.difficulty_level) })
-      break
-
     case 'stroop-test':
       if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
       if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })

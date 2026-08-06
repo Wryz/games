@@ -95,6 +95,13 @@ export default function TypingTest() {
     setTimeout(() => inputRef.current?.focus(), 100)
   }, [generateWords])
 
+  // Keep typing input focused while the test is ready or in progress
+  useEffect(() => {
+    if (gameState === 'idle' || gameState === 'playing') {
+      inputRef.current?.focus()
+    }
+  }, [gameState])
+
   // Timer effect
   useEffect(() => {
     if (gameState !== 'playing') return
@@ -299,7 +306,11 @@ export default function TypingTest() {
             </div>
 
             {/* Words Display - Fixed Layout */}
-            <div ref={wordsContainerRef} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-4 h-48 overflow-y-auto">
+            <div
+              ref={wordsContainerRef}
+              onClick={() => inputRef.current?.focus()}
+              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-4 h-48 overflow-y-auto cursor-text"
+            >
               <div className="text-xl font-mono leading-relaxed flex flex-wrap gap-2">
                 {words.slice(0, currentWordIndex + 6).map((word, idx) => (
                   <span key={idx}>

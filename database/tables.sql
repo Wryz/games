@@ -35,17 +35,6 @@ CREATE TABLE IF NOT EXISTS memory_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Pattern Recognition scores
-CREATE TABLE IF NOT EXISTS pattern_recognition_scores (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL,
-  patterns_solved INTEGER NOT NULL,
-  time_taken INTEGER NOT NULL, -- in seconds
-  difficulty_level INTEGER NOT NULL,
-  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Reaction Time scores
 CREATE TABLE IF NOT EXISTS reaction_time_scores (
   id SERIAL PRIMARY KEY,
@@ -89,16 +78,6 @@ CREATE TABLE IF NOT EXISTS stroop_test_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Sequence Memory scores
-CREATE TABLE IF NOT EXISTS sequence_memory_scores (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL,
-  level_reached INTEGER NOT NULL,
-  longest_sequence INTEGER NOT NULL,
-  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Chimp Test scores
 CREATE TABLE IF NOT EXISTS chimp_test_scores (
   id SERIAL PRIMARY KEY,
@@ -120,9 +99,6 @@ CREATE INDEX IF NOT EXISTS idx_typing_test_date ON typing_test_scores(date_submi
 CREATE INDEX IF NOT EXISTS idx_memory_username ON memory_scores(username);
 CREATE INDEX IF NOT EXISTS idx_memory_date ON memory_scores(date_submitted);
 
-CREATE INDEX IF NOT EXISTS idx_pattern_recognition_username ON pattern_recognition_scores(username);
-CREATE INDEX IF NOT EXISTS idx_pattern_recognition_date ON pattern_recognition_scores(date_submitted);
-
 CREATE INDEX IF NOT EXISTS idx_reaction_time_username ON reaction_time_scores(username);
 CREATE INDEX IF NOT EXISTS idx_reaction_time_date ON reaction_time_scores(date_submitted);
 
@@ -134,9 +110,6 @@ CREATE INDEX IF NOT EXISTS idx_visual_memory_date ON visual_memory_scores(date_s
 
 CREATE INDEX IF NOT EXISTS idx_stroop_test_username ON stroop_test_scores(username);
 CREATE INDEX IF NOT EXISTS idx_stroop_test_date ON stroop_test_scores(date_submitted);
-
-CREATE INDEX IF NOT EXISTS idx_sequence_memory_username ON sequence_memory_scores(username);
-CREATE INDEX IF NOT EXISTS idx_sequence_memory_date ON sequence_memory_scores(date_submitted);
 
 CREATE INDEX IF NOT EXISTS idx_chimp_test_username ON chimp_test_scores(username);
 CREATE INDEX IF NOT EXISTS idx_chimp_test_date ON chimp_test_scores(date_submitted);

@@ -156,6 +156,13 @@ export default function LinearAlgebra() {
     }
   }, [generateProblem])
 
+  // Keep the answer input focused while playing (esp. after submit on mobile)
+  useEffect(() => {
+    if (gameState === 'playing' && currentProblem) {
+      inputRef.current?.focus()
+    }
+  }, [gameState, currentProblem])
+
   // Start new game
   const startGame = useCallback(() => {
     setGameState('playing')
@@ -257,7 +264,8 @@ export default function LinearAlgebra() {
         setCurrentProblemType(problem.type)
         setUserInput('')
         setQuestionStartTime(Date.now())
-        setTimeout(() => inputRef.current?.focus(), 100)
+        // Focus immediately within the same user gesture so mobile keyboards stay open
+        inputRef.current?.focus()
       }
     } else {
       // Wrong! Show the correct answer and wait for user to click "Play Again"
@@ -370,17 +378,21 @@ export default function LinearAlgebra() {
                 <input
                   ref={inputRef}
                   type="text"
+                  inputMode={currentProblem.answerType === 'vector' ? 'text' : 'numeric'}
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={currentProblem.answerType === 'vector' ? 'Enter as (x, y)' : 'Enter number'}
                   className="w-full px-4 py-3 text-2xl text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
                   autoFocus
+                  autoComplete="off"
                 />
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                   {currentProblem.answerType === 'vector' ? 'Format: (x, y) or x, y' : 'Enter a number'}
                 </div>
                 <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSubmit}
                   className="w-full mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
                 >
