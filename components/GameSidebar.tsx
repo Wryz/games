@@ -16,7 +16,7 @@ interface GameSidebarProps {
 
 export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarProps) {
   const { username, setUsername, clearUsername } = useUser()
-  const { toggleCategory, isCategoryCollapsed } = useSidebar()
+  const { toggleCategory, isCategoryCollapsed, isSidebarOpen, toggleSidebar } = useSidebar()
   const posthog = usePostHog()
   const router = useRouter()
   
@@ -70,169 +70,194 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
   }, {} as Record<string, Game[]>)
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-80 bg-transparent overflow-y-auto z-10 hidden lg:block">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/images/brain.png" 
-              alt="Brain" 
-              className="w-8 h-8"
-            />
-            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100">
-            Brain Benchmark
-          </h2>
+    <div
+      className={`fixed left-0 top-0 z-20 hidden h-screen lg:flex transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-80'
+      }`}
+    >
+      <div className="h-full w-80 overflow-y-auto bg-transparent">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <img 
+                src="/images/brain.png" 
+                alt="Brain" 
+                className="w-8 h-8"
+              />
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100">
+              Brain Benchmark
+            </h2>
+            </div>
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
-        </div>
-        
-        {/* Username Input */}
-        <div className="mb-6">
-          <UsernameInput 
-            username={username}
-            onUsernameSubmit={handleUsernameSubmit}
-            onUsernameChange={handleUsernameChange}
-          />
-        </div>
+          
+          {/* Username Input */}
+          <div className="mb-6">
+            <UsernameInput 
+              username={username}
+              onUsernameSubmit={handleUsernameSubmit}
+              onUsernameChange={handleUsernameChange}
+            />
+          </div>
 
-        {/* Home and Brain Levels */}
-        <div className="mb-6 space-y-1">
-          {/* Home Button */}
-          <button
-            onClick={() => handleGameClick('home', 'Home')}
-            className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
-              selectedGame === 'home' || selectedGame === null
-                ? 'bg-blue-100 dark:bg-blue-900/30'
-                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <HomeIcon 
-                size={24} 
-                className={selectedGame === 'home' || selectedGame === null
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-gray-600 dark:text-gray-400'
-                } 
-              />
-              <div className={`font-medium text-sm ${
+          {/* Home and Brain Levels */}
+          <div className="mb-6 space-y-1">
+            {/* Home Button */}
+            <button
+              onClick={() => handleGameClick('home', 'Home')}
+              className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
                 selectedGame === 'home' || selectedGame === null
-                  ? 'text-blue-700 dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-100'
-              }`}>
-                Home
+                  ? 'bg-blue-100 dark:bg-blue-900/30'
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <HomeIcon 
+                  size={24} 
+                  className={selectedGame === 'home' || selectedGame === null
+                    ? 'text-blue-600 dark:text-blue-400' 
+                    : 'text-gray-600 dark:text-gray-400'
+                  } 
+                />
+                <div className={`font-medium text-sm ${
+                  selectedGame === 'home' || selectedGame === null
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : 'text-gray-700 dark:text-gray-100'
+                }`}>
+                  Home
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
 
-          {/* Your Progress Button */}
-          <button
-            onClick={() => handleGameClick('brain-levels', 'Your Progress')}
-            className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
-              selectedGame === 'brain-levels'
-                ? 'bg-blue-100 dark:bg-blue-900/30'
-                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <MemoryIcon 
-                size={24} 
-                className={selectedGame === 'brain-levels'
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-gray-600 dark:text-gray-400'
-                } 
-              />
-              <div className={`font-medium text-sm ${
+            {/* Your Progress Button */}
+            <button
+              onClick={() => handleGameClick('brain-levels', 'Your Progress')}
+              className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
                 selectedGame === 'brain-levels'
-                  ? 'text-blue-700 dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-100'
-              }`}>
-                Your Progress
+                  ? 'bg-blue-100 dark:bg-blue-900/30'
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <MemoryIcon 
+                  size={24} 
+                  className={selectedGame === 'brain-levels'
+                    ? 'text-blue-600 dark:text-blue-400' 
+                    : 'text-gray-600 dark:text-gray-400'
+                  } 
+                />
+                <div className={`font-medium text-sm ${
+                  selectedGame === 'brain-levels'
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : 'text-gray-700 dark:text-gray-100'
+                }`}>
+                  Your Progress
+                </div>
               </div>
-            </div>
-          </button>
-        </div>
-        
-        <div className="space-y-6">
-          {Object.entries(gamesByCategory).map(([category, games]) => {
-            const isCollapsed = isCategoryCollapsed(category)
-            return (
-            <div key={category} className="space-y-2">
-              <button
-                onClick={() => toggleCategory(category)}
-                className="w-full flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg p-1 -ml-1 transition-colors"
-              >
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  {categories[category as keyof typeof categories]}
-                </h3>
-                <svg
-                  className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            </button>
+          </div>
+          
+          <div className="space-y-6">
+            {Object.entries(gamesByCategory).map(([category, games]) => {
+              const isCollapsed = isCategoryCollapsed(category)
+              return (
+              <div key={category} className="space-y-2">
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="w-full flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg p-1 -ml-1 transition-colors"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              
-              <div className={`space-y-1 overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}>
-                {games.map((game) => (
-                  <button
-                    key={game.id}
-                    onClick={() => handleGameClick(game.id, game.name)}
-                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
-                      selectedGame === game.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                    }`}
+                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                    {categories[category as keyof typeof categories]}
+                  </h3>
+                  <svg
+                    className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <div className="flex items-center space-x-3">
-                      <game.icon 
-                        size={24} 
-                        className={selectedGame === game.id 
-                          ? 'text-blue-600 dark:text-blue-400' 
-                          : 'text-gray-600 dark:text-gray-400'
-                        } 
-                      />
-                      <div className={`font-medium text-sm flex items-center gap-2 ${
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                
+                <div className={`space-y-1 overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}>
+                  {games.map((game) => (
+                    <button
+                      key={game.id}
+                      onClick={() => handleGameClick(game.id, game.name)}
+                      className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
                         selectedGame === game.id
-                          ? 'text-blue-700 dark:text-blue-300'
-                          : 'text-gray-700 dark:text-gray-100'
-                      }`}>
-                        {game.name}
-                        {game.id === 'maze' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            New
-                          </span>
-                        )}
-                        {game.id === 'linear-algebra' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            New
-                          </span>
-                        )}
-                        {game.id === 'geometry' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            New
-                          </span>
-                        )}
-                        {game.id === 'word-search' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            New
-                          </span>
-                        )}
-                        {(game.id === 'anagrams' || game.id === 'countries') && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                            Soon
-                          </span>
-                        )}
+                          ? 'bg-blue-100 dark:bg-blue-900/30'
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <game.icon 
+                          size={24} 
+                          className={selectedGame === game.id 
+                            ? 'text-blue-600 dark:text-blue-400' 
+                            : 'text-gray-600 dark:text-gray-400'
+                          } 
+                        />
+                        <div className={`font-medium text-sm flex items-center gap-2 ${
+                          selectedGame === game.id
+                            ? 'text-blue-700 dark:text-blue-300'
+                            : 'text-gray-700 dark:text-gray-100'
+                        }`}>
+                          {game.name}
+                          {game.id === 'maze' && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                              New
+                            </span>
+                          )}
+                          {game.id === 'linear-algebra' && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                              New
+                            </span>
+                          )}
+                          {game.id === 'geometry' && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                              New
+                            </span>
+                          )}
+                          {game.id === 'word-search' && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                              New
+                            </span>
+                          )}
+                          {(game.id === 'anagrams' || game.id === 'countries') && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                              Soon
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )})}
+            )})}
+          </div>
         </div>
       </div>
+
+      {/* Toggle tab sticking out from top-right of sidebar */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        aria-expanded={isSidebarOpen}
+        className="mt-4 flex h-12 w-7 shrink-0 items-center justify-center rounded-r-md border border-l-0 border-gray-300/60 bg-white/90 text-gray-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-600/60 dark:bg-neutral-900/90 dark:text-gray-300 dark:hover:bg-neutral-800 dark:hover:text-gray-100"
+      >
+        <svg
+          className={`h-4 w-4 transition-transform duration-300 ${isSidebarOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
   )
 }

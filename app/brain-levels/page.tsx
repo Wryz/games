@@ -9,10 +9,12 @@ import GameSidebar from '@/components/GameSidebar'
 import MobileGameDrawer from '@/components/MobileGameDrawer'
 import BrainLevels from '@/components/BrainLevels'
 import { useUser } from '@/contexts/UserContext'
+import { useSidebar } from '@/contexts/SidebarContext'
 
 export default function BrainLevelsPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { username } = useUser()
+  const { isSidebarOpen } = useSidebar()
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -28,7 +30,7 @@ export default function BrainLevelsPage() {
       <FloatingParticles />
       
       {/* Main content area - responsive margin */}
-      <div className="lg:ml-80 relative z-10">
+      <div className={`relative z-10 transition-[margin] duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-80' : 'lg:ml-0'}`}>
         <div className="p-4 sm:p-6 md:p-8">
           <GameHeader onMobileMenuToggle={handleMobileMenuToggle} />
           
