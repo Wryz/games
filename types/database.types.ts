@@ -146,33 +146,6 @@ export type Database = {
         }
         Relationships: []
       }
-      linear_algebra_scores: {
-        Row: {
-          average_time: number
-          correct_answers: number
-          created_at: string | null
-          date_submitted: string | null
-          id: number
-          username: string
-        }
-        Insert: {
-          average_time: number
-          correct_answers: number
-          created_at?: string | null
-          date_submitted?: string | null
-          id?: number
-          username: string
-        }
-        Update: {
-          average_time?: number
-          correct_answers?: number
-          created_at?: string | null
-          date_submitted?: string | null
-          id?: number
-          username?: string
-        }
-        Relationships: []
-      }
       maze_scores: {
         Row: {
           created_at: string | null
@@ -531,50 +504,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_linear_algebra_score:
-        | {
-            Args: {
-              p_average_time: number
-              p_correct_answers: number
-              p_problem_type: string
-              p_username: string
-            }
-            Returns: {
-              average_time: number
-              correct_answers: number
-              created_at: string | null
-              date_submitted: string | null
-              id: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "linear_algebra_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_average_time: number
-              p_correct_answers: number
-              p_username: string
-            }
-            Returns: {
-              average_time: number
-              correct_answers: number
-              created_at: string | null
-              date_submitted: string | null
-              id: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "linear_algebra_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
       submit_maze_score: {
         Args: { p_time_taken: number; p_username: string }
         Returns: {

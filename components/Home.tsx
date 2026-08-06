@@ -373,7 +373,6 @@ export default function Home({ onGameSelect }: HomeProps) {
               break
             case 'algebra':
             case 'arithmetic':
-            case 'linear-algebra':
             case 'geometry':
               const correctAnswers = scoreValue.correct_answers || 0
               const avgTime = scoreValue.average_time || 0
@@ -421,7 +420,6 @@ export default function Home({ onGameSelect }: HomeProps) {
       'maze_scores',
       'algebra_scores',
       'arithmetic_scores',
-      'linear_algebra_scores',
       'geometry_scores',
       'word_search_scores'
     ].map(tableName => {

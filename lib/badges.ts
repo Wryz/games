@@ -359,36 +359,6 @@ export const GAME_BADGES: Record<string, BadgeDefinition[]> = {
       threshold: [20, 2000] // Level 20 threshold
     }
   ],
-  'linear-algebra': [
-    {
-      id: 'linear-algebra-novice',
-      name: 'Novice',
-      tier: 'novice',
-      description: 'Completed Linear Algebra',
-      threshold: [1, 20000] // 1 correct, 20s avg
-    },
-    {
-      id: 'linear-algebra-adept',
-      name: 'Adept',
-      tier: 'adept',
-      description: '5 correct, 12s avg',
-      threshold: [5, 12000] // Level 5 threshold
-    },
-    {
-      id: 'linear-algebra-expert',
-      name: 'Expert',
-      tier: 'expert',
-      description: '12 correct, 4s avg',
-      threshold: [12, 4000] // Level 12 threshold
-    },
-    {
-      id: 'linear-algebra-master',
-      name: 'Master',
-      tier: 'master',
-      description: '20 correct, 2s avg',
-      threshold: [20, 2000] // Level 20 threshold
-    }
-  ],
   'geometry': [
     {
       id: 'geometry-novice',
@@ -498,7 +468,6 @@ export const BUILT_GAMES = [
   'maze',
   'algebra',
   'arithmetic',
-  'linear-algebra',
   'geometry',
   'word-search',
   'time-estimation'
@@ -549,7 +518,6 @@ export function hasEarnedBadge(gameId: string, badge: BadgeDefinition, score: an
 
     case 'algebra':
     case 'arithmetic':
-    case 'linear-algebra':
     case 'geometry':
       // Check both correct_answers and average_time
       const algCorrectAnswers = score.correct_answers || 0

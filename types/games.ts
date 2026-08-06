@@ -9,7 +9,6 @@ import {
   StroopTestIcon,
   ChimpTestIcon,
   AlgebraIcon,
-  LinearAlgebraIcon,
   ArithmeticIcon,
   GeometryIcon,
   TimeEstimationIcon,
@@ -89,13 +88,6 @@ export const GAMES: Game[] = [
     name: 'Algebra',
     description: 'Solve equations and master algebraic concepts',
     icon: AlgebraIcon,
-    category: 'computation'
-  },
-  {
-    id: 'linear-algebra',
-    name: 'Linear Algebra',
-    description: 'Work with vectors, matrices, and linear transformations',
-    icon: LinearAlgebraIcon,
     category: 'computation'
   },
   {
