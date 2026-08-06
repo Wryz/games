@@ -119,27 +119,6 @@ export type Database = {
         }
         Relationships: []
       }
-      feedback: {
-        Row: {
-          date_submitted: string | null
-          feedback: string
-          id: number
-          username: string
-        }
-        Insert: {
-          date_submitted?: string | null
-          feedback: string
-          id?: number
-          username: string
-        }
-        Update: {
-          date_submitted?: string | null
-          feedback?: string
-          id?: number
-          username?: string
-        }
-        Relationships: []
-      }
       geometry_scores: {
         Row: {
           average_time: number
@@ -582,21 +561,6 @@ export type Database = {
               isSetofReturn: false
             }
           }
-      submit_feedback: {
-        Args: { p_feedback: string; p_username: string }
-        Returns: {
-          date_submitted: string | null
-          feedback: string
-          id: number
-          username: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "feedback"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       submit_geometry_score: {
         Args: {
           p_average_time: number
