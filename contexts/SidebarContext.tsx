@@ -6,16 +6,20 @@ interface SidebarContextType {
   collapsedCategories: Set<string>
   toggleCategory: (category: string) => void
   isCategoryCollapsed: (category: string) => boolean
+  isSidebarOpen: boolean
+  toggleSidebar: () => void
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
 const STORAGE_KEY = 'brainbench-sidebar-collapsed'
+const OPEN_STORAGE_KEY = 'brainbench-sidebar-open'
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // Load collapsed categories from localStorage on mount
+  // Load collapsed categories and open state from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -23,6 +27,10 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         if (saved) {
           const categories = JSON.parse(saved) as string[]
           setCollapsedCategories(new Set(categories))
+        }
+        const savedOpen = localStorage.getItem(OPEN_STORAGE_KEY)
+        if (savedOpen !== null) {
+          setIsSidebarOpen(savedOpen === 'true')
         }
       } catch (error) {
         console.error('Error loading sidebar state:', error)
@@ -56,8 +64,22 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     return collapsedCategories.has(category)
   }
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => {
+      const next = !prev
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(OPEN_STORAGE_KEY, String(next))
+        } catch (error) {
+          console.error('Error saving sidebar open state:', error)
+        }
+      }
+      return next
+    })
+  }
+
   return (
-    <SidebarContext.Provider value={{ collapsedCategories, toggleCategory, isCategoryCollapsed }}>
+    <SidebarContext.Provider value={{ collapsedCategories, toggleCategory, isCategoryCollapsed, isSidebarOpen, toggleSidebar }}>
       {children}
     </SidebarContext.Provider>
   )
