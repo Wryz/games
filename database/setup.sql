@@ -1055,7 +1055,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to get recent activity across all games
-CREATE OR REPLACE FUNCTION get_recent_activity(p_limit INTEGER DEFAULT 10)
+CREATE OR REPLACE FUNCTION get_recent_activity(p_limit INTEGER DEFAULT 6)
 RETURNS JSON AS $$
 DECLARE
   result JSON;

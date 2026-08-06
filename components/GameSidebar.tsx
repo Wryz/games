@@ -102,7 +102,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
             onClick={() => handleGameClick('home', 'Home')}
             className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
               selectedGame === 'home' || selectedGame === null
-                ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'
+                ? 'bg-blue-100 dark:bg-blue-900/30'
                 : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
             }`}
           >
@@ -129,7 +129,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
             onClick={() => handleGameClick('brain-levels', 'Your Progress')}
             className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
               selectedGame === 'brain-levels'
-                ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'
+                ? 'bg-blue-100 dark:bg-blue-900/30'
                 : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
             }`}
           >
@@ -181,7 +181,7 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                     onClick={() => handleGameClick(game.id, game.name)}
                     className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
                       selectedGame === game.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500'
+                        ? 'bg-blue-100 dark:bg-blue-900/30'
                         : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                     }`}
                   >
