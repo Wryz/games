@@ -11,7 +11,6 @@ import VisualMemory from './games/VisualMemory'
 import StroopTest from './games/StroopTest'
 import ChimpTest from './games/ChimpTest'
 import Algebra from './games/Algebra'
-import LinearAlgebra from './games/LinearAlgebra'
 import Arithmetic from './games/Arithmetic'
 import Geometry from './games/Geometry'
 import TimeEstimation from './games/TimeEstimation'
@@ -42,7 +41,6 @@ export default function GameRenderer({ selectedGame, onGameSelect }: GameRendere
     'stroop-test': StroopTest,
     'chimp-test': ChimpTest,
     'algebra': Algebra,
-    'linear-algebra': LinearAlgebra,
     'arithmetic': Arithmetic,
     'geometry': Geometry,
     'time-estimation': TimeEstimation,

@@ -95,11 +95,6 @@ function formatScoreDetails(gameId: string, score: any): Array<{ label: string; 
       if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
       break
 
-    case 'linear-algebra':
-      if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
-      if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })
-      break
-
     case 'geometry':
       if (score.correct_answers !== undefined) details.push({ label: 'Correct Answers', value: formatNumber(score.correct_answers) })
       if (score.average_time !== undefined) details.push({ label: 'Average Time', value: `${formatNumber(score.average_time)}ms` })

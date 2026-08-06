@@ -130,16 +130,6 @@ CREATE TABLE IF NOT EXISTS arithmetic_scores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Linear Algebra scores
-CREATE TABLE IF NOT EXISTS linear_algebra_scores (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL,
-  correct_answers INTEGER NOT NULL,
-  average_time INTEGER NOT NULL, -- average response time in milliseconds
-  date_submitted TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Geometry scores
 CREATE TABLE IF NOT EXISTS geometry_scores (
   id SERIAL PRIMARY KEY,
@@ -199,9 +189,6 @@ CREATE INDEX IF NOT EXISTS idx_algebra_date ON algebra_scores(date_submitted);
 
 CREATE INDEX IF NOT EXISTS idx_arithmetic_username ON arithmetic_scores(username);
 CREATE INDEX IF NOT EXISTS idx_arithmetic_date ON arithmetic_scores(date_submitted);
-
-CREATE INDEX IF NOT EXISTS idx_linear_algebra_username ON linear_algebra_scores(username);
-CREATE INDEX IF NOT EXISTS idx_linear_algebra_date ON linear_algebra_scores(date_submitted);
 
 CREATE INDEX IF NOT EXISTS idx_geometry_username ON geometry_scores(username);
 CREATE INDEX IF NOT EXISTS idx_geometry_date ON geometry_scores(date_submitted);
@@ -415,23 +402,6 @@ DECLARE
   new_score arithmetic_scores;
 BEGIN
   INSERT INTO arithmetic_scores (username, correct_answers, average_time)
-  VALUES (p_username, p_correct_answers, p_average_time)
-  RETURNING * INTO new_score;
-  
-  RETURN new_score;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Function to submit linear algebra score
-CREATE OR REPLACE FUNCTION submit_linear_algebra_score(
-  p_username VARCHAR(50),
-  p_correct_answers INTEGER,
-  p_average_time INTEGER
-) RETURNS linear_algebra_scores AS $$
-DECLARE
-  new_score linear_algebra_scores;
-BEGIN
-  INSERT INTO linear_algebra_scores (username, correct_answers, average_time)
   VALUES (p_username, p_correct_answers, p_average_time)
   RETURNING * INTO new_score;
   
@@ -854,33 +824,6 @@ BEGIN
     
     UNION ALL
     
-    -- Linear Algebra
-    SELECT 
-      'linear-algebra' as game_id,
-      (SELECT COUNT(*) FROM linear_algebra_scores) as total_games,
-      (SELECT json_build_object(
-        'username', username,
-        'correct_answers', correct_answers,
-        'average_time', average_time,
-        'date_submitted', date_submitted
-      ) FROM linear_algebra_scores 
-      ORDER BY correct_answers DESC, average_time ASC 
-      LIMIT 1) as top_score,
-      CASE 
-        WHEN p_username IS NOT NULL THEN
-          (SELECT json_build_object(
-            'correct_answers', correct_answers,
-            'average_time', average_time,
-            'date_submitted', date_submitted
-          ) FROM linear_algebra_scores 
-          WHERE username = p_username
-          ORDER BY correct_answers DESC, average_time ASC 
-          LIMIT 1)
-        ELSE NULL
-      END as user_best
-    
-    UNION ALL
-    
     -- Geometry
     SELECT 
       'geometry' as game_id,
@@ -1084,17 +1027,6 @@ BEGIN
     
     UNION ALL
     
-    -- Linear Algebra
-    SELECT 
-      'linear-algebra' as game_id,
-      'Linear Algebra' as game_name,
-      username,
-      json_build_object('correct_answers', correct_answers, 'average_time', average_time) as score_value,
-      date_submitted
-    FROM linear_algebra_scores
-    
-    UNION ALL
-    
     -- Geometry
     SELECT 
       'geometry' as game_id,
@@ -1138,7 +1070,6 @@ ALTER TABLE stroop_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chimp_test_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_estimation_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maze_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE linear_algebra_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE geometry_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE word_search_scores ENABLE ROW LEVEL SECURITY;
 
@@ -1288,18 +1219,6 @@ CREATE POLICY "Allow public read access on arithmetic_scores" ON arithmetic_scor
 CREATE POLICY "Allow public insert access on arithmetic_scores" ON arithmetic_scores
     FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on arithmetic_scores" ON arithmetic_scores
-    FOR UPDATE USING (true);
-
--- Policies for linear_algebra_scores
-DROP POLICY IF EXISTS "Allow public read access on linear_algebra_scores" ON linear_algebra_scores;
-DROP POLICY IF EXISTS "Allow public insert access on linear_algebra_scores" ON linear_algebra_scores;
-DROP POLICY IF EXISTS "Allow public update access on linear_algebra_scores" ON linear_algebra_scores;
-
-CREATE POLICY "Allow public read access on linear_algebra_scores" ON linear_algebra_scores
-    FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on linear_algebra_scores" ON linear_algebra_scores
-    FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update access on linear_algebra_scores" ON linear_algebra_scores
     FOR UPDATE USING (true);
 
 -- Policies for geometry_scores

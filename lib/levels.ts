@@ -299,28 +299,6 @@ const GAME_THRESHOLDS: GameThresholds = {
     { level: 19, threshold: [19, 2550] }, // Master's - 19 correct, 2.55s avg
     { level: 20, threshold: [20, 2500] } // Doctorate - 20 correct, 2.5s avg
   ],
-  'linear-algebra': [
-    { level: 1, threshold: [1, 20000] }, // Pre-School - 1 correct, 20s avg (correct_answers, average_time)
-    { level: 2, threshold: [2, 18000] }, // Kindergarten - 2 correct, 18s avg
-    { level: 3, threshold: [3, 16000] }, // 1st Grade - 3 correct, 16s avg
-    { level: 4, threshold: [4, 14000] }, // 2nd Grade - 4 correct, 14s avg
-    { level: 5, threshold: [5, 12000] }, // 3rd Grade - 5 correct, 12s avg
-    { level: 6, threshold: [6, 10000] }, // 4th Grade - 6 correct, 10s avg
-    { level: 7, threshold: [7, 8500] }, // 5th Grade - 7 correct, 8.5s avg
-    { level: 8, threshold: [8, 7000] }, // 6th Grade - 8 correct, 7s avg
-    { level: 9, threshold: [9, 6000] }, // 7th Grade - 9 correct, 6s avg
-    { level: 10, threshold: [10, 5000] }, // 8th Grade - 10 correct, 5s avg
-    { level: 11, threshold: [11, 4500] }, // 9th Grade - 11 correct, 4.5s avg
-    { level: 12, threshold: [12, 4000] }, // 10th Grade - 12 correct, 4s avg
-    { level: 13, threshold: [13, 3500] }, // 11th Grade - 13 correct, 3.5s avg
-    { level: 14, threshold: [14, 3200] }, // 12th Grade - 14 correct, 3.2s avg
-    { level: 15, threshold: [15, 2900] }, // College Freshman - 15 correct, 2.9s avg
-    { level: 16, threshold: [16, 2600] }, // College Sophomore - 16 correct, 2.6s avg
-    { level: 17, threshold: [17, 2400] }, // College Junior - 17 correct, 2.4s avg
-    { level: 18, threshold: [18, 2200] }, // College Senior - 18 correct, 2.2s avg
-    { level: 19, threshold: [19, 2100] }, // Master's - 19 correct, 2.1s avg
-    { level: 20, threshold: [20, 2000] } // Doctorate - 20 correct, 2s avg
-  ],
   'geometry': [
     { level: 1, threshold: [1, 20000] }, // Pre-School - 1 correct, 20s avg (correct_answers, average_time)
     { level: 2, threshold: [2, 18000] }, // Kindergarten - 2 correct, 18s avg
@@ -418,9 +396,8 @@ function extractScoreValue(gameId: string, score: any): number {
       return score.time_taken || 60000
     case 'algebra':
     case 'arithmetic':
-    case 'linear-algebra':
     case 'geometry':
-      // For algebra, arithmetic, linear-algebra, and geometry, we use the score object directly in meetsThreshold
+      // For algebra, arithmetic, and geometry, we use the score object directly in meetsThreshold
       // Return correct_answers as the primary value for backward compatibility
       return score.correct_answers || 0
     case 'word-search':
@@ -444,8 +421,8 @@ function meetsThreshold(gameId: string, score: any, threshold: number[]): boolea
     return accuracy >= threshold[0] && reactionTime <= threshold[1]
   }
   
-  // Handle algebra, arithmetic, linear-algebra, and geometry with [correct_answers, average_time]
-  if ((gameId === 'algebra' || gameId === 'arithmetic' || gameId === 'linear-algebra' || gameId === 'geometry') && threshold.length >= 2) {
+  // Handle algebra, arithmetic, and geometry with [correct_answers, average_time]
+  if ((gameId === 'algebra' || gameId === 'arithmetic' || gameId === 'geometry') && threshold.length >= 2) {
     const correctAnswers = score?.correct_answers || 0
     const averageTime = score?.average_time || 10000
     // Must meet both: correct_answers >= threshold[0] AND average_time <= threshold[1]
@@ -550,8 +527,8 @@ export function calculateGameLevel(gameId: string, score: any): GameLevelInfo {
         
         // Average the two progress values
         progress = (accuracyProgress + reactionProgress) / 2
-      } else if ((gameId === 'algebra' || gameId === 'arithmetic' || gameId === 'linear-algebra' || gameId === 'geometry') && currentThreshold.threshold.length >= 2 && nextThreshold.threshold.length >= 2) {
-        // Handle algebra, arithmetic, linear-algebra, and geometry with multiple metrics [correct_answers, average_time]
+      } else if ((gameId === 'algebra' || gameId === 'arithmetic' || gameId === 'geometry') && currentThreshold.threshold.length >= 2 && nextThreshold.threshold.length >= 2) {
+        // Handle algebra, arithmetic, and geometry with multiple metrics [correct_answers, average_time]
         const correctAnswers = score?.correct_answers || 0
         const averageTime = score?.average_time || 10000
         
@@ -694,9 +671,8 @@ export function formatThreshold(gameId: string, threshold: number | number[]): s
       return `${formatNumber(seconds)}.${milliseconds}s or faster`
     case 'algebra':
     case 'arithmetic':
-    case 'linear-algebra':
     case 'geometry':
-      // For algebra, arithmetic, linear-algebra, and geometry, threshold is [correct_answers, average_time]
+      // For algebra, arithmetic, and geometry, threshold is [correct_answers, average_time]
       if (Array.isArray(threshold) && threshold.length >= 2) {
         const timeMs = threshold[1]
         return `${formatNumber(threshold[0])} correct, ${formatNumber(timeMs)}ms avg or faster`
@@ -744,7 +720,6 @@ export function formatUserScore(gameId: string, score: any): string {
       return `${formatNumber(seconds)}.${milliseconds}s`
     case 'algebra':
     case 'arithmetic':
-    case 'linear-algebra':
     case 'geometry':
       const correctAnswers = score.correct_answers || 0
       const avgTime = score.average_time || 0
