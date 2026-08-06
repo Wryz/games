@@ -31,7 +31,7 @@ export default function HomePage() {
           <GameHeader onMobileMenuToggle={handleMobileMenuToggle} />
           
           {/* Game content area */}
-          <main className="mt-8 mb-16">
+          <main className=" mb-16">
             <Home />
           </main>
           

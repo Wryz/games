@@ -24,42 +24,82 @@ interface HomeProps {
   onGameSelect?: (gameId: string) => void
 }
 
+const CrownIcon = ({ className = '', size = 14 }: { className?: string; size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden
+  >
+    <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
+  </svg>
+)
+
+const PeopleIcon = ({ className = '', size = 14 }: { className?: string; size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden
+  >
+    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+  </svg>
+)
+
+const GAME_STATUS_BADGES: Record<string, { label: string; className: string }> = {
+  maze: { label: 'New', className: 'bg-emerald-500' },
+  'word-search': { label: 'New', className: 'bg-emerald-500' },
+  'linear-algebra': { label: 'New', className: 'bg-emerald-500' },
+  geometry: { label: 'New', className: 'bg-emerald-500' },
+  anagrams: { label: 'Soon', className: 'bg-indigo-500' },
+  countries: { label: 'Soon', className: 'bg-indigo-500' },
+}
+
+const CATEGORY_SOLID: Record<string, string> = {
+  motor: 'bg-blue-500',
+  memory: 'bg-purple-500',
+  cognitive: 'bg-cyan-500',
+  perception: 'bg-pink-500',
+  computation: 'bg-orange-500',
+  linguistic: 'bg-green-500',
+  geography: 'bg-teal-500',
+  attention: 'bg-yellow-500',
+  language: 'bg-indigo-500',
+  social: 'bg-rose-500',
+  creative: 'bg-violet-500',
+  spatial: 'bg-emerald-500',
+  other: 'bg-gray-500',
+}
+
 // Enhanced skeleton component for loading state
 const GameCardSkeleton = () => {
-  const randomColors = ['blue', 'purple', 'cyan', 'pink'][Math.floor(Math.random() * 4)]
-  const colorClasses = {
-    blue: 'border-blue-300 dark:border-blue-600',
-    purple: 'border-purple-300 dark:border-purple-600',
-    cyan: 'border-cyan-300 dark:border-cyan-600',
-    pink: 'border-pink-300 dark:border-pink-600',
-  }
-  
+  const solidColors = ['bg-blue-400', 'bg-purple-400', 'bg-cyan-400', 'bg-pink-400']
+  const color = solidColors[Math.floor(Math.random() * solidColors.length)]
+
   return (
-    <div className={`relative bg-white dark:bg-gray-800/50 rounded-2xl border-2 ${colorClasses[randomColors as keyof typeof colorClasses]} p-6 aspect-square flex flex-col overflow-hidden`}>
-      {/* Animated shimmer effect */}
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gray-200/50 dark:via-gray-600/50 to-transparent"></div>
-      
-      <div className="relative z-10 animate-pulse">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-lg"></div>
-          <div className="flex-1">
-            <div className="h-5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-lg w-3/4 mb-2"></div>
-            <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-full w-1/2"></div>
+    <div
+      className={`relative ${color} rounded-lg p-2 aspect-square flex flex-col overflow-hidden opacity-70`}
+    >
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <div className="relative z-10 flex flex-col h-full animate-pulse">
+        <div className="flex items-start justify-between gap-1">
+          <div className="space-y-1">
+            <div className="h-2.5 bg-white/40 rounded w-12" />
+            <div className="h-2 bg-white/30 rounded w-10 ml-3" />
           </div>
         </div>
-        
-        <div className="flex-1 space-y-3 mt-6">
-          <div className={`border-2 ${colorClasses[randomColors as keyof typeof colorClasses]} rounded-lg p-3`}>
-            <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
-            <div className="h-6 bg-gray-400 dark:bg-gray-600 rounded-lg w-1/2 mb-2"></div>
-            <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
-          </div>
-          
-          <div className={`border-2 border-dashed ${colorClasses[randomColors as keyof typeof colorClasses]} rounded-lg p-3`}>
-            <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
-            <div className="h-6 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 rounded-lg w-2/3"></div>
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-1">
+          <div className="w-8 h-8 bg-white/30 rounded-md" />
+          <div className="h-3 bg-white/40 rounded w-2/3" />
+          <div className="h-2.5 bg-white/30 rounded w-1/2" />
         </div>
+        <div className="h-6 bg-white/25 rounded w-full" />
       </div>
     </div>
   )
@@ -107,7 +147,7 @@ export default function Home({ onGameSelect }: HomeProps) {
     try {
       // Use RPC function to get recent activity across all games
       const { data: rpcData, error } = await supabase
-        .rpc('get_recent_activity', { p_limit: 10 }) as { data: any[] | null, error: any }
+        .rpc('get_recent_activity', { p_limit: 6 }) as { data: any[] | null, error: any }
 
       if (error) throw error
 
@@ -305,8 +345,8 @@ export default function Home({ onGameSelect }: HomeProps) {
             <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
               Games Overview
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3">
+              {[...Array(12)].map((_, i) => (
                 <GameCardSkeleton key={i} />
               ))}
             </div>
@@ -481,231 +521,106 @@ export default function Home({ onGameSelect }: HomeProps) {
                           </div>
                           
                           {/* Exercises Grid for this Category */}
-                          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 items-stretch">
+                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 pt-2 items-stretch">
                             {games.map((game, index) => {
-                              const categoryColorsMap = {
-                                motor: 'from-blue-500 to-blue-600',
-                                memory: 'from-purple-500 to-purple-600',
-                                cognitive: 'from-cyan-500 to-cyan-600',
-                                perception: 'from-pink-500 to-pink-600',
-                                computation: 'from-orange-500 to-orange-600',
-                                linguistic: 'from-green-500 to-green-600',
-                                geography: 'from-teal-500 to-teal-600',
-                                attention: 'from-yellow-500 to-yellow-600',
-                                language: 'from-indigo-500 to-indigo-600',
-                                social: 'from-rose-500 to-rose-600',
-                                creative: 'from-violet-500 to-violet-600',
-                                spatial: 'from-emerald-500 to-emerald-600',
-                              }
-                              const categoryBorderColorsMap = {
-                                motor: 'border-blue-500 dark:border-blue-400',
-                                memory: 'border-purple-500 dark:border-purple-400',
-                                cognitive: 'border-cyan-500 dark:border-cyan-400',
-                                perception: 'border-pink-500 dark:border-pink-400',
-                                computation: 'border-orange-500 dark:border-orange-400',
-                                linguistic: 'border-green-500 dark:border-green-400',
-                                geography: 'border-teal-500 dark:border-teal-400',
-                                attention: 'border-yellow-500 dark:border-yellow-400',
-                                language: 'border-indigo-500 dark:border-indigo-400',
-                                social: 'border-rose-500 dark:border-rose-400',
-                                creative: 'border-violet-500 dark:border-violet-400',
-                                spatial: 'border-emerald-500 dark:border-emerald-400',
-                              }
-                              const categoryGlowMap = {
-                                motor: 'shadow-glow',
-                                memory: 'shadow-glow-purple',
-                                cognitive: 'shadow-glow-cyan',
-                                perception: 'shadow-glow',
-                                computation: 'shadow-glow',
-                                linguistic: 'shadow-glow',
-                                geography: 'shadow-glow',
-                                attention: 'shadow-glow',
-                                language: 'shadow-glow',
-                                social: 'shadow-glow',
-                                creative: 'shadow-glow',
-                                spatial: 'shadow-glow',
-                              }
-                              const categoryBackgroundsMap = {
-                                motor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/50',
-                                memory: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/50',
-                                cognitive: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/50',
-                                perception: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/50',
-                                computation: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/50',
-                                linguistic: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/50',
-                                geography: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/50',
-                                attention: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/50',
-                                language: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/50',
-                                social: 'bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/50',
-                                creative: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/50',
-                                spatial: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/50',
-                              }
-                              
-                              // Check if current user has the top score
-                              const hasTopScore = username && game.topScore?.username === username
-                              
+                              const hasTopScore = Boolean(username && game.topScore?.username === username)
+                              const statusBadge = GAME_STATUS_BADGES[game.id]
+                              const solidBg =
+                                CATEGORY_SOLID[game.category] || CATEGORY_SOLID.other
+
                               return (
                                 <div
                                   key={game.id}
                                   onClick={() => handleGameClick(game.id, game.name)}
-                                  className={`group relative ${
-                                    hasTopScore 
-                                      ? categoryBackgroundsMap[game.category as keyof typeof categoryBackgroundsMap]
-                                      : 'bg-white dark:bg-gray-800/50'
-                                  } rounded-xl md:rounded-2xl border-2 ${categoryBorderColorsMap[game.category as keyof typeof categoryBorderColorsMap]} p-3 md:p-6 cursor-pointer h-full flex flex-col overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-card-3d ${categoryGlowMap[game.category as keyof typeof categoryGlowMap]}`}
+                                  className="group relative cursor-pointer transform transition-all duration-200 hover:scale-105"
                                   style={{
                                     animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
                                   }}
                                 >
-                                  {/* Animated border gradient on hover */}
-                                  <div className={`absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} opacity-0 group-hover:opacity-20 transition-opacity duration-300 -z-10 blur-md`} />
-                                  
-                                  <div className="relative z-10 flex flex-col h-full">
-                                    {/* Mobile layout - Parent column flex */}
-                                    <div className="md:hidden flex flex-row gap-2">
-                                      {/* First div: Row flex with icon and user counter */}
-                                      <div className="flex flex-col items-start justify-between">
-                                        <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} p-1 rounded-md flex-shrink-0`}>
-                                          <game.icon size={20} className="text-white drop-shadow-sm" />
-                                        </div>
-                                        <div className="flex items-center gap-0.5 text-gray-500 dark:text-gray-400">
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
-                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-                                          </svg>
-                                          <span className="text-[10px] font-medium">{game.totalGames.toLocaleString('en-US')}</span>
+                                  {/* Tilted crown covering top-left edge when user holds #1 */}
+                                  {hasTopScore && (
+                                    <div className="pointer-events-none absolute -left-2 -top-2.5 z-20 -rotate-[28deg] transition-transform duration-300 group-hover:-rotate-[16deg] group-hover:scale-110">
+                                      <CrownIcon
+                                        size={32}
+                                        className="w-7 h-7 sm:w-8 sm:h-8 text-amber-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
+                                      />
+                                    </div>
+                                  )}
+
+                                  {/* Icon badge as the card container */}
+                                  <div
+                                    className={`relative aspect-square overflow-hidden rounded-lg ${solidBg} p-2 sm:p-2.5 flex flex-col text-white shadow-sm`}
+                                  >
+                                    <div className="relative z-10 flex flex-col h-full min-h-0">
+                                      {/* Top row: high scorer */}
+                                      <div className="flex items-start justify-between gap-1">
+                                        <div className="min-w-0 max-w-full">
+                                          {game.topScore ? (
+                                            <>
+                                              <div className="flex items-center gap-1">
+                                                <CrownIcon
+                                                  size={14}
+                                                  className="w-3.5 h-3.5 flex-shrink-0 text-amber-200"
+                                                />
+                                                <span className="truncate text-[11px] sm:text-xs font-semibold text-white/95 leading-tight">
+                                                  {game.topScore.username}
+                                                </span>
+                                              </div>
+                                              <p className="truncate text-[10px] sm:text-[11px] font-medium text-white/75 leading-tight mt-0.5 pl-[18px]">
+                                                {game.topScore.value}
+                                              </p>
+                                            </>
+                                          ) : (
+                                            <span className="truncate text-[11px] italic text-white/60 leading-tight">
+                                              —
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
-                                      
-                                      {/* Second div: Title, top game score, and top game scorer */}
-                                      <div>
-                                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                                          <h3 className={`font-black text-sm line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
+
+                                      {/* Center: game icon + name + play count */}
+                                      <div className="flex-1 flex flex-col items-center justify-center gap-1 min-h-0 py-1">
+                                        <div className="transform transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
+                                          <game.icon className="w-8 h-8 sm:w-9 sm:h-9 text-white drop-shadow-sm" />
+                                        </div>
+                                        <div className="flex items-center justify-center gap-1 flex-wrap px-0.5">
+                                          <h3 className="font-bold text-xs sm:text-sm text-center text-white leading-tight line-clamp-2">
                                             {game.name}
                                           </h3>
-                                          {game.id === 'maze' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {game.id === 'word-search' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {(game.id === 'anagrams' || game.id === 'countries') && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              Soon
-                                            </span>
-                                          )}
-                                          {game.id === 'linear-algebra' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {game.id === 'geometry' && (
-                                            <span className="text-[8px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1 py-0.5 rounded-md shadow-sm">
-                                              New
+                                          {statusBadge && (
+                                            <span
+                                              className={`text-[9px] font-bold uppercase tracking-wider ${statusBadge.className} text-white px-1 py-0.5 rounded shadow-sm`}
+                                            >
+                                              {statusBadge.label}
                                             </span>
                                           )}
                                         </div>
-                                        {/* Top Scorer */}
-                                        {game.topScore ? (
-                                          <div className="text-xs mt-0.5">
-                                            <p className="font-semibold text-xs text-gray-900 dark:text-white">
-                                              {game.topScore.value}
-                                            </p>
-                                            <p className="text-gray-500 dark:text-gray-400 font-medium text-[10px]">
-                                              {game.topScore.username}
-                                            </p>
-                                          </div>
-                                        ) : (
-                                          <p className="text-[10px] text-gray-400 dark:text-gray-500 italic mt-0.5">
-                                            No scores yet
-                                          </p>
-                                        )}
+                                        <div className="flex items-center gap-0.5 text-white/80">
+                                          <PeopleIcon size={14} className="w-3.5 h-3.5" />
+                                          <span className="text-[11px] sm:text-xs font-medium tabular-nums leading-tight">
+                                            {game.totalGames.toLocaleString('en-US')} played
+                                          </span>
+                                        </div>
                                       </div>
-                                    </div>
 
-                                    {/* Desktop layout - traditional with icon on left */}
-                                    <div className="hidden md:flex items-start space-x-3 mb-4">
-                                      <div className={`transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 bg-gradient-to-br ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} p-2 rounded-lg flex-shrink-0`}>
-                                        <game.icon size={36} className="text-white drop-shadow-sm" />
-                                      </div>
-                                      <div className="flex-1 min-w-0 pr-0">
-                                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                                          <h3 className={`font-black text-lg line-clamp-2 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent transition-all duration-300 leading-tight`}>
-                                            {game.name}
-                                          </h3>
-                                          {game.id === 'maze' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {game.id === 'word-search' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {(game.id === 'anagrams' || game.id === 'countries') && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              Soon
-                                            </span>
-                                          )}
-                                          {game.id === 'linear-algebra' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
-                                          )}
-                                          {game.id === 'geometry' && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                                              New
-                                            </span>
+                                      {/* Bottom: user stats */}
+                                      {username && (
+                                        <div className="mt-auto rounded border border-white/25 bg-black/20 px-1.5 py-1.5">
+                                          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-white/70 leading-none mb-0.5">
+                                            Your Best
+                                          </p>
+                                          {game.userBest ? (
+                                            <p className="font-bold text-xs sm:text-sm text-white leading-tight line-clamp-1">
+                                              {game.userBest.value}
+                                            </p>
+                                          ) : (
+                                            <p className="text-[11px] font-medium text-white/60 leading-tight">
+                                              Not yet
+                                            </p>
                                           )}
                                         </div>
-                                        {/* Top Scorer */}
-                                        {game.topScore ? (
-                                          <div className="text-xs">
-                                            <p className="font-semibold text-base text-gray-900 dark:text-white">
-                                              {game.topScore.value}
-                                            </p>
-                                            <p className="text-gray-500 dark:text-gray-400 font-medium">
-                                              {game.topScore.username}
-                                            </p>
-                                          </div>
-                                        ) : (
-                                          <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                            No scores yet
-                                          </p>
-                                        )}
-                                      </div>
-                                      {/* Desktop Games Counter */}
-                                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 dark:text-gray-500">
-                                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-                                        </svg>
-                                        <span className="text-xs font-medium">{game.totalGames.toLocaleString('en-US')}</span>
-                                      </div>
+                                      )}
                                     </div>
-
-                                    {/* Spacer to push Your Best to bottom */}
-                                    <div className="flex-1"></div>
-
-                                    {/* User Best - Always at bottom */}
-                                    {username && (
-                                      <div className={`border-2 ${categoryBorderColorsMap[game.category as keyof typeof categoryBorderColorsMap]} border-dashed rounded-lg p-2 md:p-3 transform transition-all duration-300 group-hover:translate-x-1 group-hover:border-solid`}>
-                                        <p className={`text-[10px] md:text-xs font-bold uppercase tracking-wide mb-0.5 md:mb-1 flex items-center gap-1 bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent`}>
-                                          <span className="text-xs md:text-sm">⭐</span> Your Best
-                                        </p>
-                                        {game.userBest ? (
-                                          <p className={`font-extrabold text-base md:text-xl bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent`}>
-                                            {game.userBest.value}
-                                          </p>
-                                        ) : (
-                                          <p className={`text-xs md:text-sm font-semibold bg-gradient-to-r ${categoryColorsMap[game.category as keyof typeof categoryColorsMap]} bg-clip-text text-transparent opacity-60`}>
-                                            Not assessed yet
-                                          </p>
-                                        )}
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
                               )
