@@ -7,9 +7,6 @@ import { supabase } from '@/lib/supabase'
 import { GAMES } from '@/types/games'
 import { usePostHog } from 'posthog-js/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import AnimatedBrain from './AnimatedBrain'
-import FeedbackForm from './FeedbackForm'
 
 interface RecentScore {
   id: number
@@ -273,43 +270,38 @@ export default function Home({ onGameSelect }: HomeProps) {
 
   return (
     <div className="space-y-12">
-      {/* Enhanced Hero Section */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-12 animate-fade-in-up">
-        {/* Hero Text - Left Side */}
-        <div className="flex-1 space-y-6 text-left">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_auto]">
-              Brain Benchmark
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-xl">
-            Level up your brain through engaging cognitive challenges
-          </p>
-          
-          {/* Learn More Button */}
-          <div className="pt-2">
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105"
-            >
-              Learn More
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-        
-        {/* Animated Brain Icon - Right Side */}
-        <div className="flex-shrink-0">
-          <AnimatedBrain />
-        </div>
-      </div>
-
       {loading && gameStats.length === 0 ? (
         <div>
-          {/* Games Overview Skeleton */}
+          {/* Recent Activity Skeleton */}
           <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
+              Live Activity Feed
+            </h2>
+            <div className="w-full">
+              <div className="border-b border-gray-300/20 dark:border-gray-500/20 py-3 px-4 flex gap-4">
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16 animate-pulse" />
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16 animate-pulse" />
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16 animate-pulse" />
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-12 animate-pulse ml-auto" />
+              </div>
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`border-b border-gray-300/20 dark:border-gray-500/20 py-3.5 px-4 flex gap-4 animate-pulse ${
+                    i % 2 === 0 ? 'bg-transparent' : 'bg-gray-100/40 dark:bg-gray-800/40'
+                  }`}
+                >
+                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Games Overview Skeleton */}
+          <div>
             <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
               Games Overview
             </h2>
@@ -319,33 +311,85 @@ export default function Home({ onGameSelect }: HomeProps) {
               ))}
             </div>
           </div>
-          
-          {/* Recent Activity Skeleton */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
-              Recent Activity
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4 animate-pulse">
-                    <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       ) : (
         <>
+          {/* Live Activity Feed */}
+          <div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-8">
+              Live Activity Feed
+            </h2>
+            {recentScores.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-gray-300/40 dark:border-gray-600/40 rounded-lg">
+                <div className="text-6xl mb-4 animate-bounce-gentle">🧠</div>
+                <p className="text-gray-600 dark:text-gray-300 font-medium">
+                  No recent scores yet. Start assessments to see activity here!
+                </p>
+              </div>
+            ) : (
+              <div className="w-full overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-300/20 dark:border-gray-500/20">
+                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
+                        Player
+                      </th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
+                        Game
+                      </th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
+                        Score
+                      </th>
+                      <th className="text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
+                        When
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentScores.map((score, index) => (
+                      <tr
+                        key={`${score.game_type}-${score.id}`}
+                        className={`border-b border-gray-300/20 dark:border-gray-500/20 ${
+                          index % 2 === 0
+                            ? 'bg-transparent'
+                            : 'bg-gray-100/40 dark:bg-gray-800/40'
+                        }`}
+                      >
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`font-semibold ${
+                              isUserScore(score.username)
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-gray-800 dark:text-gray-100'
+                            }`}
+                          >
+                            {score.username}
+                            {isUserScore(score.username) && (
+                              <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-blue-500 dark:text-blue-400">
+                                You
+                              </span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-sm text-gray-600 dark:text-gray-300">
+                          {score.game_type}
+                        </td>
+                        <td className="py-3.5 px-4 text-sm font-medium text-gray-700 dark:text-gray-200">
+                          {score.score_value}
+                        </td>
+                        <td className="py-3.5 px-4 text-sm text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
+                          {formatTimeAgo(score.date_submitted)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* Enhanced Exercise Overview Grid - Organized by Category */}
           <div>
-            <FeedbackForm />
-
             <div className="flex items-center justify-between mb-8">
               {gameStatsLoading && gameStats.length > 0 && (
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
@@ -673,105 +717,6 @@ export default function Home({ onGameSelect }: HomeProps) {
                   </div>
                 )
               })()}
-          </div>
-
-          {/* Enhanced Recent Activity */}
-          <div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-8">
-              Live Activity Feed
-            </h2>
-            <div className="space-y-3">
-              {recentScores.length === 0 ? (
-                <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700">
-                  <div className="text-6xl mb-4 animate-bounce-gentle">🧠</div>
-                  <p className="text-gray-600 dark:text-gray-300 font-medium">
-                    No recent scores yet. Start assessments to see activity here!
-                  </p>
-                </div>
-              ) : (
-                recentScores.map((score, index) => (
-                  <div
-                    key={`${score.game_type}-${score.id}`}
-                    className={`group relative p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.02] animate-slide-in ${
-                      isUserScore(score.username)
-                        ? 'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-300 dark:border-blue-700 shadow-glow'
-                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg'
-                    }`}
-                    style={{
-                      animationDelay: `${index * 0.05}s`,
-                    }}
-                  >
-                    {/* Decorative corner accent */}
-                    <div className="absolute top-0 left-0 w-16 h-16 opacity-10">
-                      <div className={`absolute top-2 left-2 w-3 h-3 rounded-full ${
-                        isUserScore(score.username) ? 'bg-blue-500' : 'bg-gray-400'
-                      } animate-ping`} />
-                      <div className={`absolute top-2 left-2 w-3 h-3 rounded-full ${
-                        isUserScore(score.username) ? 'bg-blue-500' : 'bg-gray-400'
-                      }`} />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
-                          {/* Animated indicator */}
-                        <div className="relative flex-shrink-0">
-                            <div className={`w-3 h-3 rounded-full animate-pulse ${
-                              isUserScore(score.username) ? 'bg-blue-500 shadow-glow' : 'bg-gray-400'
-                            }`} />
-                          </div>
-                          
-                        <div className="flex items-center gap-2 flex-wrap flex-1">
-                              <span className={`font-bold text-lg ${
-                                isUserScore(score.username)
-                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
-                                  : 'text-gray-800 dark:text-gray-100'
-                              }`}>
-                                {score.username}
-                                {isUserScore(score.username) && (
-                                  <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full shadow-glow animate-pulse-glow">
-                                    You
-                                  </span>
-                                )}
-                              </span>
-                              <span className="text-gray-500 dark:text-gray-400">•</span>
-                              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                                {score.game_type}
-                              </span>
-                          <span className="text-gray-500 dark:text-gray-400">•</span>
-                          {(() => {
-                            // Parse score_value to split into separate bubbles
-                            const match = score.score_value.match(/^(.+?)\s*\((.+?)\)$/)
-                            if (match) {
-                              const [, primary, secondary] = match
-                              return (
-                                <>
-                                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                                    {primary}
-                                  </span>
-                                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                                    {secondary}
-                                  </span>
-                                </>
-                              )
-                            }
-                            // Fallback for scores without parentheses
-                            return (
-                              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                                {score.score_value}
-                              </span>
-                            )
-                          })()}
-                        </div>
-                      </div>
-                      
-                      <div className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full ml-4 flex-shrink-0">
-                          {formatTimeAgo(score.date_submitted)}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </>
       )}
