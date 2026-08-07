@@ -16,6 +16,7 @@ ALTER TABLE arithmetic_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE geometry_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE word_search_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sudoku_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tangrams_scores ENABLE ROW LEVEL SECURITY;
 
 -- aim_trainer_scores
 DROP POLICY IF EXISTS "Allow public read access on aim_trainer_scores" ON aim_trainer_scores;
@@ -136,6 +137,14 @@ DROP POLICY IF EXISTS "Allow public update access on sudoku_scores" ON sudoku_sc
 CREATE POLICY "Allow public read access on sudoku_scores" ON sudoku_scores FOR SELECT USING (true);
 CREATE POLICY "Allow public insert access on sudoku_scores" ON sudoku_scores FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access on sudoku_scores" ON sudoku_scores FOR UPDATE USING (true);
+
+-- tangrams_scores
+DROP POLICY IF EXISTS "Allow public read access on tangrams_scores" ON tangrams_scores;
+DROP POLICY IF EXISTS "Allow public insert access on tangrams_scores" ON tangrams_scores;
+DROP POLICY IF EXISTS "Allow public update access on tangrams_scores" ON tangrams_scores;
+CREATE POLICY "Allow public read access on tangrams_scores" ON tangrams_scores FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on tangrams_scores" ON tangrams_scores FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on tangrams_scores" ON tangrams_scores FOR UPDATE USING (true);
 
 -- Grant necessary permissions to anon and authenticated users
 GRANT USAGE ON SCHEMA public TO anon, authenticated;

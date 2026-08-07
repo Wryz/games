@@ -11,11 +11,10 @@ import { formatNumber } from '@/lib/levels'
 type GameState = 'playing' | 'finished'
 type Grid = number[][] // 0 = empty
 
-const SIZE = 9
-const BOX = 3
+const SIZE = 6
+const BOX = 3 // 4 boxes of 3×3
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-const BOX_INDICES = Array.from({ length: BOX }, (_, i) => i)
-const CLUE_COUNT = 36
+const CLUE_COUNT = 16
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -100,72 +99,27 @@ function countSolutions(grid: Grid, limit = 2): number {
 }
 
 function generateSolution(): Grid {
-  // Valid base pattern, then shuffle bands/stacks/digits for variety
+  // Backtracking fill — classic band-shuffle assumes SIZE === BOX²
   const grid = emptyGrid()
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      grid[r][c] = ((r * BOX + Math.floor(r / BOX) + c) % SIZE) + 1
-    }
-  }
 
-  // Shuffle rows within each band
-  for (let band = 0; band < BOX; band++) {
-    const bandRows = BOX_INDICES.map(i => band * BOX + i)
-    const copies = bandRows.map(r => [...grid[r]])
-    const order = shuffle([...BOX_INDICES])
-    for (let i = 0; i < BOX; i++) {
-      grid[bandRows[i]] = copies[order[i]]
-    }
-  }
-
-  // Shuffle columns within each stack
-  for (let stack = 0; stack < BOX; stack++) {
-    const stackCols = BOX_INDICES.map(i => stack * BOX + i)
-    const order = shuffle([...BOX_INDICES])
-    const copies = stackCols.map(c => grid.map(row => row[c]))
-    for (let i = 0; i < BOX; i++) {
-      for (let r = 0; r < SIZE; r++) {
-        grid[r][stackCols[i]] = copies[order[i]][r]
-      }
-    }
-  }
-
-  // Shuffle bands
-  {
-    const order = shuffle([...BOX_INDICES])
-    const copies = BOX_INDICES.map(b =>
-      BOX_INDICES.map(i => [...grid[b * BOX + i]])
-    )
-    for (let b = 0; b < BOX; b++) {
-      for (let i = 0; i < BOX; i++) {
-        grid[b * BOX + i] = copies[order[b]][i]
-      }
-    }
-  }
-
-  // Shuffle stacks
-  {
-    const order = shuffle([...BOX_INDICES])
-    const copies = BOX_INDICES.map(s =>
-      BOX_INDICES.map(i => grid.map(row => row[s * BOX + i]))
-    )
-    for (let s = 0; s < BOX; s++) {
-      for (let i = 0; i < BOX; i++) {
-        for (let r = 0; r < SIZE; r++) {
-          grid[r][s * BOX + i] = copies[order[s]][i][r]
+  const fill = (): boolean => {
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        if (grid[r][c] !== 0) continue
+        for (const num of shuffle(DIGITS)) {
+          if (isValidPlacement(grid, r, c, num)) {
+            grid[r][c] = num
+            if (fill()) return true
+            grid[r][c] = 0
+          }
         }
+        return false
       }
     }
+    return true
   }
 
-  // Remap digits
-  const digitMap = shuffle(DIGITS)
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      grid[r][c] = digitMap[grid[r][c] - 1]
-    }
-  }
-
+  fill()
   return grid
 }
 
@@ -445,7 +399,7 @@ export default function Sudoku() {
     if (!ready || gameState !== 'playing') return
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key >= '1' && e.key <= String(SIZE)) {
+      if (e.key >= '1' && e.key <= '9') {
         placeNumber(Number(e.key))
         return
       }
@@ -510,7 +464,7 @@ export default function Sudoku() {
 
         {/* Game Area */}
         <div className="w-full max-w-2xl mb-6">
-          <div className="grid grid-cols-9 w-full aspect-square mb-6">
+          <div className="grid grid-cols-6 w-full aspect-square mb-6">
             {grid.map((row, rowIdx) =>
               row.map((value, colIdx) => {
                 const isGiven = puzzle[rowIdx][colIdx] !== 0

@@ -28,6 +28,7 @@ export type ArithmeticScore = Database['public']['Tables']['arithmetic_scores'][
 export type GeometryScore = Database['public']['Tables']['geometry_scores']['Row']
 export type WordSearchScore = Database['public']['Tables']['word_search_scores']['Row']
 export type SudokuScore = Database['public']['Tables']['sudoku_scores']['Row']
+export type TangramsScore = Database['public']['Tables']['tangrams_scores']['Row']
 
 // Insert types for score submission
 export type AimTrainerScoreInsert = Database['public']['Tables']['aim_trainer_scores']['Insert']
@@ -45,3 +46,4 @@ export type ArithmeticScoreInsert = Database['public']['Tables']['arithmetic_sco
 export type GeometryScoreInsert = Database['public']['Tables']['geometry_scores']['Insert']
 export type WordSearchScoreInsert = Database['public']['Tables']['word_search_scores']['Insert']
 export type SudokuScoreInsert = Database['public']['Tables']['sudoku_scores']['Insert']
+export type TangramsScoreInsert = Database['public']['Tables']['tangrams_scores']['Insert']
