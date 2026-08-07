@@ -187,6 +187,15 @@ function generatePuzzle(): { puzzle: Grid; solution: Grid } {
   return { puzzle, solution }
 }
 
+function isFilled(grid: Grid): boolean {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (grid[r][c] === 0) return false
+    }
+  }
+  return true
+}
+
 function isComplete(grid: Grid, solution: Grid): boolean {
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
@@ -261,12 +270,12 @@ function previousEditableCell(
 }
 
 export default function Sudoku() {
+  const [ready, setReady] = useState(false)
   const [gameState, setGameState] = useState<GameState>('playing')
-  const [initial] = useState(createNewGame)
-  const [puzzle, setPuzzle] = useState<Grid>(initial.puzzle)
-  const [solution, setSolution] = useState<Grid>(initial.solution)
-  const [grid, setGrid] = useState<Grid>(initial.grid)
-  const [selected, setSelected] = useState<[number, number] | null>(() => firstEmptyCell(initial.puzzle))
+  const [puzzle, setPuzzle] = useState<Grid>(() => emptyGrid())
+  const [solution, setSolution] = useState<Grid>(() => emptyGrid())
+  const [grid, setGrid] = useState<Grid>(() => emptyGrid())
+  const [selected, setSelected] = useState<[number, number] | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [timerStarted, setTimerStarted] = useState(false)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -294,10 +303,6 @@ export default function Sudoku() {
     }, 1000)
   }, [timerStarted])
 
-  useEffect(() => {
-    return () => clearTimer()
-  }, [clearTimer])
-
   const startGame = useCallback(() => {
     const next = createNewGame()
     setPuzzle(next.puzzle)
@@ -307,11 +312,23 @@ export default function Sudoku() {
     setGameState('playing')
     setElapsedTime(0)
     setTimerStarted(false)
+    setReady(true)
     clearTimer()
   }, [clearTimer])
 
+  // Generate puzzle on client only — Math.random() during SSR causes hydration mismatches
+  useEffect(() => {
+    const next = createNewGame()
+    setPuzzle(next.puzzle)
+    setSolution(next.solution)
+    setGrid(next.grid)
+    setSelected(firstEmptyCell(next.puzzle))
+    setReady(true)
+    return () => clearTimer()
+  }, [clearTimer])
+
   const placeNumber = useCallback((num: number) => {
-    if (gameState !== 'playing' || !selected || num === 0) return
+    if (!ready || gameState !== 'playing' || !selected || num === 0) return
     const [row, col] = selected
     if (puzzle[row][col] !== 0) return
 
@@ -320,19 +337,11 @@ export default function Sudoku() {
     const next = cloneGrid(grid)
     next[row][col] = num
     setGrid(next)
-
-    if (isComplete(next, solution)) {
-      setElapsedTime(Date.now() - startTimeRef.current)
-      clearTimer()
-      setGameState('finished')
-      return
-    }
-
     setSelected(nextEmptyCell(puzzle, next, row, col))
-  }, [gameState, selected, puzzle, solution, grid, clearTimer, startTimer])
+  }, [ready, gameState, selected, puzzle, grid, startTimer])
 
   const clearAndGoPrevious = useCallback(() => {
-    if (gameState !== 'playing' || !selected) return
+    if (!ready || gameState !== 'playing' || !selected) return
     const [row, col] = selected
     if (puzzle[row][col] !== 0) return
 
@@ -340,15 +349,23 @@ export default function Sudoku() {
     next[row][col] = 0
     setGrid(next)
     setSelected(previousEditableCell(puzzle, row, col) ?? [row, col])
-  }, [gameState, selected, puzzle, grid])
+  }, [ready, gameState, selected, puzzle, grid])
 
   const handleCellClick = useCallback((row: number, col: number) => {
-    if (gameState !== 'playing') return
+    if (!ready || gameState !== 'playing') return
     setSelected([row, col])
-  }, [gameState])
+  }, [ready, gameState])
+
+  const handleSubmit = useCallback(() => {
+    if (!ready || gameState !== 'playing' || !isFilled(grid)) return
+    setElapsedTime(Date.now() - startTimeRef.current)
+    clearTimer()
+    setSelected(null)
+    setGameState('finished')
+  }, [ready, gameState, grid, clearTimer])
 
   useEffect(() => {
-    if (gameState !== 'playing') return
+    if (!ready || gameState !== 'playing') return
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key >= '1' && e.key <= '9') {
@@ -378,9 +395,11 @@ export default function Sudoku() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [gameState, selected, placeNumber, clearAndGoPrevious])
+  }, [ready, gameState, selected, placeNumber, clearAndGoPrevious])
 
   const selectedValue = selected ? grid[selected[0]][selected[1]] : 0
+  const boardFilled = ready && isFilled(grid)
+  const solved = gameState === 'finished' && isComplete(grid, solution)
 
   return (
     <GameWrapper
@@ -414,10 +433,61 @@ export default function Sudoku() {
 
         {/* Game Area */}
         <div className="w-full max-w-2xl mb-6">
+          <div className="grid grid-cols-9 w-full aspect-square mb-6">
+            {grid.map((row, rowIdx) =>
+              row.map((value, colIdx) => {
+                const isGiven = puzzle[rowIdx][colIdx] !== 0
+                const isSelected = selected?.[0] === rowIdx && selected?.[1] === colIdx
+                const isSameNumber = selectedValue !== 0 && value === selectedValue
+                const isCorrect = !isGiven && value === solution[rowIdx][colIdx]
+                const isIncorrect = !isGiven && value !== 0 && value !== solution[rowIdx][colIdx]
+
+                let textColor = isGiven
+                  ? 'text-gray-900 dark:text-gray-100'
+                  : 'text-blue-600 dark:text-blue-400'
+                if (gameState === 'finished' && !isGiven) {
+                  textColor = isCorrect
+                    ? 'text-green-600 dark:text-green-400'
+                    : isIncorrect
+                    ? 'text-red-600 dark:text-red-400'
+                    : textColor
+                }
+
+                return (
+                  <button
+                    key={`${rowIdx}-${colIdx}`}
+                    type="button"
+                    onClick={() => handleCellClick(rowIdx, colIdx)}
+                    disabled={gameState !== 'playing'}
+                    className={`
+                      aspect-square flex items-center justify-center text-base sm:text-xl font-bold
+                      transition-colors select-none
+                      ${cellBorderClasses(rowIdx, colIdx)}
+                      ${gameState === 'playing' && isSelected
+                        ? 'bg-blue-200 dark:bg-blue-600/50'
+                        : gameState === 'playing' && isSameNumber
+                        ? 'bg-blue-50 dark:bg-blue-900/30'
+                        : gameState === 'finished' && isIncorrect
+                        ? 'bg-red-50 dark:bg-red-900/20'
+                        : gameState === 'finished' && isCorrect
+                        ? 'bg-green-50 dark:bg-green-900/20'
+                        : 'bg-white dark:bg-gray-800'
+                      }
+                      ${textColor}
+                      ${gameState !== 'playing' ? 'cursor-default' : ''}
+                    `}
+                  >
+                    {value !== 0 ? value : ''}
+                  </button>
+                )
+              })
+            )}
+          </div>
+
           {gameState === 'finished' ? (
             <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
-                Puzzle Complete!
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-700 dark:text-gray-100">
+                {solved ? 'Puzzle Complete!' : 'Not quite right'}
               </h2>
               <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
                 <div className="text-center">
@@ -425,7 +495,7 @@ export default function Sudoku() {
                     {formatTime(elapsedTime)}
                   </div>
                   <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    Completion Time
+                    {solved ? 'Completion Time' : 'Time'}
                   </div>
                 </div>
               </div>
@@ -438,43 +508,8 @@ export default function Sudoku() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-9 w-full aspect-square mb-6">
-                {grid.map((row, rowIdx) =>
-                  row.map((value, colIdx) => {
-                    const isGiven = puzzle[rowIdx][colIdx] !== 0
-                    const isSelected = selected?.[0] === rowIdx && selected?.[1] === colIdx
-                    const isSameNumber = selectedValue !== 0 && value === selectedValue
-
-                    return (
-                      <button
-                        key={`${rowIdx}-${colIdx}`}
-                        type="button"
-                        onClick={() => handleCellClick(rowIdx, colIdx)}
-                        className={`
-                          aspect-square flex items-center justify-center text-base sm:text-xl font-bold
-                          transition-colors select-none
-                          ${cellBorderClasses(rowIdx, colIdx)}
-                          ${isSelected
-                            ? 'bg-blue-200 dark:bg-blue-600/50'
-                            : isSameNumber
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'bg-white dark:bg-gray-800'
-                          }
-                          ${isGiven
-                            ? 'text-gray-900 dark:text-gray-100'
-                            : 'text-blue-600 dark:text-blue-400'
-                          }
-                        `}
-                      >
-                        {value !== 0 ? value : ''}
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-
               {/* Number pad */}
-              <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-9 gap-1.5 sm:gap-2 mb-4">
                 {DIGITS.map(num => (
                   <button
                     key={num}
@@ -487,6 +522,15 @@ export default function Sudoku() {
                   </button>
                 ))}
               </div>
+
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!boardFilled}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+              >
+                Submit
+              </button>
 
               <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                 Tap a cell, then choose a number — or use keys 1–9
