@@ -8,7 +8,7 @@ import GameWrapper from '../GameWrapper'
 import type { TangramsScore } from '@/lib/supabase'
 import { formatNumber } from '@/lib/levels'
 
-type GameState = 'idle' | 'playing' | 'finished'
+type GameState = 'playing' | 'finished'
 
 type Point = { x: number; y: number }
 
@@ -38,10 +38,10 @@ type PuzzleTarget = {
 }
 
 const BOARD = 440
-const U = 36
+const U = 40
 const SNAP = 20
-const EDGE = 55
-
+const EDGE = 60
+const S2 = U * Math.SQRT2
 
 /** Right isosceles triangle: right angle at (0,0), legs along +x/+y */
 function tri(leg: number): Point[] {
@@ -73,395 +73,58 @@ function parallelogram(): Point[] {
 const PIECE_DEFS: PieceDef[] = [
   { id: 'large-a', color: '#3b82f6', vertices: tri(2 * U) },
   { id: 'large-b', color: '#ef4444', vertices: tri(2 * U) },
-  { id: 'large-c', color: '#6366f1', vertices: tri(2 * U) },
-  { id: 'large-d', color: '#f97316', vertices: tri(2 * U) },
   { id: 'medium-a', color: '#22c55e', vertices: tri(U * Math.SQRT2) },
-  { id: 'medium-b', color: '#14b8a6', vertices: tri(U * Math.SQRT2) },
   { id: 'small-a', color: '#f59e0b', vertices: tri(U) },
   { id: 'small-b', color: '#a855f7', vertices: tri(U) },
   { id: 'small-c', color: '#eab308', vertices: tri(U) },
   { id: 'small-d', color: '#d946ef', vertices: tri(U) },
-  { id: 'small-e', color: '#fb7185', vertices: tri(U) },
-  { id: 'small-f', color: '#8b5cf6', vertices: tri(U) },
   { id: 'square-a', color: '#06b6d4', vertices: square(U) },
   { id: 'square-b', color: '#0ea5e9', vertices: square(U) },
-  { id: 'square-c', color: '#2dd4bf', vertices: square(U) },
   { id: 'para-a', color: '#ec4899', vertices: parallelogram() },
-  { id: 'para-b', color: '#f43f5e', vertices: parallelogram() },
-]
-
-const SHAPE_LAYOUTS: PuzzleTarget[][] = [
-  [
-    { id: 'large-a', x: 76.0, y: 166.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 148.0, y: 238.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 148.0, y: 166.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 220.0, y: 238.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 76.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 112.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 220.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 256.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 256.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 292.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 76.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 126.912, y: 274.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 292.0, y: 166.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 292.0, y: 202.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 112.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 184.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 112.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 184.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 184.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 184.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 184.0, y: 184.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 148.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 184.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 148.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 184.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 148.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 184.0, y: 328.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 328.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 328.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 112.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 148.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 112.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 292.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 148.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 184.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 220.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 256.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 112.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 184.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 112.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 184.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 148.0, y: 184.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 112.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 148.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 184.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 148.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 184.0, y: 328.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 328.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 328.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 112.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 148.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 112.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 112.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 184.0, y: 238.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 148.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 184.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 184.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 220.0, y: 238.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 184.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 220.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 256.0, y: 238.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 184.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 220.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 148.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 184.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 184.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 220.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 256.0, y: 238.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 220.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 256.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 112.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 292.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 148.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 184.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 184.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 148.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 184.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 94.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 166.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 166.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 238.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 94.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 130.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 166.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 202.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 238.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 238.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 274.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 238.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 274.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 94.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 144.912, y: 292.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 274.0, y: 148.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 274.0, y: 184.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 112.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 184.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 112.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 184.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 184.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 148.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 148.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 184.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 148.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 184.0, y: 328.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 184.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 220.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 328.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 328.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 112.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 148.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 112.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 112.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 148.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 184.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 148.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 220.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 184.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 220.0, y: 220.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 256.0, y: 256.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 148.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 184.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 184.0, y: 256.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 220.0, y: 292.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 292.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 148.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 184.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 112.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-b', x: 184.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'large-c', x: 184.0, y: 130.0, rotation: 0, flipped: false },
-    { id: 'large-d', x: 256.0, y: 202.0, rotation: 180, flipped: false },
-    { id: 'square-a', x: 112.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-b', x: 148.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'square-c', x: 184.0, y: 202.0, rotation: 0, flipped: false },
-    { id: 'small-a', x: 184.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-b', x: 220.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'small-c', x: 184.0, y: 274.0, rotation: 0, flipped: false },
-    { id: 'small-d', x: 220.0, y: 310.0, rotation: 180, flipped: false },
-    { id: 'small-e', x: 220.0, y: 238.0, rotation: 0, flipped: false },
-    { id: 'small-f', x: 256.0, y: 274.0, rotation: 180, flipped: false },
-    { id: 'medium-a', x: 112.0, y: 310.0, rotation: 0, flipped: false },
-    { id: 'para-a', x: 162.912, y: 310.0, rotation: 0, flipped: false },
-    { id: 'medium-b', x: 256.0, y: 130.0, rotation: 270, flipped: false },
-    { id: 'para-b', x: 256.0, y: 166.0, rotation: 0, flipped: false },
-  ],
-  [
-    { id: 'large-a', x: 274.0, y: 76.0, rotation: 90, flipped: false },
-    { id: 'large-b', x: 202.0, y: 148.0, rotation: 270, flipped: false },
-    { id: 'large-c', x: 274.0, y: 148.0, rotation: 90, flipped: false },
-    { id: 'large-d', x: 202.0, y: 220.0, rotation: 270, flipped: false },
-    { id: 'square-a', x: 202.0, y: 76.0, rotation: 90, flipped: false },
-    { id: 'square-b', x: 202.0, y: 112.0, rotation: 90, flipped: false },
-    { id: 'square-c', x: 202.0, y: 148.0, rotation: 90, flipped: false },
-    { id: 'small-a', x: 202.0, y: 184.0, rotation: 90, flipped: false },
-    { id: 'small-b', x: 166.0, y: 220.0, rotation: 270, flipped: false },
-    { id: 'small-c', x: 202.0, y: 220.0, rotation: 90, flipped: false },
-    { id: 'small-d', x: 166.0, y: 256.0, rotation: 270, flipped: false },
-    { id: 'small-e', x: 202.0, y: 256.0, rotation: 90, flipped: false },
-    { id: 'small-f', x: 166.0, y: 292.0, rotation: 270, flipped: false },
-    { id: 'medium-a', x: 166.0, y: 76.0, rotation: 90, flipped: false },
-    { id: 'para-a', x: 166.0, y: 126.912, rotation: 90, flipped: false },
-    { id: 'medium-b', x: 274.0, y: 292.0, rotation: 0, flipped: false },
-    { id: 'para-b', x: 238.0, y: 292.0, rotation: 90, flipped: false },
-  ],
-]
-
-const BORDER_POSITIONS: Point[] = [
-  { x: 66.49, y: 13.47 },
-  { x: 160.96, y: 13.47 },
-  { x: 255.43, y: 13.47 },
-  { x: 349.90, y: 13.47 },
-  { x: 418.82, y: 42.87 },
-  { x: 418.82, y: 137.34 },
-  { x: 418.82, y: 231.81 },
-  { x: 418.82, y: 326.28 },
-  { x: 420.75, y: 418.82 },
-  { x: 326.28, y: 418.82 },
-  { x: 231.81, y: 418.82 },
-  { x: 137.34, y: 418.82 },
-  { x: 42.87, y: 418.82 },
-  { x: 13.47, y: 349.90 },
-  { x: 13.47, y: 255.43 },
-  { x: 13.47, y: 160.96 },
-  { x: 13.47, y: 66.49 },
 ]
 
 function getDef(id: string): PieceDef {
   return PIECE_DEFS.find(p => p.id === id)!
 }
 
-/** Same geometry family — interchangeable for placement (e.g. square-a ≡ square-b) */
 function shapeFamily(id: string): string {
   return id.split('-')[0]
+}
+
+function transformPoint(p: Point, x: number, y: number, rotation: number, flipped: boolean): Point {
+  const rad = (rotation * Math.PI) / 180
+  const sx = flipped ? -p.x : p.x
+  const cos = Math.cos(rad)
+  const sin = Math.sin(rad)
+  return {
+    x: x + sx * cos - p.y * sin,
+    y: y + sx * sin + p.y * cos,
+  }
+}
+
+function pointsToPath(pts: Point[]): string {
+  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z'
+}
+
+function pieceBounds(def: PieceDef, x: number, y: number, rotation: number, flipped: boolean) {
+  const pts = def.vertices.map(v => transformPoint(v, x, y, rotation, flipped))
+  return {
+    minX: Math.min(...pts.map(p => p.x)),
+    maxX: Math.max(...pts.map(p => p.x)),
+    minY: Math.min(...pts.map(p => p.y)),
+    maxY: Math.max(...pts.map(p => p.y)),
+  }
+}
+
+function clampPlacement(placement: PiecePlacement): PiecePlacement {
+  const def = getDef(placement.id)
+  const b = pieceBounds(def, placement.x, placement.y, placement.rotation, placement.flipped)
+  let { x, y } = placement
+  if (b.minX < 0) x += -b.minX
+  if (b.minY < 0) y += -b.minY
+  if (b.maxX > BOARD) x -= b.maxX - BOARD
+  if (b.maxY > BOARD) y -= b.maxY - BOARD
+  return { ...placement, x, y }
 }
 
 function isTargetFilled(placements: PiecePlacement[], targetId: string): boolean {
@@ -488,7 +151,6 @@ function polygonsMatch(a: Point[], b: Point[], eps = ORIENT_EPS): boolean {
   return true
 }
 
-/** Same family + current orientation produces the same silhouette as the slot. */
 function orientationMatches(piece: PiecePlacement, target: PuzzleTarget): boolean {
   if (shapeFamily(piece.id) !== shapeFamily(target.id)) return false
   const pieceDef = getDef(piece.id)
@@ -525,60 +187,246 @@ function findOpenTarget(
   return best
 }
 
-function transformPoint(p: Point, x: number, y: number, rotation: number, flipped: boolean): Point {
-  const rad = (rotation * Math.PI) / 180
-  const sx = flipped ? -p.x : p.x
+function shuffle<T>(items: T[]): T[] {
+  const arr = [...items]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
+function offsetTargets(targets: PuzzleTarget[], dx: number, dy: number): PuzzleTarget[] {
+  return targets.map(t => ({ ...t, x: t.x + dx, y: t.y + dy }))
+}
+
+function packLarges(a: string, b: string): PuzzleTarget[] {
+  return [
+    { id: a, x: 0, y: 0, rotation: 0, flipped: false },
+    { id: b, x: 2 * U, y: 2 * U, rotation: 180, flipped: false },
+  ]
+}
+
+function packSquares(a: string, b: string): PuzzleTarget[] {
+  return [
+    { id: a, x: 0, y: 0, rotation: 0, flipped: false },
+    { id: b, x: U, y: 0, rotation: 0, flipped: false },
+  ]
+}
+
+function packSmalls(ids: [string, string, string, string]): PuzzleTarget[] {
+  const [a, b, c, d] = ids
+  return [
+    { id: a, x: 0, y: 0, rotation: 0, flipped: false },
+    { id: b, x: U, y: U, rotation: 180, flipped: false },
+    { id: c, x: U, y: 0, rotation: 0, flipped: false },
+    { id: d, x: 2 * U, y: U, rotation: 180, flipped: false },
+  ]
+}
+
+function packMidPara(medium: string, para: string): PuzzleTarget[] {
+  return [
+    { id: medium, x: 0, y: 0, rotation: 0, flipped: false },
+    { id: para, x: S2, y: 0, rotation: 0, flipped: false },
+  ]
+}
+
+function rotateTargets(targets: PuzzleTarget[], deg: number): PuzzleTarget[] {
+  if (deg % 360 === 0) return targets.map(t => ({ ...t }))
+  const pts = targets.flatMap(t => {
+    const def = getDef(t.id)
+    return def.vertices.map(v => transformPoint(v, t.x, t.y, t.rotation, t.flipped))
+  })
+  const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length
+  const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length
+  const rad = (deg * Math.PI) / 180
   const cos = Math.cos(rad)
   const sin = Math.sin(rad)
-  return {
-    x: x + sx * cos - p.y * sin,
-    y: y + sx * sin + p.y * cos,
+  return targets.map(t => {
+    const x = t.x - cx
+    const y = t.y - cy
+    return {
+      ...t,
+      x: x * cos - y * sin + cx,
+      y: x * sin + y * cos + cy,
+      rotation: (((t.rotation + deg) % 360) + 360) % 360,
+    }
+  })
+}
+
+function centerTargets(targets: PuzzleTarget[]): PuzzleTarget[] {
+  const pts = targets.flatMap(t => {
+    const def = getDef(t.id)
+    return def.vertices.map(v => transformPoint(v, t.x, t.y, t.rotation, t.flipped))
+  })
+  const minX = Math.min(...pts.map(p => p.x))
+  const maxX = Math.max(...pts.map(p => p.x))
+  const minY = Math.min(...pts.map(p => p.y))
+  const maxY = Math.max(...pts.map(p => p.y))
+  const inner = BOARD - 2 * EDGE
+  const ox = EDGE + (inner - (maxX - minX)) / 2 - minX
+  const oy = EDGE + (inner - (maxY - minY)) / 2 - minY
+  return targets.map(t => ({
+    ...t,
+    x: Math.round((t.x + ox) * 10) / 10,
+    y: Math.round((t.y + oy) * 10) / 10,
+  }))
+}
+
+type Packs = {
+  larges: PuzzleTarget[]
+  squares: PuzzleTarget[]
+  smalls: PuzzleTarget[]
+  midpara: PuzzleTarget[]
+}
+
+/** Compose the four tessellating packs into different silhouettes. */
+const SHAPE_RECIPES: Array<(p: Packs) => PuzzleTarget[]> = [
+  // Tower
+  p => [
+    ...offsetTargets(p.larges, 0, 0),
+    ...offsetTargets(p.squares, 0, 2 * U),
+    ...offsetTargets(p.smalls, 0, 3 * U),
+    ...offsetTargets(p.midpara, 0, 4 * U),
+  ],
+  // Tower with smalls/squares swapped
+  p => [
+    ...offsetTargets(p.larges, 0, 0),
+    ...offsetTargets(p.smalls, 0, 2 * U),
+    ...offsetTargets(p.squares, 0, 3 * U),
+    ...offsetTargets(p.midpara, 0, 4 * U),
+  ],
+  // Wide block
+  p => [
+    ...offsetTargets(p.larges, 0, 0),
+    ...offsetTargets(p.squares, 2 * U, 0),
+    ...offsetTargets(p.smalls, 2 * U, U),
+    ...offsetTargets(p.midpara, 0, 2 * U),
+  ],
+  // Wide with midpara under the right column
+  p => [
+    ...offsetTargets(p.larges, 0, 0),
+    ...offsetTargets(p.squares, 2 * U, 0),
+    ...offsetTargets(p.smalls, 2 * U, U),
+    ...offsetTargets(p.midpara, 2 * U, 2 * U),
+  ],
+  // Steps
+  p => [
+    ...offsetTargets(p.larges, 0, U),
+    ...offsetTargets(p.squares, 0, 0),
+    ...offsetTargets(p.smalls, 2 * U, 0),
+    ...offsetTargets(p.midpara, 0, 3 * U),
+  ],
+  // Candle
+  p => [
+    ...offsetTargets(p.larges, 0, 0),
+    ...offsetTargets(p.squares, U / 2, 2 * U),
+    ...offsetTargets(p.smalls, U / 2, 3 * U),
+    ...offsetTargets(p.midpara, U / 2, 4 * U),
+  ],
+  // L foot
+  p => [
+    ...offsetTargets(p.larges, 0, 0),
+    ...offsetTargets(p.squares, 0, 2 * U),
+    ...offsetTargets(p.smalls, 0, 3 * U),
+    ...offsetTargets(p.midpara, 2 * U, 3 * U),
+  ],
+  // Side wing
+  p => [
+    ...offsetTargets(p.larges, U, 0),
+    ...offsetTargets(
+      [
+        { ...p.squares[0], x: 0, y: 0 },
+        { ...p.squares[1], x: 0, y: U },
+      ],
+      0,
+      U
+    ),
+    ...offsetTargets(p.smalls, U, 2 * U),
+    ...offsetTargets(p.midpara, U, 3 * U),
+  ],
+  // Left spine squares
+  p => [
+    ...offsetTargets(p.larges, U, 0),
+    ...offsetTargets(
+      [
+        { ...p.squares[0], x: 0, y: 0 },
+        { ...p.squares[1], x: 0, y: U },
+      ],
+      0,
+      0
+    ),
+    ...offsetTargets(p.smalls, 0, 2 * U),
+    ...offsetTargets(p.midpara, 0, 3 * U),
+  ],
+]
+
+function generateBorderPositions(count: number): Point[] {
+  const positions: Point[] = []
+  const m = EDGE * 0.35
+  const inner = BOARD - m
+  for (let i = 0; i < count; i++) {
+    const p = ((i + 0.5) / count) * 4
+    if (p < 1) positions.push({ x: m + (inner - m) * p, y: m * 0.7 })
+    else if (p < 2) positions.push({ x: BOARD - m * 1.1, y: m + (inner - m) * (p - 1) })
+    else if (p < 3) positions.push({ x: inner - (inner - m) * (p - 2), y: BOARD - m * 1.1 })
+    else positions.push({ x: m * 0.7, y: inner - (inner - m) * (p - 3) })
   }
+  return positions
 }
 
-function pointsToPath(pts: Point[]): string {
-  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z'
-}
+/** Build a fresh silhouette from shuffled packs + random recipe/rotation. */
+function generatePuzzle(): PuzzleTarget[] {
+  const larges = shuffle(['large-a', 'large-b']) as [string, string]
+  const squares = shuffle(['square-a', 'square-b']) as [string, string]
+  const smalls = shuffle(['small-a', 'small-b', 'small-c', 'small-d']) as [
+    string,
+    string,
+    string,
+    string,
+  ]
 
-function pieceBounds(def: PieceDef, x: number, y: number, rotation: number, flipped: boolean) {
-  const pts = def.vertices.map(v => transformPoint(v, x, y, rotation, flipped))
-  return {
-    minX: Math.min(...pts.map(p => p.x)),
-    maxX: Math.max(...pts.map(p => p.x)),
-    minY: Math.min(...pts.map(p => p.y)),
-    maxY: Math.max(...pts.map(p => p.y)),
+  const packs: Packs = {
+    larges: packLarges(larges[0], larges[1]),
+    squares: packSquares(squares[0], squares[1]),
+    smalls: packSmalls(smalls),
+    midpara: packMidPara('medium-a', 'para-a'),
   }
-}
 
-/** Clamp piece so its entire polygon stays inside the board */
-function clampPlacement(placement: PiecePlacement): PiecePlacement {
-  const def = getDef(placement.id)
-  const b = pieceBounds(def, placement.x, placement.y, placement.rotation, placement.flipped)
-  let { x, y } = placement
-  if (b.minX < 0) x += -b.minX
-  if (b.minY < 0) y += -b.minY
-  if (b.maxX > BOARD) x -= b.maxX - BOARD
-  if (b.maxY > BOARD) y -= b.maxY - BOARD
-  return { ...placement, x, y }
-}
+  const recipe = SHAPE_RECIPES[Math.floor(Math.random() * SHAPE_RECIPES.length)]
+  let targets = recipe(packs)
 
-function createPuzzle(shapeIndex = 0): PuzzleTarget[] {
-  const layouts = SHAPE_LAYOUTS
-  const idx = ((shapeIndex % layouts.length) + layouts.length) % layouts.length
-  return layouts[idx].map(t => ({ ...t }))
+  const seen = new Set<string>()
+  targets = targets.filter(t => {
+    if (seen.has(t.id)) return false
+    seen.add(t.id)
+    return true
+  })
+
+  if (targets.length !== PIECE_DEFS.length) {
+    targets = [
+      ...offsetTargets(packs.larges, 0, 0),
+      ...offsetTargets(packs.squares, 0, 2 * U),
+      ...offsetTargets(packs.smalls, 0, 3 * U),
+      ...offsetTargets(packs.midpara, 0, 4 * U),
+    ]
+  }
+
+  const rotation = [0, 90, 180, 270][Math.floor(Math.random() * 4)]
+  return centerTargets(rotateTargets(targets, rotation))
 }
 
 function borderSlots(targets: PuzzleTarget[]): PiecePlacement[] {
-  return PIECE_DEFS.map((def, i) => {
-    // Orient to any same-family slot so the piece already matches a valid pose
+  const slots = shuffle(generateBorderPositions(PIECE_DEFS.length))
+  const order = shuffle(PIECE_DEFS.map(d => d.id))
+  return order.map((id, i) => {
     const target =
-      targets.find(t => t.id === def.id) ??
-      targets.find(t => shapeFamily(t.id) === shapeFamily(def.id))!
-    const slot = BORDER_POSITIONS[i % BORDER_POSITIONS.length]
+      targets.find(t => t.id === id) ??
+      targets.find(t => shapeFamily(t.id) === shapeFamily(id))!
     return clampPlacement({
-      id: def.id,
-      x: slot.x,
-      y: slot.y,
+      id,
+      x: slots[i].x,
+      y: slots[i].y,
       rotation: target.rotation,
       flipped: target.flipped,
       placed: false,
@@ -587,14 +435,9 @@ function borderSlots(targets: PuzzleTarget[]): PiecePlacement[] {
   })
 }
 
-function createNewGame(shapeIndex?: number) {
-  const index =
-    shapeIndex === undefined
-      ? Math.floor(Math.random() * SHAPE_LAYOUTS.length)
-      : shapeIndex
-  const targets = createPuzzle(index)
+function createNewGame() {
+  const targets = generatePuzzle()
   return {
-    shapeIndex: index,
     targets,
     placements: borderSlots(targets),
   }
@@ -603,14 +446,14 @@ function createNewGame(shapeIndex?: number) {
 export default function Tangrams() {
   const [scores, setScores] = useState<TangramsScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameState, setGameState] = useState<GameState>('idle')
-  const [shapeIndex, setShapeIndex] = useState(0)
-  const [targets, setTargets] = useState<PuzzleTarget[]>(() => createPuzzle(0))
-  const [placements, setPlacements] = useState<PiecePlacement[]>(() =>
-    borderSlots(createPuzzle(0))
-  )
+  const [ready, setReady] = useState(false)
+  const [gameState, setGameState] = useState<GameState>('playing')
+  const [targets, setTargets] = useState<PuzzleTarget[]>([])
+  const [placements, setPlacements] = useState<PiecePlacement[]>([])
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [timerStarted, setTimerStarted] = useState(false)
   const [dragId, setDragId] = useState<string | null>(null)
+  const [solved, setSolved] = useState(false)
   const { username } = useUser()
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef(0)
@@ -619,11 +462,10 @@ export default function Tangrams() {
   const dragOffsetRef = useRef({ x: 0, y: 0 })
   const pointerStartRef = useRef<{ id: string; x: number; y: number } | null>(null)
   const didDragRef = useRef(false)
-
-  const activeTargetId =
-    targets.find(t => !isTargetFilled(placements, t.id))?.id ?? null
+  const originPositionsRef = useRef<Record<string, Point>>({})
 
   const DRAG_THRESHOLD = 6
+  const MOVE_EPS = 12
 
   const loadScores = async () => {
     try {
@@ -684,38 +526,48 @@ export default function Tangrams() {
   }, [])
 
   const startTimer = useCallback(() => {
-    clearTimer()
+    if (timerStarted || timerIntervalRef.current) return
+    setTimerStarted(true)
     startTimeRef.current = Date.now()
     setElapsedTime(0)
     timerIntervalRef.current = setInterval(() => {
       setElapsedTime(Date.now() - startTimeRef.current)
     }, 1000)
-  }, [clearTimer])
+  }, [timerStarted])
 
   const startGame = useCallback(() => {
-    // Cycle to a different shape each round (or random if first start from idle)
-    const nextIndex =
-      gameState === 'idle'
-        ? Math.floor(Math.random() * SHAPE_LAYOUTS.length)
-        : (shapeIndex + 1) % SHAPE_LAYOUTS.length
-    const next = createNewGame(nextIndex)
-    setShapeIndex(next.shapeIndex)
+    const next = createNewGame()
+    originPositionsRef.current = Object.fromEntries(
+      next.placements.map(p => [p.id, { x: p.x, y: p.y }])
+    )
     setTargets(next.targets)
     setPlacements(next.placements)
     setDragId(null)
     setGameState('playing')
+    setSolved(false)
+    setElapsedTime(0)
+    setTimerStarted(false)
+    setReady(true)
     hasSubmittedScore.current = false
-    startTimer()
-  }, [startTimer, gameState, shapeIndex])
+    startTimeRef.current = 0
+    clearTimer()
+  }, [clearTimer])
+
+  // Generate puzzle on client only — Math.random() during SSR causes hydration mismatches
+  useEffect(() => {
+    startGame()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const finishGame = useCallback(
-    (finalTime: number) => {
+    (finalTime: number, isSolved: boolean) => {
       setElapsedTime(finalTime)
       clearTimer()
       setGameState('finished')
+      setSolved(isSolved)
       setDragId(null)
 
-      if (username && !hasSubmittedScore.current) {
+      if (isSolved && username && !hasSubmittedScore.current) {
         hasSubmittedScore.current = true
         submitTangramsScore({
           username,
@@ -732,6 +584,27 @@ export default function Tangrams() {
     },
     [username, clearTimer]
   )
+
+  const allMoved =
+    ready &&
+    placements.length > 0 &&
+    placements.every(p => {
+      const origin = originPositionsRef.current[p.id]
+      if (!origin) return false
+      return Math.hypot(p.x - origin.x, p.y - origin.y) > MOVE_EPS
+    })
+
+  const handleSubmit = useCallback(() => {
+    if (!ready || gameState !== 'playing') return
+    if (!allMoved) return
+
+    const finalTime =
+      startTimeRef.current > 0 ? Date.now() - startTimeRef.current : elapsedTime
+    const isSolved =
+      placements.length === targets.length &&
+      targets.every(t => isTargetFilled(placements, t.id))
+    finishGame(finalTime, isSolved)
+  }, [ready, gameState, allMoved, placements, targets, elapsedTime, finishGame])
 
   const trySnap = useCallback(
     (placement: PiecePlacement, current: PiecePlacement[]): PiecePlacement => {
@@ -750,7 +623,6 @@ export default function Tangrams() {
           ...placement,
           x: target.x,
           y: target.y,
-          // Keep the piece's orientation — only snap translation
           placed: true,
           filledTargetId: target.id,
         }
@@ -758,45 +630,6 @@ export default function Tangrams() {
       return clampPlacement({ ...placement, placed: false, filledTargetId: null })
     },
     [targets]
-  )
-
-  const checkComplete = useCallback(
-    (next: PiecePlacement[]) => {
-      if (next.every(p => p.placed)) {
-        const finalTime = Date.now() - startTimeRef.current
-        finishGame(finalTime)
-      }
-    },
-    [finishGame]
-  )
-
-  const placePiece = useCallback(
-    (id: string) => {
-      if (!activeTargetId) return
-      const target = targets.find(t => t.id === activeTargetId)
-      if (!target) return
-
-      setPlacements(prev => {
-        if (isTargetFilled(prev, target.id)) return prev
-        const piece = prev.find(p => p.id === id)
-        if (!piece || !orientationMatches(piece, target)) return prev
-
-        const next = prev.map(p =>
-          p.id === id
-            ? {
-                ...p,
-                x: target.x,
-                y: target.y,
-                placed: true,
-                filledTargetId: target.id,
-              }
-            : p
-        )
-        queueMicrotask(() => checkComplete(next))
-        return next
-      })
-    },
-    [targets, activeTargetId, checkComplete]
   )
 
   const clientToBoard = useCallback((clientX: number, clientY: number): Point => {
@@ -812,7 +645,7 @@ export default function Tangrams() {
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent, id: string) => {
-      if (gameState !== 'playing') return
+      if (!ready || gameState !== 'playing') return
       e.preventDefault()
       e.stopPropagation()
       ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
@@ -824,12 +657,12 @@ export default function Tangrams() {
       didDragRef.current = false
       setDragId(null)
     },
-    [gameState, clientToBoard, placements]
+    [ready, gameState, clientToBoard, placements]
   )
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (gameState !== 'playing' || !pointerStartRef.current) return
+      if (!ready || gameState !== 'playing' || !pointerStartRef.current) return
       const pos = clientToBoard(e.clientX, e.clientY)
       const start = pointerStartRef.current
       const dist = Math.hypot(pos.x - start.x, pos.y - start.y)
@@ -860,37 +693,31 @@ export default function Tangrams() {
         })
       )
     },
-    [gameState, clientToBoard]
+    [ready, gameState, clientToBoard]
   )
 
   const onPointerUp = useCallback(() => {
-    if (gameState !== 'playing' || !pointerStartRef.current) return
+    if (!ready || gameState !== 'playing' || !pointerStartRef.current) return
     const { id } = pointerStartRef.current
     pointerStartRef.current = null
 
     if (!didDragRef.current) {
-      // Click: same geometry + already in the correct orientation
-      const piece = placements.find(p => p.id === id)
-      const target = activeTargetId
-        ? targets.find(t => t.id === activeTargetId)
-        : null
-      if (piece && target && orientationMatches(piece, target)) {
-        placePiece(id)
-      }
       setDragId(null)
       didDragRef.current = false
       return
     }
 
-    // Drag: snap to nearest open slot of the same shape family
     setPlacements(prev => {
       const next = prev.map(p => (p.id === id ? trySnap(p, prev) : p))
-      queueMicrotask(() => checkComplete(next))
+      const snapped = next.find(p => p.id === id)
+      if (snapped?.placed) {
+        queueMicrotask(() => startTimer())
+      }
       return next
     })
     setDragId(null)
     didDragRef.current = false
-  }, [gameState, activeTargetId, placePiece, trySnap, checkComplete, placements, targets])
+  }, [ready, gameState, trySnap, startTimer])
 
   return (
     <GameWrapper
@@ -905,51 +732,27 @@ export default function Tangrams() {
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
-            {gameState === 'idle' ? (
-              'Ready'
-            ) : (
-              <>
-                Time:{' '}
-                <span className="font-bold text-blue-600 dark:text-blue-400">
-                  {formatTime(elapsedTime)}
-                </span>
-              </>
-            )}
+            Time:{' '}
+            <span className="font-bold text-blue-600 dark:text-blue-400">
+              {formatTime(elapsedTime)}
+            </span>
           </div>
-          {gameState !== 'idle' && (
-            <button
-              onClick={startGame}
-              className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              title="Restart"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
+          <button
+            onClick={startGame}
+            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            title="Restart"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
 
         <div className="w-full max-w-2xl mb-6">
-          {gameState === 'idle' ? (
-            <div className="text-center py-16">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-700 dark:text-gray-100">
-                Tangrams
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                Place each highlighted tan — click a same-shaped, correctly oriented piece or drag it into place. Fastest time wins.
-              </p>
-              <button
-                type="button"
-                onClick={startGame}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-              >
-                Start Puzzle
-              </button>
-            </div>
-          ) : gameState === 'finished' ? (
+          {gameState === 'finished' ? (
             <div className="text-center">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-700 dark:text-gray-100">
-                Puzzle Complete!
+                {solved ? 'Puzzle Complete!' : 'Not quite right'}
               </h2>
               <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
                 <div className="text-center">
@@ -957,7 +760,7 @@ export default function Tangrams() {
                     {formatTime(elapsedTime)}
                   </div>
                   <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    Completion Time
+                    {solved ? 'Completion Time' : 'Time'}
                   </div>
                 </div>
               </div>
@@ -978,29 +781,55 @@ export default function Tangrams() {
                 onPointerCancel={onPointerUp}
               >
                 <svg viewBox={`0 0 ${BOARD} ${BOARD}`} className="w-full h-full">
-                  {/* All target slots visible; active one highlighted */}
-                  {targets.map(t => {
-                    if (isTargetFilled(placements, t.id)) return null
-                    const def = getDef(t.id)
-                    const world = def.vertices.map(v =>
-                      transformPoint(v, t.x, t.y, t.rotation, t.flipped)
-                    )
-                    const isActive = t.id === activeTargetId
-                    return (
-                      <path
-                        key={`slot-${t.id}`}
-                        d={pointsToPath(world)}
-                        className={
-                          isActive
-                            ? 'fill-blue-200/50 dark:fill-blue-500/30 stroke-blue-600 dark:stroke-blue-400'
-                            : 'fill-none stroke-gray-400 dark:stroke-gray-500'
-                        }
-                        strokeWidth={isActive ? 3 : 2}
-                        strokeDasharray={isActive ? '8 4' : '6 4'}
-                        strokeLinejoin="round"
-                      />
-                    )
-                  })}
+                  <defs>
+                    <filter
+                      id="tangram-outline-light"
+                      x="-4%"
+                      y="-4%"
+                      width="108%"
+                      height="108%"
+                      colorInterpolationFilters="sRGB"
+                    >
+                      <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="dilated" />
+                      <feComposite in="dilated" in2="SourceAlpha" operator="out" result="ring" />
+                      <feFlood floodColor="#374151" result="color" />
+                      <feComposite in="color" in2="ring" operator="in" result="outline" />
+                      <feMerge>
+                        <feMergeNode in="outline" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter
+                      id="tangram-outline-dark"
+                      x="-4%"
+                      y="-4%"
+                      width="108%"
+                      height="108%"
+                      colorInterpolationFilters="sRGB"
+                    >
+                      <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="dilated" />
+                      <feComposite in="dilated" in2="SourceAlpha" operator="out" result="ring" />
+                      <feFlood floodColor="#e5e7eb" result="color" />
+                      <feComposite in="color" in2="ring" operator="in" result="outline" />
+                      <feMerge>
+                        <feMergeNode in="outline" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <path
+                    d={targets
+                      .map(t => {
+                        const def = getDef(t.id)
+                        const world = def.vertices.map(v =>
+                          transformPoint(v, t.x, t.y, t.rotation, t.flipped)
+                        )
+                        return pointsToPath(world)
+                      })
+                      .join(' ')}
+                    className="pointer-events-none fill-gray-200 dark:fill-gray-700 [filter:url(#tangram-outline-light)] dark:[filter:url(#tangram-outline-dark)]"
+                  />
 
                   {[...placements]
                     .sort((a, b) => {
@@ -1033,8 +862,17 @@ export default function Tangrams() {
                 </svg>
               </div>
 
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!allMoved}
+                className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+              >
+                Submit
+              </button>
+
               <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                Click a correctly oriented match to place it, or drag one onto its spot.
+                Drag pieces onto the outline to place them.
               </p>
             </>
           )}
