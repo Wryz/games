@@ -280,7 +280,7 @@ BEGIN
         'best_accuracy', best_accuracy,
         'date_submitted', date_submitted
       ) FROM time_estimation_scores 
-      ORDER BY best_accuracy ASC 
+      ORDER BY average_accuracy ASC 
       LIMIT 1) as top_score,
       CASE 
         WHEN p_username IS NOT NULL THEN
@@ -290,11 +290,11 @@ BEGIN
             'date_submitted', date_submitted
           ) FROM time_estimation_scores 
           WHERE username = p_username
-          ORDER BY best_accuracy ASC 
+          ORDER BY average_accuracy ASC 
           LIMIT 1)
         ELSE NULL
       END as user_best
-    
+      
     UNION ALL
     
     -- Maze

@@ -316,7 +316,7 @@ export async function getTimeEstimationScores(filters?: { username?: string; lim
   let query = supabase
     .from('time_estimation_scores')
     .select('*')
-    .order('best_accuracy', { ascending: true })
+    .order('average_accuracy', { ascending: true })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)

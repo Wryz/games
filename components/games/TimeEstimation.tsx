@@ -254,7 +254,7 @@ export default function TimeEstimation() {
       loading={loading}
       onRefresh={loadScores}
       formatScore={formatScore}
-      sortKey="best_accuracy"
+      sortKey="average_accuracy"
       sortDirection="asc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">

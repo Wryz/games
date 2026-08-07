@@ -20,13 +20,6 @@ interface Problem {
   options: number[]
 }
 
-const PROBLEM_TYPE_NAMES: Record<ProblemType, string> = {
-  triangle_angles: 'Triangle Angles',
-  quadrilateral_angles: 'Quadrilateral Angles',
-  pythagorean: 'Pythagorean Theorem',
-  area: 'Area'
-}
-
 // Triangle component
 const TriangleShape = ({ angle1, angle2, angle3, missingAngle }: { angle1: number | null, angle2: number | null, angle3: number | null, missingAngle: 'a' | 'b' | 'c' }) => {
   return (
@@ -244,12 +237,15 @@ export default function Geometry() {
   const [gameState, setGameState] = useState<GameState>('idle')
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null)
   const [correctCount, setCorrectCount] = useState(0)
-  const [currentProblemType, setCurrentProblemType] = useState<ProblemType | null>(null)
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   const [questionStartTime, setQuestionStartTime] = useState(0)
   const [responseTimes, setResponseTimes] = useState<number[]>([])
+  const [elapsedTime, setElapsedTime] = useState(0)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
+  const gameStartTimeRef = useRef(0)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const timerStartedRef = useRef(false)
 
   const loadScores = async () => {
     try {
@@ -263,6 +259,24 @@ export default function Geometry() {
       setLoading(false)
     }
   }
+
+  const clearTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+  }, [])
+
+  const ensureTimerStarted = useCallback(() => {
+    if (timerStartedRef.current) return
+    timerStartedRef.current = true
+    const now = Date.now()
+    gameStartTimeRef.current = now
+    setElapsedTime(0)
+    timerIntervalRef.current = setInterval(() => {
+      setElapsedTime(Date.now() - gameStartTimeRef.current)
+    }, 1000)
+  }, [])
 
   // Generate a random geometry problem
   const generateProblem = useCallback((): Problem => {
@@ -493,18 +507,20 @@ export default function Geometry() {
     // Start game automatically
     const problem = generateProblem()
     setCurrentProblem(problem)
-    setCurrentProblemType(problem.type)
     setGameState('playing')
     setQuestionStartTime(Date.now())
 
     return () => {
+      clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [generateProblem])
+  }, [generateProblem, clearTimer])
 
   // Handle answer selection
   const handleAnswerSelect = useCallback((selectedAnswer: number) => {
     if (gameState !== 'playing' || !currentProblem) return
+
+    ensureTimerStarted()
     
     const responseTime = Date.now() - questionStartTime
     
@@ -516,6 +532,7 @@ export default function Geometry() {
       
       if (newCorrectCount >= 10) {
         // Reached 10 correct answers - game finished!
+        clearTimer()
         setGameState('finished')
         
         // Submit single score for the entire game
@@ -541,11 +558,11 @@ export default function Geometry() {
         // Continue to next question immediately
         const problem = generateProblem()
         setCurrentProblem(problem)
-        setCurrentProblemType(problem.type)
         setQuestionStartTime(Date.now())
       }
     } else {
       // Wrong! Show the correct answer and wait for user to click "Play Again"
+      clearTimer()
       setGameState('wrong')
       setShowCorrectAnswer(true)
       setResponseTimes(prev => [...prev, responseTime])
@@ -570,13 +587,15 @@ export default function Geometry() {
         })
       }
     }
-  }, [gameState, currentProblem, correctCount, questionStartTime, responseTimes, username, generateProblem, loadScores])
+  }, [gameState, currentProblem, correctCount, questionStartTime, responseTimes, username, generateProblem, loadScores, clearTimer, ensureTimerStarted])
 
   // Reset game
   const resetGame = useCallback(() => {
+    clearTimer()
+    timerStartedRef.current = false
+    setElapsedTime(0)
     setGameState('idle')
     setCurrentProblem(null)
-    setCurrentProblemType(null)
     setCorrectCount(0)
     setShowCorrectAnswer(false)
     setResponseTimes([])
@@ -585,14 +604,18 @@ export default function Geometry() {
     setTimeout(() => {
       const problem = generateProblem()
       setCurrentProblem(problem)
-      setCurrentProblemType(problem.type)
       setGameState('playing')
       setQuestionStartTime(Date.now())
     }, 100)
-  }, [generateProblem])
+  }, [generateProblem, clearTimer])
 
   const formatScore = (score: GeometryScore) => {
     return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`
+  }
+
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000)
+    return `${seconds}s`
   }
 
   return (
@@ -617,11 +640,9 @@ export default function Geometry() {
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
             Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctCount}</span> / 10
-            {currentProblemType && (
-              <span className="ml-4 text-xs">
-                Type: <span className="font-semibold">{PROBLEM_TYPE_NAMES[currentProblemType]}</span>
-              </span>
-            )}
+          </div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
           </div>
           <button
             onClick={resetGame}
@@ -691,8 +712,11 @@ export default function Geometry() {
               <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                 Congratulations!
               </div>
-              <div className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+              <div className="text-xl text-gray-600 dark:text-gray-400 mb-2">
                 You completed all 10 questions correctly!
+              </div>
+              <div className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                Time: {formatTime(elapsedTime)}
               </div>
               <button
                 onClick={resetGame}
