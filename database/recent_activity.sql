@@ -166,6 +166,17 @@ BEGIN
       date_submitted
     FROM word_search_scores
     
+    UNION ALL
+    
+    -- Sudoku
+    SELECT 
+      'sudoku' as game_id,
+      'Sudoku' as game_name,
+      username,
+      json_build_object('time_taken', time_taken) as score_value,
+      date_submitted
+    FROM sudoku_scores
+    
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;

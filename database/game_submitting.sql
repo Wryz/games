@@ -236,3 +236,19 @@ BEGIN
   RETURN new_score;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to submit sudoku score
+CREATE OR REPLACE FUNCTION submit_sudoku_score(
+  p_username VARCHAR(50),
+  p_time_taken INTEGER
+) RETURNS sudoku_scores AS $$
+DECLARE
+  new_score sudoku_scores;
+BEGIN
+  INSERT INTO sudoku_scores (username, time_taken)
+  VALUES (p_username, p_time_taken)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
