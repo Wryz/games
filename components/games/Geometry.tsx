@@ -115,6 +115,16 @@ const sideOuterLabel = (a: Point, b: Point, centroid: Point, dist = SIDE_LABEL_D
   })
 }
 
+/** Place a label inside the shape, toward the centroid from a side midpoint. */
+const sideInnerLabel = (a: Point, b: Point, centroid: Point, dist = SIDE_LABEL_DIST): Point => {
+  const mid = midPoint(a, b)
+  const inward = dirFrom(mid, centroid)
+  return clampLabel({
+    x: mid.x + inward.x * dist,
+    y: mid.y + inward.y * dist,
+  })
+}
+
 /**
  * Push labels apart without pulling them toward the shape centroid.
  * Separation only moves labels further outward (or sideways).
@@ -420,10 +430,9 @@ const RectangleShape = ({ width, height }: { width: number, height: number }) =>
     { x: 0, y: height },
   ]) as [Point, Point, Point, Point]
   const centroid = centroidOf([tl, tr, br, bl])
-  const [topLabel, leftLabel] = separateLabels([
-    sideOuterLabel(tl, tr, centroid),
-    sideOuterLabel(tl, bl, centroid),
-  ], centroid)
+  // Width stays outside above; height sits inside along the left side
+  const topLabel = sideOuterLabel(tl, tr, centroid)
+  const leftLabel = sideInnerLabel(tl, bl, centroid)
 
   return (
     <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
@@ -453,15 +462,13 @@ const TriangleAreaShape = ({ base, height }: { base: number, height: number }) =
   ]) as [Point, Point, Point]
   const foot = { x: (pL.x + pR.x) / 2, y: pL.y }
   const centroid = centroidOf([pL, pR, pApex])
-  // Height label outside to the right of the triangle; base below the bottom edge
-  const heightLabelOutside = clampLabel({
-    x: Math.max(pR.x, pApex.x) + SIDE_LABEL_DIST,
-    y: (pApex.y + foot.y) / 2,
+  // Height number sits inside the triangle beside the altitude; base stays below
+  const altMid = midPoint(pApex, foot)
+  const heightLabel = clampLabel({
+    x: altMid.x + SIDE_LABEL_DIST * 0.7,
+    y: altMid.y,
   })
-  const [heightLabel, baseLabel] = separateLabels([
-    heightLabelOutside,
-    sideOuterLabel(pL, pR, centroid),
-  ], centroid)
+  const baseLabel = sideOuterLabel(pL, pR, centroid)
 
   return (
     <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
