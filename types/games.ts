@@ -14,8 +14,7 @@ import {
   TimeEstimationIcon,
   WordSearchIcon,
   MazeIcon,
-  AnagramsIcon,
-  CountriesIcon
+  SudokuIcon
 } from '@/components/icons/GameIcons'
 
 export interface Game {
@@ -23,7 +22,7 @@ export interface Game {
   name: string
   description: string
   icon: ComponentType<{ className?: string; size?: number }>
-  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'spatial' | 'linguistic' | 'geography'
+  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'puzzles' | 'linguistic'
 }
 
 export const GAMES: Game[] = [
@@ -123,20 +122,13 @@ export const GAMES: Game[] = [
     name: 'Maze',
     description: 'Navigate through complex mazes and test your spatial awareness',
     icon: MazeIcon,
-    category: 'perception'
+    category: 'puzzles'
   },
   {
-    id: 'anagrams',
-    name: 'Anagrams',
-    description: 'Unscramble letters to form words and test your linguistic skills',
-    icon: AnagramsIcon,
-    category: 'linguistic'
-  },
-  {
-    id: 'countries',
-    name: 'Countries',
-    description: 'Test your knowledge of world geography and country locations',
-    icon: CountriesIcon,
-    category: 'geography'
+    id: 'sudoku',
+    name: 'Sudoku',
+    description: 'Fill the grid so every row, column, and box contains 1–9',
+    icon: SudokuIcon,
+    category: 'puzzles'
   }
 ]

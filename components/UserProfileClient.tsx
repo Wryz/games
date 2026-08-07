@@ -1,21 +1,26 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useState } from 'react'
 import BackgroundPattern from '@/components/BackgroundPattern'
 import FloatingParticles from '@/components/FloatingParticles'
 import GameHeader from '@/components/GameHeader'
 import GameFooter from '@/components/GameFooter'
 import GameSidebar from '@/components/GameSidebar'
 import MobileGameDrawer from '@/components/MobileGameDrawer'
-import GameRenderer from '@/components/GameRenderer'
-import { useState } from 'react'
+import BrainLevels from '@/components/BrainLevels'
+import { useUser } from '@/contexts/UserContext'
 import { useSidebar } from '@/contexts/SidebarContext'
 
-export default function GamePage() {
-  const params = useParams()
-  const gameId = params.id as string
+interface UserProfileClientProps {
+  username: string
+}
+
+export default function UserProfileClient({ username: profileUsername }: UserProfileClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { username } = useUser()
   const { isSidebarOpen } = useSidebar()
+
+  const isOwnProfile = Boolean(username && username === profileUsername)
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -30,34 +35,29 @@ export default function GamePage() {
       <BackgroundPattern />
       <FloatingParticles />
       
-      {/* Main content area - responsive margin */}
       <div className={`relative z-10 transition-[margin] duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-80' : 'lg:ml-0'}`}>
         <div className="p-4 sm:p-6 md:p-8">
-          <GameHeader onMobileMenuToggle={handleMobileMenuToggle} compactOnMobile />
+          <GameHeader onMobileMenuToggle={handleMobileMenuToggle} />
           
-          {/* Game content area */}
           <main className="mt-8 mb-16">
-            <GameRenderer selectedGame={gameId} />
+            <BrainLevels username={profileUsername} />
           </main>
           
           <GameFooter />
         </div>
       </div>
       
-      {/* Desktop Sidebar */}
       <GameSidebar 
-        selectedGame={gameId} 
+        selectedGame={isOwnProfile ? 'brain-levels' : null} 
         onGameSelect={() => {}} 
       />
       
-      {/* Mobile Drawer */}
       <MobileGameDrawer
         isOpen={isMobileMenuOpen}
         onClose={handleMobileMenuClose}
-        selectedGame={gameId}
+        selectedGame={isOwnProfile ? 'brain-levels' : null}
         onGameSelect={() => {}}
       />
     </div>
   )
 }
-

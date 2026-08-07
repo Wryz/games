@@ -1,7 +1,12 @@
+'use client'
+
 import Link from 'next/link'
 import { GAMES } from '@/types/games'
+import { useUser } from '@/contexts/UserContext'
 
 const GameFooter = () => {
+  const { username } = useUser()
+
   // Group games by category
   const gamesByCategory = GAMES.reduce((acc, game) => {
     const category = game.category || 'other'
@@ -20,17 +25,18 @@ const GameFooter = () => {
     perception: 'Perception',
     computation: 'Computation',
     linguistic: 'Linguistic',
-    geography: 'Geography',
     attention: 'Attention',
     language: 'Language',
     social: 'Social',
     creative: 'Creative',
-    spatial: 'Spatial',
+    puzzles: 'Puzzles',
     other: 'Other'
   }
 
   // Category order
-  const categoryOrder = ['motor', 'memory', 'cognitive', 'perception', 'computation', 'linguistic', 'geography', 'attention', 'language', 'social', 'creative', 'spatial', 'other']
+  const categoryOrder = ['motor', 'memory', 'cognitive', 'perception', 'computation', 'linguistic', 'attention', 'language', 'social', 'creative', 'puzzles', 'other']
+
+  const progressHref = username ? `/${encodeURIComponent(username)}` : '/brain-levels'
 
   return (
     <footer className="mt-8 sm:mt-12 md:mt-16 relative z-10 px-4 transition-colors duration-300 border-t border-gray-200 dark:border-gray-700 pt-8 pb-6">
@@ -46,7 +52,7 @@ const GameFooter = () => {
             </Link>
             <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
             <Link 
-              href="/brain-levels"
+              href={progressHref}
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
             >
               Your Progress
