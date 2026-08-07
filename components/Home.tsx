@@ -474,8 +474,20 @@ export default function Home({ onGameSelect }: HomeProps) {
     <div className="space-y-12">
       {loading && gameStats.length === 0 ? (
         <div>
-          {/* Recent Activity Skeleton */}
+          {/* Games Overview Skeleton */}
           <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
+              Games Overview
+            </h2>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3">
+              {[...Array(12)].map((_, i) => (
+                <GameCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activity Skeleton */}
+          <div>
             <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
               Live Activity Feed
             </h2>
@@ -501,21 +513,58 @@ export default function Home({ onGameSelect }: HomeProps) {
               ))}
             </div>
           </div>
-
-          {/* Games Overview Skeleton */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
-              Games Overview
-            </h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3">
-              {[...Array(12)].map((_, i) => (
-                <GameCardSkeleton key={i} />
-              ))}
-            </div>
-          </div>
         </div>
       ) : (
         <>
+          {/* Games Overview - sorted by popularity */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold flex items-baseline gap-2 flex-wrap">
+                <span className="bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                  Games
+                </span>
+                <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                  (by popularity)
+                </span>
+              </h2>
+              {gameStatsLoading && gameStats.length > 0 && (
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Updating...
+                </div>
+              )}
+            </div>
+
+            {(() => {
+              const gamesByPopularity = GAMES.map(game => {
+                const stats = gameStats.find(stat => stat.id === game.id)
+                return {
+                  id: game.id,
+                  name: game.name,
+                  icon: game.icon,
+                  category: game.category,
+                  totalGames: stats?.totalGames || 0,
+                  topScore: stats?.topScore || null,
+                  userBest: stats?.userBest || null,
+                }
+              }).sort((a, b) => b.totalGames - a.totalGames)
+
+              return (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 pt-2 items-stretch">
+                  {gamesByPopularity.map((game, index) => (
+                    <SelectableGameCard
+                      key={game.id}
+                      game={game}
+                      hasTopScore={Boolean(username && game.topScore?.username === username)}
+                      index={index}
+                      onSelect={() => handleGameClick(game.id, game.name)}
+                    />
+                  ))}
+                </div>
+              )
+            })()}
+          </div>
+
           {/* Live Activity Feed */}
           <div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-8">
@@ -588,55 +637,6 @@ export default function Home({ onGameSelect }: HomeProps) {
                 </table>
               </div>
             )}
-          </div>
-
-          {/* Games Overview - sorted by popularity */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold flex items-baseline gap-2 flex-wrap">
-                <span className="bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                  Games
-                </span>
-                <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
-                  (by popularity)
-                </span>
-              </h2>
-              {gameStatsLoading && gameStats.length > 0 && (
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                  Updating...
-                </div>
-              )}
-            </div>
-
-            {(() => {
-              const gamesByPopularity = GAMES.map(game => {
-                const stats = gameStats.find(stat => stat.id === game.id)
-                return {
-                  id: game.id,
-                  name: game.name,
-                  icon: game.icon,
-                  category: game.category,
-                  totalGames: stats?.totalGames || 0,
-                  topScore: stats?.topScore || null,
-                  userBest: stats?.userBest || null,
-                }
-              }).sort((a, b) => b.totalGames - a.totalGames)
-
-              return (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 pt-2 items-stretch">
-                  {gamesByPopularity.map((game, index) => (
-                    <SelectableGameCard
-                      key={game.id}
-                      game={game}
-                      hasTopScore={Boolean(username && game.topScore?.username === username)}
-                      index={index}
-                      onSelect={() => handleGameClick(game.id, game.name)}
-                    />
-                  ))}
-                </div>
-              )
-            })()}
           </div>
         </>
       )}

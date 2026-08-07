@@ -187,25 +187,6 @@ function generatePuzzle(): { puzzle: Grid; solution: Grid } {
   return { puzzle, solution }
 }
 
-function hasConflict(grid: Grid, row: number, col: number): boolean {
-  const num = grid[row][col]
-  if (num === 0) return false
-
-  for (let i = 0; i < SIZE; i++) {
-    if (i !== col && grid[row][i] === num) return true
-    if (i !== row && grid[i][col] === num) return true
-  }
-
-  const boxRow = Math.floor(row / BOX) * BOX
-  const boxCol = Math.floor(col / BOX) * BOX
-  for (let r = boxRow; r < boxRow + BOX; r++) {
-    for (let c = boxCol; c < boxCol + BOX; c++) {
-      if ((r !== row || c !== col) && grid[r][c] === num) return true
-    }
-  }
-  return false
-}
-
 function isComplete(grid: Grid, solution: Grid): boolean {
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
@@ -237,14 +218,57 @@ function createNewGame() {
   }
 }
 
+function firstEmptyCell(puzzle: Grid): [number, number] | null {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (puzzle[r][c] === 0) return [r, c]
+    }
+  }
+  return null
+}
+
+/** Next empty (non-given) cell after (fromRow, fromCol), wrapping around. */
+function nextEmptyCell(
+  puzzle: Grid,
+  grid: Grid,
+  fromRow: number,
+  fromCol: number
+): [number, number] | null {
+  const start = fromRow * SIZE + fromCol
+  for (let offset = 1; offset < SIZE * SIZE; offset++) {
+    const idx = (start + offset) % (SIZE * SIZE)
+    const r = Math.floor(idx / SIZE)
+    const c = idx % SIZE
+    if (puzzle[r][c] === 0 && grid[r][c] === 0) return [r, c]
+  }
+  return null
+}
+
+/** Previous editable (non-given) cell before (fromRow, fromCol), wrapping around. */
+function previousEditableCell(
+  puzzle: Grid,
+  fromRow: number,
+  fromCol: number
+): [number, number] | null {
+  const start = fromRow * SIZE + fromCol
+  for (let offset = 1; offset < SIZE * SIZE; offset++) {
+    const idx = (start - offset + SIZE * SIZE) % (SIZE * SIZE)
+    const r = Math.floor(idx / SIZE)
+    const c = idx % SIZE
+    if (puzzle[r][c] === 0) return [r, c]
+  }
+  return null
+}
+
 export default function Sudoku() {
   const [gameState, setGameState] = useState<GameState>('playing')
   const [initial] = useState(createNewGame)
   const [puzzle, setPuzzle] = useState<Grid>(initial.puzzle)
   const [solution, setSolution] = useState<Grid>(initial.solution)
   const [grid, setGrid] = useState<Grid>(initial.grid)
-  const [selected, setSelected] = useState<[number, number] | null>(null)
+  const [selected, setSelected] = useState<[number, number] | null>(() => firstEmptyCell(initial.puzzle))
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [timerStarted, setTimerStarted] = useState(false)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef(0)
 
@@ -261,44 +285,62 @@ export default function Sudoku() {
   }, [])
 
   const startTimer = useCallback(() => {
-    clearTimer()
+    if (timerStarted || timerIntervalRef.current) return
+    setTimerStarted(true)
     startTimeRef.current = Date.now()
     setElapsedTime(0)
     timerIntervalRef.current = setInterval(() => {
       setElapsedTime(Date.now() - startTimeRef.current)
     }, 1000)
-  }, [clearTimer])
+  }, [timerStarted])
 
   useEffect(() => {
-    startTimer()
     return () => clearTimer()
-  }, [startTimer, clearTimer])
+  }, [clearTimer])
 
   const startGame = useCallback(() => {
     const next = createNewGame()
     setPuzzle(next.puzzle)
     setSolution(next.solution)
     setGrid(next.grid)
-    setSelected(null)
+    setSelected(firstEmptyCell(next.puzzle))
     setGameState('playing')
-    startTimer()
-  }, [startTimer])
+    setElapsedTime(0)
+    setTimerStarted(false)
+    clearTimer()
+  }, [clearTimer])
 
   const placeNumber = useCallback((num: number) => {
-    if (gameState !== 'playing' || !selected) return
+    if (gameState !== 'playing' || !selected || num === 0) return
     const [row, col] = selected
     if (puzzle[row][col] !== 0) return
+
+    startTimer()
 
     const next = cloneGrid(grid)
     next[row][col] = num
     setGrid(next)
 
-    if (num !== 0 && isComplete(next, solution)) {
+    if (isComplete(next, solution)) {
       setElapsedTime(Date.now() - startTimeRef.current)
       clearTimer()
       setGameState('finished')
+      return
     }
-  }, [gameState, selected, puzzle, solution, grid, clearTimer])
+
+    setSelected(nextEmptyCell(puzzle, next, row, col))
+  }, [gameState, selected, puzzle, solution, grid, clearTimer, startTimer])
+
+  const clearAndGoPrevious = useCallback(() => {
+    if (gameState !== 'playing' || !selected) return
+    const [row, col] = selected
+    if (puzzle[row][col] !== 0) return
+
+    const next = cloneGrid(grid)
+    next[row][col] = 0
+    setGrid(next)
+    setSelected(previousEditableCell(puzzle, row, col) ?? [row, col])
+  }, [gameState, selected, puzzle, grid])
 
   const handleCellClick = useCallback((row: number, col: number) => {
     if (gameState !== 'playing') return
@@ -314,7 +356,8 @@ export default function Sudoku() {
         return
       }
       if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
-        placeNumber(0)
+        e.preventDefault()
+        clearAndGoPrevious()
         return
       }
 
@@ -335,7 +378,7 @@ export default function Sudoku() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [gameState, selected, placeNumber])
+  }, [gameState, selected, placeNumber, clearAndGoPrevious])
 
   const selectedValue = selected ? grid[selected[0]][selected[1]] : 0
 
@@ -401,7 +444,6 @@ export default function Sudoku() {
                     const isGiven = puzzle[rowIdx][colIdx] !== 0
                     const isSelected = selected?.[0] === rowIdx && selected?.[1] === colIdx
                     const isSameNumber = selectedValue !== 0 && value === selectedValue
-                    const conflict = !isGiven && value !== 0 && hasConflict(grid, rowIdx, colIdx)
 
                     return (
                       <button
@@ -418,12 +460,9 @@ export default function Sudoku() {
                             ? 'bg-blue-50 dark:bg-blue-900/30'
                             : 'bg-white dark:bg-gray-800'
                           }
-                          ${conflict ? 'text-red-500 dark:text-red-400' : ''}
                           ${isGiven
                             ? 'text-gray-900 dark:text-gray-100'
-                            : !conflict
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : ''
+                            : 'text-blue-600 dark:text-blue-400'
                           }
                         `}
                       >
@@ -435,29 +474,18 @@ export default function Sudoku() {
               </div>
 
               {/* Number pad */}
-              <div className="w-full space-y-2">
-                <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
-                  {DIGITS.map(num => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => placeNumber(num)}
-                      disabled={!selected || puzzle[selected[0]][selected[1]] !== 0}
-                      className="aspect-square bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm sm:text-lg font-bold rounded-lg shadow-lg transition-colors active:scale-95"
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => placeNumber(0)}
-                  disabled={!selected || puzzle[selected[0]][selected[1]] !== 0}
-                  className="w-full py-3 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm sm:text-base font-semibold rounded-lg shadow-lg transition-colors active:scale-95"
-                  aria-label="Clear cell"
-                >
-                  Clear
-                </button>
+              <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+                {DIGITS.map(num => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => placeNumber(num)}
+                    disabled={!selected || puzzle[selected[0]][selected[1]] !== 0}
+                    className="aspect-square border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-transparent dark:disabled:border-gray-600 dark:disabled:text-gray-500 disabled:cursor-not-allowed text-sm sm:text-lg font-bold rounded-lg transition-colors active:scale-95 bg-transparent"
+                  >
+                    {num}
+                  </button>
+                ))}
               </div>
 
               <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
