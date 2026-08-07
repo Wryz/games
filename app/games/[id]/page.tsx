@@ -33,7 +33,7 @@ export default function GamePage() {
       {/* Main content area - responsive margin */}
       <div className={`relative z-10 transition-[margin] duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-80' : 'lg:ml-0'}`}>
         <div className="p-4 sm:p-6 md:p-8">
-          <GameHeader onMobileMenuToggle={handleMobileMenuToggle} />
+          <GameHeader onMobileMenuToggle={handleMobileMenuToggle} compactOnMobile />
           
           {/* Game content area */}
           <main className="mt-8 mb-16">

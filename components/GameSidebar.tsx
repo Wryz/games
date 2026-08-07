@@ -41,7 +41,9 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
     if (gameId === 'home') {
       router.push('/', { scroll: true })
     } else if (gameId === 'brain-levels') {
-      router.push('/brain-levels', { scroll: true })
+      if (username) {
+        router.push(`/${encodeURIComponent(username)}`, { scroll: true })
+      }
     } else {
       router.push(`/games/${gameId}`, { scroll: true })
     }
@@ -56,9 +58,8 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
     memory: 'Memory',
     perception: 'Perception',
     computation: 'Computation',
-    spatial: 'Spatial',
+    puzzles: 'Puzzles',
     linguistic: 'Linguistic',
-    geography: 'Geography'
   }
 
   const gamesByCategory = GAMES.reduce((acc, game) => {
@@ -204,11 +205,6 @@ export default function GameSidebar({ selectedGame, onGameSelect }: GameSidebarP
                             : 'text-gray-700 dark:text-gray-100'
                         }`}>
                           {game.name}
-                          {(game.id === 'anagrams' || game.id === 'countries') && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-md shadow-sm">
-                              Soon
-                            </span>
-                          )}
                         </div>
                       </div>
                     </button>

@@ -298,10 +298,17 @@ export const MazeIcon = ({ className = "", size = 24 }: IconProps) => (
   <svg width={size} height={size} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" className={className}><path fill="currentColor" d="M5 9V3h3v1H6v5h2v1H2v3h3v-1H3v-1h5v1H6v1h6v1H1V1h1v5h2v2H3V7H2v2zm9-8v13h-1v-2H9V9h3v1h-2v1h3V8H9V6H8v2H7V5h4V4H9V3h3v3h-2v1h3V2H4v3H3V1z"/></svg>
 )
 
-export const AnagramsIcon = ({ className = "", size = 24 }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 48 48" className={className}><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M24 4a7.115 7.115 0 0 0-7.115 7.116a7.1 7.1 0 0 0 .954 3.524l-3.188 3.188a7.1 7.1 0 0 0-3.536-.944A7.115 7.115 0 0 0 4 24h0a7.115 7.115 0 0 0 7.116 7.115a7.1 7.1 0 0 0 3.524-.954l3.199 3.2a7.1 7.1 0 0 0-.954 3.525a7.115 7.115 0 0 0 14.23-.002c0-1.24-.326-2.459-.943-3.535l3.188-3.188a7.1 7.1 0 0 0 3.525.954a7.115 7.115 0 1 0-5.389-2.468l-2.851 2.85A7.12 7.12 0 0 0 24 29.77a7.12 7.12 0 0 0-4.647 1.727l-2.849-2.85A7.12 7.12 0 0 0 18.231 24a7.12 7.12 0 0 0-1.729-4.645l2.852-2.852a7.115 7.115 0 0 0 11.761-5.386A7.115 7.115 0 0 0 24.002 4z"/><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M21.91 40.616v-7.377h2.415a2.474 2.474 0 0 1 2.472 2.476v.001a2.474 2.474 0 0 1-2.471 2.478H21.91m2.415 0l2.415 2.42m.949-32.928l-1.845 7.377L24 7.686l-1.844 7.377l-1.845-7.377m14.802 20.003V20.31h1.66A3.23 3.23 0 0 1 40 23.54h0v.922a3.23 3.23 0 0 1-3.227 3.228zm-23.997-7.378a2.44 2.44 0 0 1 2.444 2.445v2.49a2.44 2.44 0 0 1-2.445 2.443h0a2.44 2.44 0 0 1-2.443-2.445v-2.49a2.44 2.44 0 0 1 2.444-2.443"/></svg>
-)
-
-export const CountriesIcon = ({ className = "", size = 24 }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 16 16" className={className}><path fill="currentColor" d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8s8-3.6 8-8s-3.6-8-8-8zm5.2 5.3c.4 0 .7.3 1.1.3c-.3.4-1.6.4-2-.1c.3-.1.5-.2.9-.2zM1 8c0-.4 0-.8.1-1.3c.1 0 .2.1.3.1c0 0 .1.1.1.2c0 .3.3.5.5.5c.8.1 1.1.8 1.8 1c.2.1.1.3 0 .5c-.6.8-.1 1.4.4 1.9c.5.4.5.8.6 1.4c0 .7.1 1.5.4 2.2C2.7 13.3 1 10.9 1 8zm7 7c-.7 0-1.5-.1-2.1-.3c-.1-.2-.1-.4 0-.6c.4-.8.8-1.5 1.3-2.2c.2-.2.4-.4.4-.7c0-.2.1-.5.2-.7c.3-.5.2-.8-.2-.9c-.8-.2-1.2-.9-1.8-1.2s-1.2-.5-1.7-.2c-.2.1-.5.2-.5-.1c0-.4-.5-.7-.4-1.1c-.1 0-.2 0-.3.1s-.2.2-.4.1c-.2-.2-.1-.4-.1-.6c.1-.2.2-.3.4-.4c.4-.1.8-.1 1 .4c.3-.9.9-1.4 1.5-1.8c0 0 .8-.7.9-.7s.2.2.4.3c.2 0 .3 0 .3-.2c.1-.5-.2-1.1-.6-1.2c0-.1.1-.1.1-.1c.3-.1.7-.3.6-.6c0-.4-.4-.6-.8-.6c-.2 0-.4 0-.6.1c-.4.2-.9.4-1.5.4C5.2 1.4 6.6 1 8 1h.8c-.6.1-1.2.3-1.6.5c.6.1.7.4.5.9c-.1.2 0 .4.2.5s.4.1.5-.1c.2-.3.6-.4.9-.5c.4-.1.7-.3 1-.7c0-.1.1-.1.2-.2c.6.2 1.2.6 1.8 1c-.1 0-.1.1-.2.1c-.2.2-.5.3-.2.7c.1.2 0 .3-.1.4c-.2.1-.3 0-.4-.1s-.1-.3-.4-.3c-.1.2-.4.3-.4.6c.5 0 .4.4.5.7c-.6.1-.8.4-.5.9c.1.2-.1.3-.2.4c-.4.6-.8 1-.8 1.7s.5 1.4 1.3 1.3c.9-.1.9-.1 1.2.7c0 .1.1.2.1.3c.1.2.2.4.1.6c-.3.8.1 1.4.4 2c.1.2.2.3.3.4c-1.3 1.4-3 2.2-5 2.2z"/></svg>
+export const SudokuIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <path d="M3 5h18M3 7h18M3 11h18M3 13h18M3 17h18M3 19h18M5 3v18M7 3v18M11 3v18M13 3v18M17 3v18M19 3v18" stroke="currentColor" strokeWidth="0.75"/>
+    <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="currentColor" strokeWidth="2"/>
+  </svg>
 )

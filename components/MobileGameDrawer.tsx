@@ -48,7 +48,9 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
     motor: 'Motor Skills',
     memory: 'Memory',
     perception: 'Perception',
-    computation: 'Computation'
+    computation: 'Computation',
+    puzzles: 'Puzzles',
+    linguistic: 'Linguistic',
   }
 
   const gamesByCategory = GAMES.reduce((acc, game) => {
@@ -72,7 +74,9 @@ export default function MobileGameDrawer({ isOpen, onClose, selectedGame, onGame
     if (gameId === 'home') {
       router.push('/', { scroll: true })
     } else if (gameId === 'brain-levels') {
-      router.push('/brain-levels', { scroll: true })
+      if (username) {
+        router.push(`/${encodeURIComponent(username)}`, { scroll: true })
+      }
     } else {
       router.push(`/games/${gameId}`, { scroll: true })
     }

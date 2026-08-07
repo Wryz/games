@@ -5,6 +5,8 @@ import Image from 'next/image'
 
 interface GameHeaderProps {
   onMobileMenuToggle?: () => void
+  /** Hide last-updated + contact on mobile (used on game pages) */
+  compactOnMobile?: boolean
 }
 
 function formatBuildDateTime(iso?: string) {
@@ -24,7 +26,7 @@ const CONTACT_EMAIL = 'wrysplays@gmail.com'
 const CONTACT_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Brain Benchmark — update request')}`
 const BUILD_TIME = process.env.NEXT_PUBLIC_BUILD_TIME
 
-const GameHeader = ({ onMobileMenuToggle }: GameHeaderProps) => {
+const GameHeader = ({ onMobileMenuToggle, compactOnMobile = false }: GameHeaderProps) => {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   useEffect(() => {
@@ -34,7 +36,11 @@ const GameHeader = ({ onMobileMenuToggle }: GameHeaderProps) => {
   return (
     <div className="relative z-10">
       {/* Site meta — last updated (auto from build, local time) + contact */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+      <div
+        className={`mb-3 flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 ${
+          compactOnMobile ? 'hidden lg:flex' : 'flex'
+        }`}
+      >
         <p className="tabular-nums">
           {lastUpdated ? (
             <>

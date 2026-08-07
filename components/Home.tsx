@@ -59,12 +59,11 @@ const CATEGORY_BG: Record<string, string> = {
   perception: 'bg-pink-100 dark:bg-transparent',
   computation: 'bg-orange-100 dark:bg-transparent',
   linguistic: 'bg-green-100 dark:bg-transparent',
-  geography: 'bg-teal-100 dark:bg-transparent',
   attention: 'bg-yellow-100 dark:bg-transparent',
   language: 'bg-indigo-100 dark:bg-transparent',
   social: 'bg-rose-100 dark:bg-transparent',
   creative: 'bg-violet-100 dark:bg-transparent',
-  spatial: 'bg-emerald-100 dark:bg-transparent',
+  puzzles: 'bg-emerald-100 dark:bg-transparent',
   other: 'bg-gray-100 dark:bg-transparent',
 }
 
@@ -75,29 +74,27 @@ const CATEGORY_ACCENT: Record<string, string> = {
   perception: 'text-pink-500',
   computation: 'text-orange-500',
   linguistic: 'text-green-500',
-  geography: 'text-teal-500',
   attention: 'text-yellow-500',
   language: 'text-indigo-500',
   social: 'text-rose-500',
   creative: 'text-violet-500',
-  spatial: 'text-emerald-500',
+  puzzles: 'text-emerald-500',
   other: 'text-gray-500',
 }
 
 const CATEGORY_BORDER: Record<string, string> = {
-  motor: 'border-blue-200 dark:border-blue-500',
-  memory: 'border-purple-200 dark:border-purple-500',
-  cognitive: 'border-cyan-200 dark:border-cyan-500',
-  perception: 'border-pink-200 dark:border-pink-500',
-  computation: 'border-orange-200 dark:border-orange-500',
-  linguistic: 'border-green-200 dark:border-green-500',
-  geography: 'border-teal-200 dark:border-teal-500',
-  attention: 'border-yellow-200 dark:border-yellow-500',
-  language: 'border-indigo-200 dark:border-indigo-500',
-  social: 'border-rose-200 dark:border-rose-500',
-  creative: 'border-violet-200 dark:border-violet-500',
-  spatial: 'border-emerald-200 dark:border-emerald-500',
-  other: 'border-gray-200 dark:border-gray-500',
+  motor: 'border-blue-200 dark:border-blue-500/30',
+  memory: 'border-purple-200 dark:border-purple-500/30',
+  cognitive: 'border-cyan-200 dark:border-cyan-500/30',
+  perception: 'border-pink-200 dark:border-pink-500/30',
+  computation: 'border-orange-200 dark:border-orange-500/30',
+  linguistic: 'border-green-200 dark:border-green-500/30',
+  attention: 'border-yellow-200 dark:border-yellow-500/30',
+  language: 'border-indigo-200 dark:border-indigo-500/30',
+  social: 'border-rose-200 dark:border-rose-500/30',
+  creative: 'border-violet-200 dark:border-violet-500/30',
+  puzzles: 'border-emerald-200 dark:border-emerald-500/30',
+  other: 'border-gray-200 dark:border-gray-500/30',
 }
 
 interface SelectableGameCardProps {
@@ -251,10 +248,10 @@ const SelectableGameCard = ({ game, hasTopScore, index, onSelect }: SelectableGa
 // Enhanced skeleton component for loading state
 const GameCardSkeleton = () => {
   const colors = [
-    'bg-blue-100 dark:bg-transparent border-blue-200 dark:border-blue-500',
-    'bg-purple-100 dark:bg-transparent border-purple-200 dark:border-purple-500',
-    'bg-cyan-100 dark:bg-transparent border-cyan-200 dark:border-cyan-500',
-    'bg-pink-100 dark:bg-transparent border-pink-200 dark:border-pink-500',
+    'bg-blue-100 dark:bg-transparent border-blue-200 dark:border-blue-500/30',
+    'bg-purple-100 dark:bg-transparent border-purple-200 dark:border-purple-500/30',
+    'bg-cyan-100 dark:bg-transparent border-cyan-200 dark:border-cyan-500/30',
+    'bg-pink-100 dark:bg-transparent border-pink-200 dark:border-pink-500/30',
   ]
   const color = colors[Math.floor(Math.random() * colors.length)]
 

@@ -6,6 +6,27 @@ export const MAX_USERNAME_LENGTH = 20
 // Minimum character limit for usernames
 export const MIN_USERNAME_LENGTH = 1
 
+/** Top-level paths and system names that cannot be used as profile usernames. */
+export const RESERVED_USERNAMES = new Set([
+  'about',
+  'api',
+  'apple-icon',
+  'background',
+  'brain-levels',
+  'favicon',
+  'games',
+  'home',
+  'icon',
+  'images',
+  'robots.txt',
+  'sitemap.xml',
+  '_next',
+])
+
+export function isReservedUsername(username: string): boolean {
+  return RESERVED_USERNAMES.has(username.trim().toLowerCase())
+}
+
 // Initialize bad-words filter with regex to catch obfuscations
 // replaceRegex handles character substitutions and multilingual support
 // This catches attempts like "ash0le" (0 instead of o) or "n1gger" (1 instead of i)
@@ -106,6 +127,13 @@ export function validateUsername(username: string): { isValid: boolean; error?: 
       error: `Username must be at least ${MIN_USERNAME_LENGTH} character` 
     }
   }
+
+  if (isReservedUsername(trimmed)) {
+    return {
+      isValid: false,
+      error: 'That username is reserved. Please choose a different username.'
+    }
+  }
   
   // Check for derogatory language
   if (containsDerogatoryLanguage(trimmed)) {
@@ -117,4 +145,3 @@ export function validateUsername(username: string): { isValid: boolean; error?: 
   
   return { isValid: true }
 }
-

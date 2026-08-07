@@ -9,7 +9,7 @@ interface GameStats {
   id: string
   name: string
   icon: any
-  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'spatial' | 'linguistic' | 'geography'
+  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'puzzles' | 'linguistic'
   totalGames: number
   topScore: {
     username: string

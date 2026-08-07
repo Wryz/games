@@ -8,7 +8,7 @@ import GameWrapper from '../GameWrapper'
 import type { MazeScore } from '@/lib/supabase'
 import { formatNumber } from '@/lib/levels'
 
-type GameState = 'idle' | 'playing' | 'finished'
+type GameState = 'playing' | 'finished'
 
 type Cell = {
   row: number
@@ -32,7 +32,7 @@ const MAZE_SIZE = 20 // 20x20 grid
 export default function Maze() {
   const [scores, setScores] = useState<MazeScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameState, setGameState] = useState<GameState>('idle')
+  const [gameState, setGameState] = useState<GameState>('playing')
   const [maze, setMaze] = useState<Cell[][]>([])
   const [playerPos, setPlayerPos] = useState<Position>({ row: 0, col: 0 })
   const [startPos, setStartPos] = useState<Position>({ row: 0, col: 0 })
@@ -43,6 +43,7 @@ export default function Maze() {
   const hasSubmittedScore = useRef(false)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef(0)
+  const hasStartedRef = useRef(false)
 
   const loadScores = async () => {
     try {
@@ -337,8 +338,15 @@ export default function Maze() {
     }
     timerIntervalRef.current = setInterval(() => {
       setElapsedTime(Date.now() - startTimeRef.current)
-    }, 10)
+    }, 1000)
   }, [generateMaze])
+
+  // Auto-start on mount
+  useEffect(() => {
+    if (hasStartedRef.current) return
+    hasStartedRef.current = true
+    startGame()
+  }, [startGame])
 
   // Handle movement in a direction
   const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
@@ -443,7 +451,7 @@ export default function Maze() {
       }
       timerIntervalRef.current = setInterval(() => {
         setElapsedTime(Date.now() - startTimeRef.current)
-      }, 10)
+      }, 1000)
     }
 
     return () => {
@@ -453,27 +461,15 @@ export default function Maze() {
     }
   }, [gameState])
 
-  // Reset game
+  // Reset starts a new maze
   const resetGame = useCallback(() => {
-    setGameState('idle')
-    setMaze([])
-    setPlayerPos({ row: 0, col: 0 })
-    setStartPos({ row: 0, col: 0 })
-    setExitPos({ row: 0, col: 0 })
-    setStartTime(0)
-    startTimeRef.current = 0
-    setElapsedTime(0)
-    hasSubmittedScore.current = false
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current)
-    }
-  }, [])
+    startGame()
+  }, [startGame])
 
   // Format time display
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000)
-    const milliseconds = Math.floor((ms % 1000) / 100)
-    return `${seconds}.${milliseconds}s`
+    return `${seconds}s`
   }
 
   return (
@@ -491,13 +487,13 @@ export default function Maze() {
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
             Time: <span className="font-bold text-blue-600 dark:text-blue-400">
-              {gameState === 'playing' ? formatTime(elapsedTime) : '0.0s'}
+              {formatTime(elapsedTime)}
             </span>
           </div>
           <button
             onClick={resetGame}
             className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            title="Reset"
+            title="New maze"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -507,22 +503,7 @@ export default function Maze() {
 
         {/* Game Area */}
         <div className="w-full max-w-2xl mb-6">
-          {gameState === 'idle' ? (
-            <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-8 text-center min-h-[400px] flex flex-col items-center justify-center">
-              <div className="text-6xl font-bold text-gray-400 dark:text-gray-500 mb-4">
-                ?
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Use arrow keys to navigate through the maze
-              </p>
-              <button
-                onClick={startGame}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-              >
-                Start Game
-              </button>
-            </div>
-          ) : gameState === 'finished' ? (
+          {gameState === 'finished' ? (
             <div className="text-center">
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
                 Maze Complete!
@@ -545,8 +526,8 @@ export default function Maze() {
               </button>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
-              <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${MAZE_SIZE}, minmax(0, 1fr))` }}>
+            <>
+              <div className="grid gap-0 aspect-square" style={{ gridTemplateColumns: `repeat(${MAZE_SIZE}, minmax(0, 1fr))` }}>
                 {maze.map((row, rowIdx) =>
                   row.map((cell, colIdx) => {
                     const isPlayer = playerPos.row === rowIdx && playerPos.col === colIdx
@@ -636,7 +617,7 @@ export default function Maze() {
                   </button>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
