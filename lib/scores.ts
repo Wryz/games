@@ -161,7 +161,8 @@ export async function getAimTrainerScores(filters?: { username?: string; limit?:
   let query = supabase
     .from('aim_trainer_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('accuracy', { ascending: false })
+    .order('reaction_time', { ascending: true })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
@@ -181,6 +182,7 @@ export async function getTypingTestScores(filters?: { username?: string; limit?:
     .from('typing_test_scores')
     .select('*')
     .order('date_submitted', { ascending: false })
+    .order('wpm', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
@@ -199,7 +201,7 @@ export async function getMemoryScores(filters?: { username?: string; limit?: num
   let query = supabase
     .from('memory_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('level_reached', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
@@ -237,7 +239,7 @@ export async function getNumberMemoryScores(filters?: { username?: string; limit
   let query = supabase
     .from('number_memory_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('longest_sequence', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
@@ -256,7 +258,7 @@ export async function getVisualMemoryScores(filters?: { username?: string; limit
   let query = supabase
     .from('visual_memory_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('level_reached', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
@@ -275,7 +277,7 @@ export async function getStroopTestScores(filters?: { username?: string; limit?:
   let query = supabase
     .from('stroop_test_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('correct_answers', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
@@ -294,7 +296,7 @@ export async function getChimpTestScores(filters?: { username?: string; limit?: 
   let query = supabase
     .from('chimp_test_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
+    .order('patterns_remembered', { ascending: false })
 
   if (filters?.username) {
     query = query.eq('username', filters.username)
