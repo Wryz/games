@@ -34,8 +34,11 @@ export default function AimTrainer() {
     gameStartTime: 0
   })
   const [wrongClickTarget, setWrongClickTarget] = useState<number | null>(null)
+  const [elapsedTime, setElapsedTime] = useState(0)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
+  const gameStartTimeRef = useRef(0)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const GRID_SIZE = 8
   const TOTAL_TARGETS = 30
@@ -51,6 +54,23 @@ export default function AimTrainer() {
       setLoading(false)
     }
   }
+
+  const clearTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+  }, [])
+
+  const startTimer = useCallback(() => {
+    clearTimer()
+    const now = Date.now()
+    gameStartTimeRef.current = now
+    setElapsedTime(0)
+    timerIntervalRef.current = setInterval(() => {
+      setElapsedTime(Date.now() - gameStartTimeRef.current)
+    }, 1000)
+  }, [clearTimer])
 
   useEffect(() => {
     loadScores()
@@ -75,9 +95,10 @@ export default function AimTrainer() {
 
     // Cleanup subscription on unmount
     return () => {
+      clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [clearTimer])
 
   // Initialize grid
   const initializeGrid = useCallback(() => {
@@ -105,6 +126,7 @@ export default function AimTrainer() {
   // Start new target
   const spawnTarget = useCallback(() => {
     if (gameStats.totalTargets >= TOTAL_TARGETS) {
+      clearTimer()
       setGameState('finished')
       return
     }
@@ -126,13 +148,14 @@ export default function AimTrainer() {
       totalTargets: prev.totalTargets + 1,
       startTime: Date.now()
     }))
-  }, [currentTarget?.id, gameStats.totalTargets, getRandomTarget])
+  }, [currentTarget?.id, gameStats.totalTargets, getRandomTarget, clearTimer])
 
   // Handle target click
   const handleTargetClick = useCallback((targetId: number) => {
     // If game hasn't started yet, start it on first red tile click
     if (gameState === 'idle' && currentTarget && targetId === currentTarget.id) {
       setGameState('playing')
+      startTimer()
       setGameStats(prev => ({
         ...prev,
         gameStartTime: Date.now(),
@@ -177,10 +200,12 @@ export default function AimTrainer() {
         setWrongClickTarget(null)
       }, 500)
     }
-  }, [gameState, currentTarget, gameStats.startTime, spawnTarget])
+  }, [gameState, currentTarget, gameStats.startTime, spawnTarget, startTimer])
 
   // Initialize game (show grid with first target)
   const initializeGame = useCallback(() => {
+    clearTimer()
+    setElapsedTime(0)
     setGameState('idle')
     const initialGrid = initializeGrid()
     setTargets(initialGrid)
@@ -210,7 +235,7 @@ export default function AimTrainer() {
         }))
       }
     }, 10)
-  }, [initializeGrid])
+  }, [initializeGrid, clearTimer])
 
   // Initialize game when component mounts
   useEffect(() => {
@@ -262,6 +287,11 @@ export default function AimTrainer() {
     return `${formatNumber(score.accuracy)}% (${formatNumber(score.reaction_time)}ms)`
   }
 
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000)
+    return `${seconds}s`
+  }
+
   // Custom sort function for aim trainer: prioritize accuracy, then reaction time
   const customSort = (a: AimTrainerScore, b: AimTrainerScore) => {
     // First, sort by accuracy (descending - higher is better)
@@ -295,7 +325,7 @@ export default function AimTrainer() {
               Game Complete!
         </h2>
             <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-sm mb-6">
-              <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {accuracy.toFixed(1)}%
@@ -307,6 +337,12 @@ export default function AimTrainer() {
                     {avgReactionTime}ms
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Avg Reaction</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {formatTime(elapsedTime)}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Time</div>
                 </div>
               </div>
               <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
@@ -330,6 +366,9 @@ export default function AimTrainer() {
             <div className="flex justify-between items-center mb-6 text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               <div className="text-gray-600 dark:text-gray-400">
                 Hits: <span className="font-bold text-blue-600 dark:text-blue-400">{gameStats.targetsHit}/{TOTAL_TARGETS}</span>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
               </div>
               <div className="text-gray-600 dark:text-gray-400">
                 Accuracy: <span className="font-bold text-green-600 dark:text-green-400">{accuracy.toFixed(1)}%</span>

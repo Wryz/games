@@ -38,6 +38,10 @@ export default function StroopTest() {
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const questionStartTime = useRef<number>(0)
+  const [elapsedTime, setElapsedTime] = useState(0)
+  const gameStartTimeRef = useRef(0)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const timerStartedRef = useRef(false)
 
   const loadScores = async () => {
     try {
@@ -50,6 +54,24 @@ export default function StroopTest() {
       setLoading(false)
     }
   }
+
+  const clearTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+  }, [])
+
+  const ensureTimerStarted = useCallback(() => {
+    if (timerStartedRef.current) return
+    timerStartedRef.current = true
+    const now = Date.now()
+    gameStartTimeRef.current = now
+    setElapsedTime(0)
+    timerIntervalRef.current = setInterval(() => {
+      setElapsedTime(Date.now() - gameStartTimeRef.current)
+    }, 1000)
+  }, [])
 
   useEffect(() => {
     loadScores()
@@ -72,9 +94,10 @@ export default function StroopTest() {
       .subscribe()
 
     return () => {
+      clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [clearTimer])
 
   // Generate a new question
   const generateQuestion = useCallback(() => {
@@ -89,12 +112,15 @@ export default function StroopTest() {
 
   // Start a new game
   const startNewGame = useCallback(() => {
+    clearTimer()
+    timerStartedRef.current = false
+    setElapsedTime(0)
     setGameState('playing')
     setCorrectAnswers(0)
     setResponseTimes([])
     hasSubmittedScore.current = false
     generateQuestion()
-  }, [generateQuestion])
+  }, [generateQuestion, clearTimer])
 
   // Initialize game on mount
   useEffect(() => {
@@ -106,6 +132,8 @@ export default function StroopTest() {
   // Handle color selection
   const handleColorSelect = useCallback((selectedColor: string) => {
     if (gameState !== 'playing') return
+
+    ensureTimerStarted()
     
     const responseTime = Date.now() - questionStartTime.current
     const correct = selectedColor === currentColor
@@ -119,6 +147,7 @@ export default function StroopTest() {
       generateQuestion()
     } else {
       // Wrong answer - show mistake, then end game
+      clearTimer()
       setResponseTimes(prev => [...prev, responseTime])
       setMistakeSelected(selectedColor)
       setMistakeWord(currentWord)
@@ -130,7 +159,7 @@ export default function StroopTest() {
         setGameState('finished')
       }, 3000)
     }
-  }, [gameState, currentColor, currentWord, generateQuestion])
+  }, [gameState, currentColor, currentWord, generateQuestion, clearTimer, ensureTimerStarted])
 
   // Submit score when game finishes
   useEffect(() => {
@@ -166,6 +195,11 @@ export default function StroopTest() {
     return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms)`
   }
 
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000)
+    return `${seconds}s`
+  }
+
   // Calculate current stats
   const averageTime = responseTimes.length > 0 
     ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
@@ -188,11 +222,9 @@ export default function StroopTest() {
             <div className="text-gray-600 dark:text-gray-400">
               Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctAnswers}</span>
             </div>
-            {responseTimes.length > 0 && (
-              <div className="text-gray-600 dark:text-gray-400">
-                Avg Time: <span className="font-bold text-purple-600 dark:text-purple-400">{averageTime}ms</span>
-              </div>
-            )}
+            <div className="text-gray-600 dark:text-gray-400">
+              Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
+            </div>
             <button
               onClick={resetGame}
               className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -271,13 +303,21 @@ export default function StroopTest() {
                 {mistakeSelected ? 'Game Over!' : 'Test Complete!'}
               </h2>
               <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
-                <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
                       {correctAnswers}
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                       Correct Answers
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
+                      {formatTime(elapsedTime)}
+                    </div>
+                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                      Time
                     </div>
                   </div>
                   <div>

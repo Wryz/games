@@ -81,7 +81,7 @@ export const GAMES: Game[] = [
     name: 'Chimp Test',
     description: 'Test your working memory like a chimpanzee',
     icon: ChimpTestIcon,
-    category: 'cognitive'
+    category: 'memory'
   },
   {
     id: 'algebra',

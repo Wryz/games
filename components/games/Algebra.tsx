@@ -25,9 +25,13 @@ export default function Algebra() {
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   const [questionStartTime, setQuestionStartTime] = useState(0)
   const [responseTimes, setResponseTimes] = useState<number[]>([])
+  const [elapsedTime, setElapsedTime] = useState(0)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const gameStartTimeRef = useRef(0)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const timerStartedRef = useRef(false)
 
   const loadScores = async () => {
     try {
@@ -42,13 +46,31 @@ export default function Algebra() {
     }
   }
 
+  const clearTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+  }, [])
+
+  const ensureTimerStarted = useCallback(() => {
+    if (timerStartedRef.current) return
+    timerStartedRef.current = true
+    const now = Date.now()
+    gameStartTimeRef.current = now
+    setElapsedTime(0)
+    timerIntervalRef.current = setInterval(() => {
+      setElapsedTime(Date.now() - gameStartTimeRef.current)
+    }, 1000)
+  }, [])
+
   // Generate a random algebraic equation where x is a whole number
   const generateEquation = useCallback((): Equation => {
     // Generate equations of the form: ax + b = c, where x is a whole number
     // We'll ensure the answer is always a whole number
     
     const a = Math.floor(Math.random() * 10) + 1 // coefficient of x (1-10)
-    const x = Math.floor(Math.random() * 20) - 10 // solution (-10 to 9)
+    const x = Math.floor(Math.random() * 20) + 1 // solution (1-20, positive for mobile keyboards)
     const b = Math.floor(Math.random() * 50) - 25 // constant term (-25 to 24)
     const c = a * x + b // right side of equation
     
@@ -91,9 +113,10 @@ export default function Algebra() {
     setTimeout(() => inputRef.current?.focus(), 100)
 
     return () => {
+      clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [generateEquation])
+  }, [generateEquation, clearTimer])
 
   // Keep the answer input focused while playing (esp. after submit on mobile)
   useEffect(() => {
@@ -104,6 +127,9 @@ export default function Algebra() {
 
   // Start new game
   const startGame = useCallback(() => {
+    clearTimer()
+    timerStartedRef.current = false
+    setElapsedTime(0)
     setGameState('playing')
     setCorrectCount(0)
     setResponseTimes([])
@@ -114,7 +140,7 @@ export default function Algebra() {
     setUserInput('')
     setQuestionStartTime(Date.now())
     setTimeout(() => inputRef.current?.focus(), 100)
-  }, [generateEquation])
+  }, [generateEquation, clearTimer])
 
   // Handle submit
   const handleSubmit = useCallback(() => {
@@ -131,6 +157,7 @@ export default function Algebra() {
       
       if (newCorrectCount >= 20) {
         // Reached 20 correct answers - game finished!
+        clearTimer()
         setGameState('finished')
         
         // Submit score
@@ -163,6 +190,7 @@ export default function Algebra() {
       }
     } else {
       // Wrong! Show the correct answer and wait for user to click "Play Again"
+      clearTimer()
       setGameState('wrong')
       setShowCorrectAnswer(true)
       setResponseTimes(prev => [...prev, responseTime])
@@ -187,7 +215,7 @@ export default function Algebra() {
         })
       }
     }
-  }, [gameState, userInput, currentEquation, correctCount, questionStartTime, responseTimes, username, generateEquation, loadScores])
+  }, [gameState, userInput, currentEquation, correctCount, questionStartTime, responseTimes, username, generateEquation, loadScores, clearTimer])
 
   // Handle key press
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -198,12 +226,15 @@ export default function Algebra() {
 
   // Reset game
   const resetGame = useCallback(() => {
+    clearTimer()
+    timerStartedRef.current = false
     setGameState('idle')
     setCurrentEquation(null)
     setUserInput('')
     setCorrectCount(0)
     setShowCorrectAnswer(false)
     setResponseTimes([])
+    setElapsedTime(0)
     hasSubmittedScore.current = false
     // Automatically start a new game after reset
     setTimeout(() => {
@@ -213,10 +244,15 @@ export default function Algebra() {
       setQuestionStartTime(Date.now())
       setTimeout(() => inputRef.current?.focus(), 100)
     }, 100)
-  }, [generateEquation])
+  }, [generateEquation, clearTimer])
 
   const formatScore = (score: AlgebraScore) => {
     return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`
+  }
+
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000)
+    return `${seconds}s`
   }
 
   return (
@@ -241,6 +277,9 @@ export default function Algebra() {
         <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
           <div className="text-gray-600 dark:text-gray-400">
             Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctCount}</span> / 20
+          </div>
+          <div className="text-gray-600 dark:text-gray-400">
+            Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
           </div>
           <button
             onClick={resetGame}
@@ -267,7 +306,10 @@ export default function Algebra() {
                   type="number"
                   inputMode="numeric"
                   value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
+                  onChange={(e) => {
+                    ensureTimerStarted()
+                    setUserInput(e.target.value)
+                  }}
                   onKeyPress={handleKeyPress}
                   placeholder="Enter value of x"
                   className="w-full px-4 py-3 text-2xl text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -315,8 +357,11 @@ export default function Algebra() {
               <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                 Game Over!
               </div>
-              <div className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+              <div className="text-xl text-gray-600 dark:text-gray-400 mb-2">
                 You got {correctCount} correct answer{correctCount !== 1 ? 's' : ''}!
+              </div>
+              <div className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                Time: {formatTime(elapsedTime)}
               </div>
               <button
                 onClick={resetGame}

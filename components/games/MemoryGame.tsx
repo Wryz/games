@@ -229,9 +229,6 @@ export default function MemoryGame() {
           <div className="text-gray-600 dark:text-gray-400">
             Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctClicks}</span>
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Length: <span className="font-bold text-purple-600 dark:text-purple-400">{sequence.length}</span>
-          </div>
           <button
             onClick={resetGame}
             className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
