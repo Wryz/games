@@ -27,7 +27,9 @@ import type {
   GeometryScore,
   GeometryScoreInsert,
   WordSearchScore,
-  WordSearchScoreInsert
+  WordSearchScoreInsert,
+  SudokuScore,
+  SudokuScoreInsert
 } from './supabase'
 
 // Score submission functions using RPC
@@ -471,6 +473,36 @@ export async function getWordSearchScores(filters?: { username?: string; limit?:
   return data
 }
 
+export async function submitSudokuScore(score: SudokuScoreInsert) {
+  const { data, error } = await supabase
+    .rpc('submit_sudoku_score', {
+      p_username: score.username,
+      p_time_taken: score.time_taken
+    })
+  
+  if (error) throw error
+  return data
+}
+
+export async function getSudokuScores(filters?: { username?: string; limit?: number }) {
+  let query = supabase
+    .from('sudoku_scores')
+    .select('*')
+    .order('time_taken', { ascending: true })
+
+  if (filters?.username) {
+    query = query.eq('username', filters.username)
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
 // Get all scores from all games
 export interface AllScoresEntry {
   gameId: string
@@ -498,7 +530,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     algebraScores,
     arithmeticScores,
     geometryScores,
-    wordSearchScores
+    wordSearchScores,
+    sudokuScores
   ] = await Promise.all([
     getAimTrainerScores(),
     getTypingTestScores(),
@@ -513,7 +546,8 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     getAlgebraScores(),
     getArithmeticScores(),
     getGeometryScores(),
-    getWordSearchScores()
+    getWordSearchScores(),
+    getSudokuScores()
   ])
 
   // Map each score to AllScoresEntry format
@@ -651,6 +685,16 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
     allScores.push({
       gameId: 'word-search',
       gameName: 'Word Search',
+      username: score.username,
+      score: score,
+      dateSubmitted: score.date_submitted
+    })
+  })
+
+  sudokuScores?.forEach(score => {
+    allScores.push({
+      gameId: 'sudoku',
+      gameName: 'Sudoku',
       username: score.username,
       score: score,
       dateSubmitted: score.date_submitted

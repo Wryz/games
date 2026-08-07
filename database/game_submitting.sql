@@ -252,3 +252,5 @@ BEGIN
   RETURN new_score;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION submit_sudoku_score(VARCHAR, INTEGER) TO anon, authenticated;
