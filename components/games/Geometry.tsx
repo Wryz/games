@@ -20,211 +20,472 @@ interface Problem {
   options: number[]
 }
 
-// Triangle component
-const TriangleShape = ({ angle1, angle2, angle3, missingAngle }: { angle1: number | null, angle2: number | null, angle3: number | null, missingAngle: 'a' | 'b' | 'c' }) => {
+type Point = { x: number; y: number }
+
+const SVG_W = 240
+const SVG_H = 220
+const PAD = 44
+const LABEL_MARGIN = 14
+const MIN_LABEL_GAP = 30
+const VERTEX_LABEL_DIST = 26
+const SIDE_LABEL_DIST = 22
+
+const toRad = (deg: number) => (deg * Math.PI) / 180
+
+const fitPoints = (points: Point[], pad = PAD): Point[] => {
+  const xs = points.map(p => p.x)
+  const ys = points.map(p => p.y)
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const spanX = Math.max(maxX - minX, 1e-6)
+  const spanY = Math.max(maxY - minY, 1e-6)
+  const scale = Math.min((SVG_W - 2 * pad) / spanX, (SVG_H - 2 * pad) / spanY)
+  const offsetX = (SVG_W - spanX * scale) / 2 - minX * scale
+  const offsetY = (SVG_H - spanY * scale) / 2 - minY * scale
+  return points.map(p => ({
+    x: p.x * scale + offsetX,
+    y: p.y * scale + offsetY,
+  }))
+}
+
+const pointsAttr = (points: Point[]) => points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+
+const midPoint = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })
+
+const centroidOf = (points: Point[]): Point => ({
+  x: points.reduce((s, p) => s + p.x, 0) / points.length,
+  y: points.reduce((s, p) => s + p.y, 0) / points.length,
+})
+
+const clampLabel = (p: Point): Point => ({
+  x: Math.min(SVG_W - LABEL_MARGIN, Math.max(LABEL_MARGIN, p.x)),
+  y: Math.min(SVG_H - LABEL_MARGIN, Math.max(LABEL_MARGIN, p.y)),
+})
+
+/** Unit vector from `from` toward `to`. */
+const dirFrom = (from: Point, to: Point): Point => {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const len = Math.hypot(dx, dy) || 1
+  return { x: dx / len, y: dy / len }
+}
+
+/**
+ * Place a vertex angle label clearly outside the shape.
+ * Uses the exterior angle bisector (away from the centroid).
+ */
+const vertexOuterLabel = (vertex: Point, prev: Point, next: Point, centroid: Point, dist = VERTEX_LABEL_DIST): Point => {
+  const u1 = dirFrom(vertex, prev)
+  const u2 = dirFrom(vertex, next)
+  // Interior bisector
+  let bx = u1.x + u2.x
+  let by = u1.y + u2.y
+  let bn = Math.hypot(bx, by)
+  if (bn < 1e-6) {
+    // Nearly 180°: fall back to away-from-centroid
+    const away = dirFrom(centroid, vertex)
+    bx = away.x
+    by = away.y
+    bn = 1
+  } else {
+    bx /= bn
+    by /= bn
+    // Point outward
+    const inward = dirFrom(vertex, centroid)
+    if (bx * inward.x + by * inward.y > 0) {
+      bx = -bx
+      by = -by
+    }
+  }
+  return clampLabel({
+    x: vertex.x + bx * dist,
+    y: vertex.y + by * dist,
+  })
+}
+
+/** Place a side label outside the shape, away from the centroid. */
+const sideOuterLabel = (a: Point, b: Point, centroid: Point, dist = SIDE_LABEL_DIST): Point => {
+  const mid = midPoint(a, b)
+  const away = dirFrom(centroid, mid)
+  return clampLabel({
+    x: mid.x + away.x * dist,
+    y: mid.y + away.y * dist,
+  })
+}
+
+/**
+ * Push labels apart without pulling them toward the shape centroid.
+ * Separation only moves labels further outward (or sideways).
+ */
+const separateLabels = (labels: Point[], centroid: Point, minGap = MIN_LABEL_GAP): Point[] => {
+  const pts = labels.map(p => ({ ...p }))
+  for (let iter = 0; iter < 10; iter++) {
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[j].x - pts[i].x
+        const dy = pts[j].y - pts[i].y
+        const dist = Math.hypot(dx, dy) || 0.01
+        if (dist >= minGap) continue
+        const push = (minGap - dist) / 2
+        const ux = dx / dist
+        const uy = dy / dist
+
+        // Candidate moves
+        const iCand = { x: pts[i].x - ux * push, y: pts[i].y - uy * push }
+        const jCand = { x: pts[j].x + ux * push, y: pts[j].y + uy * push }
+
+        // Prefer the move that stays farther from the centroid (keeps labels outside)
+        const keepOrOut = (orig: Point, cand: Point) => {
+          const origD = Math.hypot(orig.x - centroid.x, orig.y - centroid.y)
+          const candD = Math.hypot(cand.x - centroid.x, cand.y - centroid.y)
+          return candD >= origD - 0.5 ? cand : {
+            // If the natural push goes inward, push purely away from centroid instead
+            ...(() => {
+              const away = dirFrom(centroid, orig)
+              return { x: orig.x + away.x * push, y: orig.y + away.y * push }
+            })(),
+          }
+        }
+
+        pts[i] = keepOrOut(pts[i], iCand)
+        pts[j] = keepOrOut(pts[j], jCand)
+      }
+    }
+  }
+  return pts.map(clampLabel)
+}
+
+/**
+ * Build a triangle with interior angles A (top), B (bottom-left), C (bottom-right)
+ * using the law of sines, base BC horizontal.
+ */
+const triangleFromAngles = (angleA: number, angleB: number, angleC: number): [Point, Point, Point] => {
+  const a = Math.sin(toRad(angleA))
+  const b = Math.sin(toRad(angleB))
+  const c = Math.sin(toRad(angleC))
+  // Place B at origin, C on x-axis with length a (side opposite A)
+  const B: Point = { x: 0, y: 0 }
+  const C: Point = { x: a, y: 0 }
+  // Vertex A from B at angle B from base
+  const A: Point = {
+    x: c * Math.cos(toRad(angleB)),
+    y: -c * Math.sin(toRad(angleB)), // negative y so A is above base in SVG after flip via fit
+  }
+  // Ensure A is above the base (smaller y in SVG = up). If construction put it below, flip.
+  if (A.y > 0) A.y = -A.y
+  return fitPoints([A, B, C]) as [Point, Point, Point]
+}
+
+/**
+ * Build a convex quadrilateral with the given interior angles (walk order:
+ * TL → TR → BR → BL) by solving for side lengths that close the polygon.
+ */
+const quadFromAngles = (angles: [number, number, number, number]): [Point, Point, Point, Point] => {
+  const tryBuild = (s0: number, s1: number): Point[] | null => {
+    // Edge directions: leave V0 along heading 0; turn by (π − angle) at each later vertex
+    const edgeDir = [0, 0, 0, 0]
+    for (let i = 0; i < 3; i++) {
+      edgeDir[i + 1] = edgeDir[i] + (Math.PI - toRad(angles[i + 1]))
+    }
+    const cos = edgeDir.map(d => Math.cos(d))
+    const sin = edgeDir.map(d => Math.sin(d))
+
+    // s0*u0 + s1*u1 + s2*u2 + s3*u3 = 0  →  solve for s2, s3
+    const A = cos[2]
+    const B = cos[3]
+    const E = -s0 * cos[0] - s1 * cos[1]
+    const C = sin[2]
+    const D = sin[3]
+    const F = -s0 * sin[0] - s1 * sin[1]
+    const det = A * D - B * C
+    if (Math.abs(det) < 1e-9) return null
+    const s2 = (E * D - B * F) / det
+    const s3 = (A * F - E * C) / det
+    if (s2 <= 0.05 || s3 <= 0.05) return null
+
+    const sides = [s0, s1, s2, s3]
+    let x = 0
+    let y = 0
+    const raw: Point[] = [{ x, y }]
+    for (let i = 0; i < 4; i++) {
+      x += sides[i] * cos[i]
+      y += sides[i] * sin[i]
+      if (i < 3) raw.push({ x, y })
+    }
+    return raw
+  }
+
+  const ratios: [number, number][] = [
+    [1, 1],
+    [1, 1.4],
+    [1.4, 1],
+    [1, 0.7],
+    [0.7, 1],
+    [1, 2],
+    [2, 1],
+  ]
+  let raw: Point[] | null = null
+  for (const [s0, s1] of ratios) {
+    raw = tryBuild(s0, s1)
+    if (raw) break
+  }
+  if (!raw) {
+    raw = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: 1 },
+    ]
+  }
+
+  // Prefer orientation with first edge roughly horizontal
+  const dx = raw[1].x - raw[0].x
+  const dy = raw[1].y - raw[0].y
+  const rot = -Math.atan2(dy, dx)
+  const cosR = Math.cos(rot)
+  const sinR = Math.sin(rot)
+  let rotated = raw.map(p => ({
+    x: p.x * cosR - p.y * sinR,
+    y: p.x * sinR + p.y * cosR,
+  }))
+
+  // Keep polygon below the top edge (positive math area / CCW)
+  let area = 0
+  for (let i = 0; i < rotated.length; i++) {
+    const j = (i + 1) % rotated.length
+    area += rotated[i].x * rotated[j].y - rotated[j].x * rotated[i].y
+  }
+  if (area < 0) {
+    rotated = rotated.map(p => ({ x: p.x, y: -p.y }))
+  }
+
+  return fitPoints(rotated) as [Point, Point, Point, Point]
+}
+
+const AngleLabel = ({
+  point,
+  value,
+  isMissing,
+}: {
+  point: Point
+  value: number
+  isMissing: boolean
+}) => (
+  <text
+    x={point.x}
+    y={point.y}
+    textAnchor="middle"
+    dominantBaseline="middle"
+    className={`text-sm font-bold fill-current ${isMissing ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}
+  >
+    {isMissing ? '?' : `${value}°`}
+  </text>
+)
+
+const SideLabel = ({
+  point,
+  value,
+  isMissing,
+}: {
+  point: Point
+  value: number
+  isMissing: boolean
+}) => (
+  <text
+    x={point.x}
+    y={point.y}
+    textAnchor="middle"
+    dominantBaseline="middle"
+    className={`text-sm font-bold fill-current ${isMissing ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}
+  >
+    {isMissing ? '?' : value}
+  </text>
+)
+
+// Triangle component — vertices match angles A (top), B (BL), C (BR)
+const TriangleShape = ({ angle1, angle2, angle3, missingAngle }: { angle1: number, angle2: number, angle3: number, missingAngle: 'a' | 'b' | 'c' }) => {
+  const [pA, pB, pC] = triangleFromAngles(angle1, angle2, angle3)
+  const centroid = centroidOf([pA, pB, pC])
+  const [labelA, labelB, labelC] = separateLabels([
+    vertexOuterLabel(pA, pB, pC, centroid),
+    vertexOuterLabel(pB, pC, pA, centroid),
+    vertexOuterLabel(pC, pA, pB, centroid),
+  ], centroid)
+
   return (
-    <svg width="200" height="180" viewBox="0 0 200 180" className="mx-auto">
+    <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
       <polygon
-        points="100,20 40,160 160,160"
+        points={pointsAttr([pA, pB, pC])}
         fill="none"
         stroke="currentColor"
         strokeWidth="3"
         className="text-gray-800 dark:text-gray-200"
       />
-      {/* Angle labels */}
-      {missingAngle !== 'a' && angle1 !== null && (
-        <text x="90" y="35" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle1}°
-        </text>
-      )}
-      {missingAngle === 'a' && (
-        <text x="90" y="35" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingAngle !== 'b' && angle2 !== null && (
-        <text x="25" y="155" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle2}°
-        </text>
-      )}
-      {missingAngle === 'b' && (
-        <text x="25" y="155" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingAngle !== 'c' && angle3 !== null && (
-        <text x="155" y="155" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle3}°
-        </text>
-      )}
-      {missingAngle === 'c' && (
-        <text x="155" y="155" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
+      <AngleLabel point={labelA} value={angle1} isMissing={missingAngle === 'a'} />
+      <AngleLabel point={labelB} value={angle2} isMissing={missingAngle === 'b'} />
+      <AngleLabel point={labelC} value={angle3} isMissing={missingAngle === 'c'} />
     </svg>
   )
 }
 
-// Quadrilateral component
-const QuadrilateralShape = ({ angle1, angle2, angle3, angle4, missingAngle }: { angle1: number | null, angle2: number | null, angle3: number | null, angle4: number | null, missingAngle: 'a' | 'b' | 'c' | 'd' }) => {
+// Quadrilateral component — angles at TL, TR, BR, BL
+const QuadrilateralShape = ({ angle1, angle2, angle3, angle4, missingAngle }: { angle1: number, angle2: number, angle3: number, angle4: number, missingAngle: 'a' | 'b' | 'c' | 'd' }) => {
+  const [pTL, pTR, pBR, pBL] = quadFromAngles([angle1, angle2, angle3, angle4])
+  const centroid = centroidOf([pTL, pTR, pBR, pBL])
+  const [labelTL, labelTR, labelBR, labelBL] = separateLabels([
+    vertexOuterLabel(pTL, pBL, pTR, centroid),
+    vertexOuterLabel(pTR, pTL, pBR, centroid),
+    vertexOuterLabel(pBR, pTR, pBL, centroid),
+    vertexOuterLabel(pBL, pBR, pTL, centroid),
+  ], centroid)
+
   return (
-    <svg width="200" height="180" viewBox="0 0 200 180" className="mx-auto">
+    <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
       <polygon
-        points="50,30 150,30 170,150 30,150"
+        points={pointsAttr([pTL, pTR, pBR, pBL])}
         fill="none"
         stroke="currentColor"
         strokeWidth="3"
         className="text-gray-800 dark:text-gray-200"
       />
-      {/* Angle labels */}
-      {missingAngle !== 'a' && angle1 !== null && (
-        <text x="60" y="45" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle1}°
-        </text>
-      )}
-      {missingAngle === 'a' && (
-        <text x="60" y="45" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingAngle !== 'b' && angle2 !== null && (
-        <text x="155" y="45" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle2}°
-        </text>
-      )}
-      {missingAngle === 'b' && (
-        <text x="155" y="45" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingAngle !== 'c' && angle3 !== null && (
-        <text x="165" y="165" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle3}°
-        </text>
-      )}
-      {missingAngle === 'c' && (
-        <text x="165" y="165" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingAngle !== 'd' && angle4 !== null && (
-        <text x="25" y="165" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {angle4}°
-        </text>
-      )}
-      {missingAngle === 'd' && (
-        <text x="25" y="165" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
+      <AngleLabel point={labelTL} value={angle1} isMissing={missingAngle === 'a'} />
+      <AngleLabel point={labelTR} value={angle2} isMissing={missingAngle === 'b'} />
+      <AngleLabel point={labelBR} value={angle3} isMissing={missingAngle === 'c'} />
+      <AngleLabel point={labelBL} value={angle4} isMissing={missingAngle === 'd'} />
     </svg>
   )
 }
 
-// Right triangle component
-const RightTriangleShape = ({ sideA, sideB, sideC, missingSide }: { sideA: number | null, sideB: number | null, sideC: number | null, missingSide: 'a' | 'b' | 'c' }) => {
+// Right triangle — legs a (vertical) and b (horizontal) drawn to scale; c hypotenuse
+const RightTriangleShape = ({ sideA, sideB, sideC, missingSide }: { sideA: number, sideB: number, sideC: number, missingSide: 'a' | 'b' | 'c' }) => {
+  const a = sideA
+  const b = sideB
+  const raw: [Point, Point, Point] = [
+    { x: 0, y: 0 },       // right angle
+    { x: 0, y: -a },      // top of vertical leg
+    { x: b, y: 0 },       // end of horizontal leg
+  ]
+  const [pR, pTop, pRight] = fitPoints(raw) as [Point, Point, Point]
+
+  // Right-angle marker sized relative to shorter leg on screen
+  const marker = Math.min(12, Math.hypot(pTop.x - pR.x, pTop.y - pR.y) * 0.15, Math.hypot(pRight.x - pR.x, pRight.y - pR.y) * 0.15)
+  const ux = (pTop.x - pR.x)
+  const uy = (pTop.y - pR.y)
+  const uLen = Math.hypot(ux, uy) || 1
+  const vx = (pRight.x - pR.x)
+  const vy = (pRight.y - pR.y)
+  const vLen = Math.hypot(vx, vy) || 1
+  const m1 = { x: pR.x + (ux / uLen) * marker, y: pR.y + (uy / uLen) * marker }
+  const m2 = { x: m1.x + (vx / vLen) * marker, y: m1.y + (vy / vLen) * marker }
+  const m3 = { x: pR.x + (vx / vLen) * marker, y: pR.y + (vy / vLen) * marker }
+
+  const centroid = centroidOf([pR, pTop, pRight])
+  const [labelA, labelB, labelC] = separateLabels([
+    sideOuterLabel(pR, pTop, centroid),
+    sideOuterLabel(pR, pRight, centroid),
+    sideOuterLabel(pTop, pRight, centroid),
+  ], centroid)
+
   return (
-    <svg width="200" height="180" viewBox="0 0 200 180" className="mx-auto">
+    <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
       <polygon
-        points="50,150 50,30 180,150"
+        points={pointsAttr([pR, pTop, pRight])}
         fill="none"
         stroke="currentColor"
         strokeWidth="3"
         className="text-gray-800 dark:text-gray-200"
       />
-      {/* Right angle marker */}
       <path
-        d="M 50 150 L 50 140 L 60 140 L 60 150 Z"
+        d={`M ${m1.x.toFixed(1)} ${m1.y.toFixed(1)} L ${m2.x.toFixed(1)} ${m2.y.toFixed(1)} L ${m3.x.toFixed(1)} ${m3.y.toFixed(1)}`}
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         className="text-gray-800 dark:text-gray-200"
       />
-      {/* Side labels */}
-      {missingSide !== 'a' && sideA !== null && (
-        <text x="25" y="95" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {sideA}
-        </text>
-      )}
-      {missingSide === 'a' && (
-        <text x="25" y="95" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingSide !== 'b' && sideB !== null && (
-        <text x="110" y="165" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {sideB}
-        </text>
-      )}
-      {missingSide === 'b' && (
-        <text x="110" y="165" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
-      {missingSide !== 'c' && sideC !== null && (
-        <text x="100" y="80" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
-          {sideC}
-        </text>
-      )}
-      {missingSide === 'c' && (
-        <text x="100" y="80" className="text-sm font-bold fill-current text-red-600 dark:text-red-400">
-          ?
-        </text>
-      )}
+      <SideLabel point={labelA} value={sideA} isMissing={missingSide === 'a'} />
+      <SideLabel point={labelB} value={sideB} isMissing={missingSide === 'b'} />
+      <SideLabel point={labelC} value={sideC} isMissing={missingSide === 'c'} />
     </svg>
   )
 }
 
-// Rectangle component
+// Rectangle — aspect ratio matches width:height
 const RectangleShape = ({ width, height }: { width: number, height: number }) => {
+  const [tl, tr, br, bl] = fitPoints([
+    { x: 0, y: 0 },
+    { x: width, y: 0 },
+    { x: width, y: height },
+    { x: 0, y: height },
+  ]) as [Point, Point, Point, Point]
+  const centroid = centroidOf([tl, tr, br, bl])
+  const [topLabel, leftLabel] = separateLabels([
+    sideOuterLabel(tl, tr, centroid),
+    sideOuterLabel(tl, bl, centroid),
+  ], centroid)
+
   return (
-    <svg width="200" height="180" viewBox="0 0 200 180" className="mx-auto">
-      <rect
-        x="30"
-        y="30"
-        width="140"
-        height="120"
+    <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
+      <polygon
+        points={pointsAttr([tl, tr, br, bl])}
         fill="none"
         stroke="currentColor"
         strokeWidth="3"
         className="text-gray-800 dark:text-gray-200"
       />
-      <text x="100" y="25" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400 text-center">
+      <text x={topLabel.x} y={topLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {width}
       </text>
-      <text x="10" y="95" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
+      <text x={leftLabel.x} y={leftLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {height}
       </text>
     </svg>
   )
 }
 
-// Triangle area component
+// Triangle area — base and height drawn to scale with altitude dashed
 const TriangleAreaShape = ({ base, height }: { base: number, height: number }) => {
+  const [pL, pR, pApex] = fitPoints([
+    { x: 0, y: 0 },
+    { x: base, y: 0 },
+    { x: base / 2, y: -height },
+  ]) as [Point, Point, Point]
+  const foot = { x: (pL.x + pR.x) / 2, y: pL.y }
+  const centroid = centroidOf([pL, pR, pApex])
+  // Height label outside to the right of the triangle; base below the bottom edge
+  const heightLabelOutside = clampLabel({
+    x: Math.max(pR.x, pApex.x) + SIDE_LABEL_DIST,
+    y: (pApex.y + foot.y) / 2,
+  })
+  const [heightLabel, baseLabel] = separateLabels([
+    heightLabelOutside,
+    sideOuterLabel(pL, pR, centroid),
+  ], centroid)
+
   return (
-    <svg width="200" height="180" viewBox="0 0 200 180" className="mx-auto">
+    <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto">
       <polygon
-        points="30,150 170,150 100,30"
+        points={pointsAttr([pL, pR, pApex])}
         fill="none"
         stroke="currentColor"
         strokeWidth="3"
         className="text-gray-800 dark:text-gray-200"
       />
       <line
-        x1="100"
-        y1="30"
-        x2="100"
-        y2="150"
+        x1={pApex.x}
+        y1={pApex.y}
+        x2={foot.x}
+        y2={foot.y}
         stroke="currentColor"
         strokeWidth="2"
         strokeDasharray="5,5"
         className="text-gray-500 dark:text-gray-400"
       />
-      <text x="105" y="95" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
+      <text x={heightLabel.x} y={heightLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {height}
       </text>
-      <text x="100" y="170" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400 text-center">
+      <text x={baseLabel.x} y={baseLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {base}
       </text>
     </svg>
@@ -285,10 +546,15 @@ export default function Geometry() {
     
     switch (type) {
       case 'triangle_angles': {
-        // Triangle angles sum to 180°
-        const angle1 = Math.floor(Math.random() * 60) + 30 // 30-89
-        const angle2 = Math.floor(Math.random() * 60) + 30 // 30-89
-        const angle3 = 180 - angle1 - angle2 // Remaining angle
+        // Triangle angles sum to 180° — keep each angle visually distinct (≥25°)
+        let angle1 = 0
+        let angle2 = 0
+        let angle3 = 0
+        do {
+          angle1 = Math.floor(Math.random() * 70) + 25 // 25-94
+          angle2 = Math.floor(Math.random() * 70) + 25 // 25-94
+          angle3 = 180 - angle1 - angle2
+        } while (angle3 < 25 || angle3 > 130)
         const missingIndex = Math.floor(Math.random() * 3) // 0, 1, or 2
         const angles = [angle1, angle2, angle3]
         const answer = angles[missingIndex]
@@ -310,9 +576,9 @@ export default function Geometry() {
         const missingLabels = ['a', 'b', 'c'] as const
         const shape = (
           <TriangleShape
-            angle1={missingIndex === 0 ? null : angle1}
-            angle2={missingIndex === 1 ? null : angle2}
-            angle3={missingIndex === 2 ? null : angle3}
+            angle1={angle1}
+            angle2={angle2}
+            angle3={angle3}
             missingAngle={missingLabels[missingIndex]}
           />
         )
@@ -327,11 +593,17 @@ export default function Geometry() {
       }
       
       case 'quadrilateral_angles': {
-        // Quadrilateral angles sum to 360°
-        const angle1 = Math.floor(Math.random() * 80) + 50 // 50-129
-        const angle2 = Math.floor(Math.random() * 80) + 50 // 50-129
-        const angle3 = Math.floor(Math.random() * 80) + 50 // 50-129
-        const angle4 = 360 - angle1 - angle2 - angle3 // Remaining angle
+        // Quadrilateral angles sum to 360° — keep each angle in a drawable convex range
+        let angle1 = 0
+        let angle2 = 0
+        let angle3 = 0
+        let angle4 = 0
+        do {
+          angle1 = Math.floor(Math.random() * 80) + 50 // 50-129
+          angle2 = Math.floor(Math.random() * 80) + 50 // 50-129
+          angle3 = Math.floor(Math.random() * 80) + 50 // 50-129
+          angle4 = 360 - angle1 - angle2 - angle3
+        } while (angle4 < 50 || angle4 > 140)
         const missingIndex = Math.floor(Math.random() * 4) // 0, 1, 2, or 3
         const angles = [angle1, angle2, angle3, angle4]
         const answer = angles[missingIndex]
@@ -353,10 +625,10 @@ export default function Geometry() {
         const missingLabels = ['a', 'b', 'c', 'd'] as const
         const shape = (
           <QuadrilateralShape
-            angle1={missingIndex === 0 ? null : angle1}
-            angle2={missingIndex === 1 ? null : angle2}
-            angle3={missingIndex === 2 ? null : angle3}
-            angle4={missingIndex === 3 ? null : angle4}
+            angle1={angle1}
+            angle2={angle2}
+            angle3={angle3}
+            angle4={angle4}
             missingAngle={missingLabels[missingIndex]}
           />
         )
@@ -403,9 +675,9 @@ export default function Geometry() {
         const missingLabels = ['a', 'b', 'c'] as const
         const shape = (
           <RightTriangleShape
-            sideA={missingIndex === 0 ? null : a}
-            sideB={missingIndex === 1 ? null : b}
-            sideC={missingIndex === 2 ? null : c}
+            sideA={a}
+            sideB={b}
+            sideC={c}
             missingSide={missingLabels[missingIndex]}
           />
         )
