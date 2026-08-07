@@ -14,6 +14,7 @@ type Grid = number[][] // 0 = empty
 const SIZE = 9
 const BOX = 3
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const BOX_INDICES = Array.from({ length: BOX }, (_, i) => i)
 const CLUE_COUNT = 36
 
 function shuffle<T>(arr: T[]): T[] {
@@ -109,9 +110,9 @@ function generateSolution(): Grid {
 
   // Shuffle rows within each band
   for (let band = 0; band < BOX; band++) {
-    const bandRows = [band * BOX, band * BOX + 1, band * BOX + 2]
+    const bandRows = BOX_INDICES.map(i => band * BOX + i)
     const copies = bandRows.map(r => [...grid[r]])
-    const order = shuffle([0, 1, 2])
+    const order = shuffle([...BOX_INDICES])
     for (let i = 0; i < BOX; i++) {
       grid[bandRows[i]] = copies[order[i]]
     }
@@ -119,8 +120,8 @@ function generateSolution(): Grid {
 
   // Shuffle columns within each stack
   for (let stack = 0; stack < BOX; stack++) {
-    const stackCols = [stack * BOX, stack * BOX + 1, stack * BOX + 2]
-    const order = shuffle([0, 1, 2])
+    const stackCols = BOX_INDICES.map(i => stack * BOX + i)
+    const order = shuffle([...BOX_INDICES])
     const copies = stackCols.map(c => grid.map(row => row[c]))
     for (let i = 0; i < BOX; i++) {
       for (let r = 0; r < SIZE; r++) {
@@ -131,9 +132,9 @@ function generateSolution(): Grid {
 
   // Shuffle bands
   {
-    const order = shuffle([0, 1, 2])
-    const copies = [0, 1, 2].map(b =>
-      [0, 1, 2].map(i => [...grid[b * BOX + i]])
+    const order = shuffle([...BOX_INDICES])
+    const copies = BOX_INDICES.map(b =>
+      BOX_INDICES.map(i => [...grid[b * BOX + i]])
     )
     for (let b = 0; b < BOX; b++) {
       for (let i = 0; i < BOX; i++) {
@@ -144,9 +145,9 @@ function generateSolution(): Grid {
 
   // Shuffle stacks
   {
-    const order = shuffle([0, 1, 2])
-    const copies = [0, 1, 2].map(s =>
-      [0, 1, 2].map(i => grid.map(row => row[s * BOX + i]))
+    const order = shuffle([...BOX_INDICES])
+    const copies = BOX_INDICES.map(s =>
+      BOX_INDICES.map(i => grid.map(row => row[s * BOX + i]))
     )
     for (let s = 0; s < BOX; s++) {
       for (let i = 0; i < BOX; i++) {
@@ -444,7 +445,7 @@ export default function Sudoku() {
     if (!ready || gameState !== 'playing') return
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key >= '1' && e.key <= '9') {
+      if (e.key >= '1' && e.key <= String(SIZE)) {
         placeNumber(Number(e.key))
         return
       }

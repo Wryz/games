@@ -363,6 +363,7 @@ export default function Home({ onGameSelect }: HomeProps) {
               formattedValue = `${formatNum(scoreValue.average_accuracy || 0)}ms avg (${formatNum(scoreValue.best_accuracy || 0)}ms best)`
               break
             case 'maze':
+            case 'sudoku':
               const timeTaken = scoreValue.time_taken || 0
               const seconds = Math.floor(timeTaken / 1000)
               const milliseconds = Math.floor((timeTaken % 1000) / 100)
@@ -418,7 +419,8 @@ export default function Home({ onGameSelect }: HomeProps) {
       'algebra_scores',
       'arithmetic_scores',
       'geometry_scores',
-      'word_search_scores'
+      'word_search_scores',
+      'sudoku_scores'
     ].map(tableName => {
       return supabase
         .channel(`${tableName}_changes`)
