@@ -30,7 +30,7 @@ export const EDUCATION_LEVELS: Record<number, string> = {
   20: 'Doctorate'
 }
 
-export type GameCategory = 'motor' | 'memory' | 'perception' | 'cognitive' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'spatial' | 'linguistic' | 'geography'
+export type GameCategory = 'motor' | 'memory' | 'perception' | 'cognitive' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'puzzles' | 'linguistic'
 
 export interface GameLevelInfo {
   currentLevel: number
