@@ -181,7 +181,6 @@ export async function getTypingTestScores(filters?: { username?: string; limit?:
   let query = supabase
     .from('typing_test_scores')
     .select('*')
-    .order('date_submitted', { ascending: false })
     .order('wpm', { ascending: false })
 
   if (filters?.username) {
