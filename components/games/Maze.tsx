@@ -44,6 +44,7 @@ export default function Maze() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef(0)
   const hasStartedRef = useRef(false)
+  const timerStartedRef = useRef(false)
 
   const loadScores = async () => {
     try {
@@ -311,7 +312,7 @@ export default function Maze() {
     return grid
   }, [initializeMaze, getUnvisitedNeighbors, removeWall, addMultiplePaths, isMazeTooSimple])
 
-  // Start new game
+  // Start new game (maze only — timer starts on first move)
   const startGame = useCallback(() => {
     const newMaze = generateMaze()
     setMaze(newMaze)
@@ -325,20 +326,17 @@ export default function Maze() {
     const exit: Position = { row: MAZE_SIZE - 1, col: MAZE_SIZE - 1 }
     setExitPos(exit)
     
-    const gameStartTime = Date.now()
-    setStartTime(gameStartTime)
-    startTimeRef.current = gameStartTime
+    setStartTime(0)
+    startTimeRef.current = 0
     setElapsedTime(0)
     setGameState('playing')
     hasSubmittedScore.current = false
+    timerStartedRef.current = false
 
-    // Start timer
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
     }
-    timerIntervalRef.current = setInterval(() => {
-      setElapsedTime(Date.now() - startTimeRef.current)
-    }, 1000)
   }, [generateMaze])
 
   // Auto-start on mount
@@ -347,6 +345,22 @@ export default function Maze() {
     hasStartedRef.current = true
     startGame()
   }, [startGame])
+
+  const beginTimer = useCallback(() => {
+    if (timerStartedRef.current) return
+    timerStartedRef.current = true
+    const now = Date.now()
+    setStartTime(now)
+    startTimeRef.current = now
+    setElapsedTime(0)
+
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+    }
+    timerIntervalRef.current = setInterval(() => {
+      setElapsedTime(Date.now() - startTimeRef.current)
+    }, 1000)
+  }, [])
 
   // Handle movement in a direction
   const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
@@ -381,6 +395,7 @@ export default function Maze() {
     }
 
     if (newPos) {
+      beginTimer()
       setPlayerPos(newPos)
       
       // Check if reached exit
@@ -391,6 +406,7 @@ export default function Maze() {
         
         if (timerIntervalRef.current) {
           clearInterval(timerIntervalRef.current)
+          timerIntervalRef.current = null
         }
 
         // Submit score
@@ -408,7 +424,7 @@ export default function Maze() {
         }
       }
     }
-  }, [gameState, maze, playerPos, exitPos, username, loadScores])
+  }, [gameState, maze, playerPos, exitPos, username, beginTimer])
 
   // Handle arrow key movement
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
@@ -442,24 +458,6 @@ export default function Maze() {
       window.removeEventListener('keydown', handleKeyPress)
     }
   }, [handleKeyPress])
-
-  // Update timer
-  useEffect(() => {
-    if (gameState === 'playing' && startTimeRef.current > 0) {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current)
-      }
-      timerIntervalRef.current = setInterval(() => {
-        setElapsedTime(Date.now() - startTimeRef.current)
-      }, 1000)
-    }
-
-    return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current)
-      }
-    }
-  }, [gameState])
 
   // Reset starts a new maze
   const resetGame = useCallback(() => {
