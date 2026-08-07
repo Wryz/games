@@ -269,6 +269,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sudoku_scores: {
+        Row: {
+          date_submitted: string | null
+          id: number
+          time_taken: number
+          username: string
+        }
+        Insert: {
+          date_submitted?: string | null
+          id?: number
+          time_taken: number
+          username: string
+        }
+        Update: {
+          date_submitted?: string | null
+          id?: number
+          time_taken?: number
+          username?: string
+        }
+        Relationships: []
+      }
       time_estimation_scores: {
         Row: {
           average_accuracy: number
@@ -447,42 +468,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_chimp_test_score:
-        | {
-            Args: { p_patterns_remembered: number; p_username: string }
-            Returns: {
-              date_submitted: string | null
-              id: number
-              patterns_remembered: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "chimp_test_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_level_reached: number
-              p_patterns_remembered: number
-              p_total_patterns: number
-              p_username: string
-            }
-            Returns: {
-              date_submitted: string | null
-              id: number
-              patterns_remembered: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "chimp_test_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      submit_chimp_test_score: {
+        Args: { p_patterns_remembered: number; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          patterns_remembered: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "chimp_test_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_geometry_score: {
         Args: {
           p_average_time: number
@@ -542,41 +542,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_number_memory_score:
-        | {
-            Args: { p_longest_sequence: number; p_username: string }
-            Returns: {
-              date_submitted: string | null
-              id: number
-              longest_sequence: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "number_memory_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_attempts: number
-              p_longest_sequence: number
-              p_username: string
-            }
-            Returns: {
-              date_submitted: string | null
-              id: number
-              longest_sequence: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "number_memory_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      submit_number_memory_score: {
+        Args: { p_longest_sequence: number; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          longest_sequence: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "number_memory_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_reaction_time_score: {
         Args: {
           p_attempts: number
@@ -599,48 +579,41 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_stroop_test_score:
-        | {
-            Args: {
-              p_average_time: number
-              p_correct_answers: number
-              p_total_questions: number
-              p_username: string
-            }
-            Returns: {
-              average_time: number
-              correct_answers: number
-              date_submitted: string | null
-              id: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "stroop_test_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_average_time: number
-              p_correct_answers: number
-              p_username: string
-            }
-            Returns: {
-              average_time: number
-              correct_answers: number
-              date_submitted: string | null
-              id: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "stroop_test_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      submit_stroop_test_score: {
+        Args: {
+          p_average_time: number
+          p_correct_answers: number
+          p_username: string
+        }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stroop_test_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_sudoku_score: {
+        Args: { p_time_taken: number; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          time_taken: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sudoku_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_time_estimation_score: {
         Args: {
           p_average_accuracy: number
@@ -686,48 +659,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_visual_memory_score:
-        | {
-            Args: {
-              p_level_reached: number
-              p_total_patterns: number
-              p_username: string
-            }
-            Returns: {
-              date_submitted: string | null
-              id: number
-              level_reached: number
-              total_patterns: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "visual_memory_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_level_reached: number
-              p_patterns_remembered: number
-              p_total_patterns: number
-              p_username: string
-            }
-            Returns: {
-              date_submitted: string | null
-              id: number
-              level_reached: number
-              total_patterns: number
-              username: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "visual_memory_scores"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      submit_visual_memory_score: {
+        Args: {
+          p_level_reached: number
+          p_total_patterns: number
+          p_username: string
+        }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          total_patterns: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "visual_memory_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_word_search_score: {
         Args: { p_characters_found: number; p_username: string }
         Returns: {

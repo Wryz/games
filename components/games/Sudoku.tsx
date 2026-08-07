@@ -1,7 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { getSudokuScores, submitSudokuScore } from '@/lib/scores'
+import { useUser } from '@/contexts/UserContext'
+import { supabase } from '@/lib/supabase'
 import GameWrapper from '../GameWrapper'
+import type { SudokuScore } from '@/lib/supabase'
+import { formatNumber } from '@/lib/levels'
 
 type GameState = 'playing' | 'finished'
 type Grid = number[][] // 0 = empty
@@ -270,6 +275,8 @@ function previousEditableCell(
 }
 
 export default function Sudoku() {
+  const [scores, setScores] = useState<SudokuScore[]>([])
+  const [loading, setLoading] = useState(true)
   const [ready, setReady] = useState(false)
   const [gameState, setGameState] = useState<GameState>('playing')
   const [puzzle, setPuzzle] = useState<Grid>(() => emptyGrid())
@@ -278,8 +285,55 @@ export default function Sudoku() {
   const [selected, setSelected] = useState<[number, number] | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [timerStarted, setTimerStarted] = useState(false)
+  const { username } = useUser()
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef(0)
+  const hasSubmittedScore = useRef(false)
+
+  const loadScores = async () => {
+    try {
+      setLoading(true)
+      const data = await getSudokuScores({ limit: 50 })
+      setScores(data || [])
+    } catch (error) {
+      console.error('Error loading sudoku scores:', error)
+      setScores([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadScores()
+
+    const channel = supabase
+      .channel('sudoku_scores_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sudoku_scores'
+        },
+        (payload) => {
+          setScores(prev => [payload.new as SudokuScore, ...prev.slice(0, 49)])
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  const formatScore = (score: SudokuScore) => {
+    if (!score || score.time_taken === undefined || score.time_taken === null) {
+      return 'N/A'
+    }
+    const seconds = Math.floor(score.time_taken / 1000)
+    const milliseconds = Math.floor((score.time_taken % 1000) / 100)
+    return `${formatNumber(seconds)}.${milliseconds}s`
+  }
 
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000)
@@ -313,6 +367,8 @@ export default function Sudoku() {
     setElapsedTime(0)
     setTimerStarted(false)
     setReady(true)
+    hasSubmittedScore.current = false
+    startTimeRef.current = 0
     clearTimer()
   }, [clearTimer])
 
@@ -356,13 +412,33 @@ export default function Sudoku() {
     setSelected([row, col])
   }, [ready, gameState])
 
+  // Same pattern as Maze: finish + submit score in the completion handler
   const handleSubmit = useCallback(() => {
     if (!ready || gameState !== 'playing' || !isFilled(grid)) return
-    setElapsedTime(Date.now() - startTimeRef.current)
+
+    const finalTime = startTimeRef.current > 0
+      ? Date.now() - startTimeRef.current
+      : elapsedTime
+
+    setElapsedTime(finalTime)
     clearTimer()
     setSelected(null)
     setGameState('finished')
-  }, [ready, gameState, grid, clearTimer])
+
+    // Only save a score when the puzzle is solved correctly (like Maze on reaching exit)
+    if (isComplete(grid, solution) && username && !hasSubmittedScore.current) {
+      hasSubmittedScore.current = true
+      submitSudokuScore({
+        username,
+        time_taken: finalTime
+      }).then(() => {
+        setTimeout(() => loadScores(), 1000)
+      }).catch(error => {
+        console.error('Error submitting score:', error)
+        hasSubmittedScore.current = false
+      })
+    }
+  }, [ready, gameState, grid, solution, username, elapsedTime, clearTimer])
 
   useEffect(() => {
     if (!ready || gameState !== 'playing') return
@@ -404,11 +480,11 @@ export default function Sudoku() {
   return (
     <GameWrapper
       gameType="Sudoku"
-      scores={[]}
-      loading={false}
-      onRefresh={async () => {}}
-      formatScore={() => ''}
-      sortKey=""
+      scores={scores}
+      loading={loading}
+      onRefresh={loadScores}
+      formatScore={formatScore}
+      sortKey="time_taken"
       sortDirection="asc"
     >
       <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
