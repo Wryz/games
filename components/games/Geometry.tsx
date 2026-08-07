@@ -731,9 +731,13 @@ export default function Geometry() {
             options
           }
         } else {
-          const base = Math.floor(Math.random() * 8) + 3 // 3-10
-          const height = Math.floor(Math.random() * 8) + 3 // 3-10
-          const answer = Math.floor((base * height) / 2)
+          // Ensure area is a whole number: at least one of base/height must be even
+          let base = Math.floor(Math.random() * 8) + 3 // 3-10
+          let height = Math.floor(Math.random() * 8) + 3 // 3-10
+          if ((base * height) % 2 !== 0) {
+            height += 1 // both odd → make height even (stays ≤10)
+          }
+          const answer = (base * height) / 2
           
           // Generate wrong options
           const options = [answer]
