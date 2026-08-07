@@ -22,8 +22,22 @@ export default function ReactionTime() {
   const startTimeRef = useRef<number>(0)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const hasSubmittedScore = useRef(false)
+  const gameStateRef = useRef<GameState>(gameState)
+  const currentAttemptRef = useRef(currentAttempt)
+  const reactionTimesRef = useRef(reactionTimes)
 
   const TOTAL_ATTEMPTS = 5
+
+  gameStateRef.current = gameState
+  currentAttemptRef.current = currentAttempt
+  reactionTimesRef.current = reactionTimes
+
+  const clearTimers = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }, [])
 
   const loadScores = async () => {
     try {
@@ -65,8 +79,10 @@ export default function ReactionTime() {
 
   // Start a new round
   const startRound = useCallback(() => {
-    if (currentAttempt > TOTAL_ATTEMPTS) return
-    
+    if (currentAttemptRef.current > TOTAL_ATTEMPTS) return
+
+    clearTimers()
+    gameStateRef.current = 'ready'
     setGameState('ready')
     setInstruction('Wait for green...')
     
@@ -74,58 +90,68 @@ export default function ReactionTime() {
     const delay = Math.random() * 4000 + 1000
     
     timeoutRef.current = setTimeout(() => {
+      gameStateRef.current = 'click'
       setGameState('click')
       setInstruction('Click now!')
       startTimeRef.current = Date.now()
     }, delay)
-  }, [currentAttempt])
+  }, [clearTimers])
 
   // Handle click
   const handleClick = useCallback(() => {
-    if (gameState === 'waiting' && currentAttempt === 0) {
+    const state = gameStateRef.current
+    const attempt = currentAttemptRef.current
+
+    if (state === 'waiting' && attempt === 0) {
       // First click - start the game
+      currentAttemptRef.current = 1
       setCurrentAttempt(1)
       startRound()
-    } else if (gameState === 'waiting' && currentAttempt > 0) {
+    } else if (state === 'waiting' && attempt > 0) {
       // Already started, just continue to next round
       startRound()
-    } else if (gameState === 'ready') {
-      // Clicked too early
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    } else if (state === 'ready') {
+      // Clicked too early — fully cancel the pending green, then retry this attempt
+      clearTimers()
+      gameStateRef.current = 'too-early'
       setGameState('too-early')
       setInstruction('Too early!')
-      
-      // Auto-continue after showing warning - go directly to ready state
-      setTimeout(() => {
+
+      timeoutRef.current = setTimeout(() => {
         startRound()
       }, 1500)
-    } else if (gameState === 'click') {
+    } else if (state === 'click') {
       // Clicked at the right time
+      clearTimers()
       const reactionTime = Date.now() - startTimeRef.current
-      const newTimes = [...reactionTimes, reactionTime]
+      const newTimes = [...reactionTimesRef.current, reactionTime]
+      reactionTimesRef.current = newTimes
       setReactionTimes(newTimes)
       
-      if (currentAttempt >= TOTAL_ATTEMPTS) {
+      if (attempt >= TOTAL_ATTEMPTS) {
         // Game finished
+        gameStateRef.current = 'finished'
         setGameState('finished')
         setInstruction('Test complete!')
       } else {
         // Next attempt
-        const nextAttempt = currentAttempt + 1
+        const nextAttempt = attempt + 1
+        currentAttemptRef.current = nextAttempt
         setCurrentAttempt(nextAttempt)
+        gameStateRef.current = 'waiting'
         setGameState('waiting')
         setInstruction(`${reactionTime}ms!`)
         
         // Auto-start next round after showing result
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
           if (nextAttempt <= TOTAL_ATTEMPTS) {
-            setInstruction('Wait for green...')
-            setTimeout(() => startRound(), 100)
+            startRound()
           }
         }, 1500)
       }
     }
-  }, [gameState, currentAttempt, reactionTimes, startRound])
+    // Ignore clicks during too-early / finished so recovery timers aren't interrupted
+  }, [clearTimers, startRound])
 
   // Submit score when game finishes
   useEffect(() => {
@@ -154,13 +180,16 @@ export default function ReactionTime() {
 
   // Reset game
   const resetGame = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    clearTimers()
+    gameStateRef.current = 'waiting'
+    currentAttemptRef.current = 0
+    reactionTimesRef.current = []
     setGameState('waiting')
     setReactionTimes([])
     setCurrentAttempt(0)
     setInstruction('Click anywhere to start')
     hasSubmittedScore.current = false
-  }, [])
+  }, [clearTimers])
 
   const formatScore = (score: ReactionTimeScore) => {
     return `${formatNumber(score.average_time)}ms avg (${formatNumber(score.fastest_time)}ms best)`

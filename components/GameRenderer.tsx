@@ -17,6 +17,7 @@ import TimeEstimation from './games/TimeEstimation'
 import WordSearch from './games/WordSearch'
 import Maze from './games/Maze'
 import Sudoku from './games/Sudoku'
+import Tangrams from './games/Tangrams'
 import UsernameGate from './UsernameGate'
 
 interface GameRendererProps {
@@ -46,6 +47,7 @@ export default function GameRenderer({ selectedGame, onGameSelect }: GameRendere
     'word-search': WordSearch,
     'maze': Maze,
     'sudoku': Sudoku,
+    'tangrams': Tangrams,
   }
 
   const GameComponent = gameComponents[selectedGame as keyof typeof gameComponents]

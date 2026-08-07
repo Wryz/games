@@ -364,6 +364,7 @@ export default function Home({ onGameSelect }: HomeProps) {
               break
             case 'maze':
             case 'sudoku':
+            case 'tangrams':
               const timeTaken = scoreValue.time_taken || 0
               const seconds = Math.floor(timeTaken / 1000)
               const milliseconds = Math.floor((timeTaken % 1000) / 100)
@@ -420,7 +421,8 @@ export default function Home({ onGameSelect }: HomeProps) {
       'arithmetic_scores',
       'geometry_scores',
       'word_search_scores',
-      'sudoku_scores'
+      'sudoku_scores',
+      'tangrams_scores'
     ].map(tableName => {
       return supabase
         .channel(`${tableName}_changes`)

@@ -14,7 +14,8 @@ import {
   TimeEstimationIcon,
   WordSearchIcon,
   MazeIcon,
-  SudokuIcon
+  SudokuIcon,
+  TangramsIcon
 } from '@/components/icons/GameIcons'
 
 export interface Game {
@@ -127,8 +128,15 @@ export const GAMES: Game[] = [
   {
     id: 'sudoku',
     name: 'Sudoku',
-    description: 'Fill the grid so every row, column, and box contains 1–9',
+    description: 'Fill the 6×6 grid so each 3×3 box contains 1–9 with no repeats in rows or columns',
     icon: SudokuIcon,
+    category: 'puzzles'
+  },
+  {
+    id: 'tangrams',
+    name: 'Tangrams',
+    description: 'Arrange seven shapes to match the silhouette as fast as you can',
+    icon: TangramsIcon,
     category: 'puzzles'
   }
 ]

@@ -110,6 +110,8 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
             case 'time-estimation':
               return `${formatNumber(score.average_accuracy || 0)}ms avg (${formatNumber(score.best_accuracy || 0)}ms best)`
             case 'maze':
+            case 'sudoku':
+            case 'tangrams':
               const seconds = Math.floor((score.time_taken || 0) / 1000)
               const milliseconds = Math.floor(((score.time_taken || 0) % 1000) / 100)
               return `${formatNumber(seconds)}.${milliseconds}s`

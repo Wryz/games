@@ -450,6 +450,31 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+    
+    UNION ALL
+    
+    -- Tangrams
+    SELECT 
+      'tangrams' as game_id,
+      (SELECT COUNT(*) FROM tangrams_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'time_taken', time_taken,
+        'date_submitted', date_submitted
+      ) FROM tangrams_scores 
+      ORDER BY time_taken ASC 
+      LIMIT 1) as top_score,
+      CASE 
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'time_taken', time_taken,
+            'date_submitted', date_submitted
+          ) FROM tangrams_scores 
+          WHERE username = p_username
+          ORDER BY time_taken ASC 
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;

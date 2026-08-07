@@ -290,6 +290,27 @@ export type Database = {
         }
         Relationships: []
       }
+      tangrams_scores: {
+        Row: {
+          date_submitted: string | null
+          id: number
+          time_taken: number
+          username: string
+        }
+        Insert: {
+          date_submitted?: string | null
+          id?: number
+          time_taken: number
+          username: string
+        }
+        Update: {
+          date_submitted?: string | null
+          id?: number
+          time_taken?: number
+          username?: string
+        }
+        Relationships: []
+      }
       time_estimation_scores: {
         Row: {
           average_accuracy: number
@@ -610,6 +631,21 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "sudoku_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_tangrams_score: {
+        Args: { p_time_taken: number; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          time_taken: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tangrams_scores"
           isOneToOne: true
           isSetofReturn: false
         }

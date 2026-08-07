@@ -177,6 +177,17 @@ BEGIN
       date_submitted
     FROM sudoku_scores
     
+    UNION ALL
+    
+    -- Tangrams
+    SELECT 
+      'tangrams' as game_id,
+      'Tangrams' as game_name,
+      username,
+      json_build_object('time_taken', time_taken) as score_value,
+      date_submitted
+    FROM tangrams_scores
+    
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;

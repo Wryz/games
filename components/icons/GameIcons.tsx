@@ -157,10 +157,10 @@ export const StroopTestIcon = ({ className = "", size = 24 }: IconProps) => (
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    <circle cx="8" cy="8" r="4" fill="#ef4444"/>
-    <circle cx="16" cy="8" r="4" fill="#22c55e"/>
-    <circle cx="8" cy="16" r="4" fill="#3b82f6"/>
-    <circle cx="16" cy="16" r="4" fill="#f59e0b"/>
+    <circle cx="8" cy="8" r="4" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <circle cx="16" cy="8" r="4" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <circle cx="8" cy="16" r="4" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" fill="none"/>
   </svg>
 )
 
@@ -308,7 +308,22 @@ export const SudokuIcon = ({ className = "", size = 24 }: IconProps) => (
     className={className}
   >
     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
-    <path d="M3 5h18M3 7h18M3 11h18M3 13h18M3 17h18M3 19h18M5 3v18M7 3v18M11 3v18M13 3v18M17 3v18M19 3v18" stroke="currentColor" strokeWidth="0.75"/>
     <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+)
+
+export const TangramsIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M3 3h10v10H3z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none"/>
+    <path d="M13 3l8 8H13V3z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none"/>
+    <path d="M3 13l5 8H3v-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none"/>
+    <path d="M8 13h8l-4 8H8v-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none"/>
   </svg>
 )

@@ -254,3 +254,21 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION submit_sudoku_score(VARCHAR, INTEGER) TO anon, authenticated;
+
+-- Function to submit tangrams score
+CREATE OR REPLACE FUNCTION submit_tangrams_score(
+  p_username VARCHAR(50),
+  p_time_taken INTEGER
+) RETURNS tangrams_scores AS $$
+DECLARE
+  new_score tangrams_scores;
+BEGIN
+  INSERT INTO tangrams_scores (username, time_taken)
+  VALUES (p_username, p_time_taken)
+  RETURNING * INTO new_score;
+  
+  RETURN new_score;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION submit_tangrams_score(VARCHAR, INTEGER) TO anon, authenticated;
