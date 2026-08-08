@@ -58,6 +58,8 @@ export default function Algebra() {
     timerStartedRef.current = true
     const now = Date.now()
     gameStartTimeRef.current = now
+    // Align Q1 response clock with display timer (exclude idle before first input)
+    setQuestionStartTime(now)
     setElapsedTime(0)
     timerIntervalRef.current = setInterval(() => {
       setElapsedTime(Date.now() - gameStartTimeRef.current)
