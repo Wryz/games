@@ -820,7 +820,11 @@ export default function Geometry() {
       
       if (newCorrectCount >= 10) {
         // Reached 10 correct answers - game finished!
+        const finalTime = timerStartedRef.current
+          ? Date.now() - gameStartTimeRef.current
+          : 0
         clearTimer()
+        setElapsedTime(finalTime)
         setGameState('finished')
         
         // Submit single score for the entire game
@@ -906,12 +910,18 @@ export default function Geometry() {
     return `${seconds}s`
   }
 
+  const formatExactTime = (ms: number) => {
+    return `${(ms / 1000).toFixed(3)}s`
+  }
+
   return (
     <GameWrapper
       gameType="Geometry"
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getGeometryScores}
+      scoreTable="geometry_scores"
       formatScore={formatScore}
       sortKey="correct_answers"
       sortDirection="desc"
@@ -1004,7 +1014,7 @@ export default function Geometry() {
                 You completed all 10 questions correctly!
               </div>
               <div className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                Time: {formatTime(elapsedTime)}
+                Time: {formatExactTime(elapsedTime)}
               </div>
               <button
                 onClick={resetGame}

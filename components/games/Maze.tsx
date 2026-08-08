@@ -470,12 +470,18 @@ export default function Maze() {
     return `${seconds}s`
   }
 
+  const formatExactTime = (ms: number) => {
+    return `${(ms / 1000).toFixed(3)}s`
+  }
+
   return (
     <GameWrapper
       gameType="Maze"
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getMazeScores}
+      scoreTable="maze_scores"
       formatScore={formatScore}
       sortKey="time_taken"
       sortDirection="asc"
@@ -509,7 +515,7 @@ export default function Maze() {
               <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
                 <div className="text-center">
                   <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
-                    {formatTime(elapsedTime)}
+                    {formatExactTime(elapsedTime)}
                   </div>
                   <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                     Completion Time

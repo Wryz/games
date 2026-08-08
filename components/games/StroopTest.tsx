@@ -149,7 +149,11 @@ export default function StroopTest() {
       generateQuestion()
     } else {
       // Wrong answer - show mistake, then end game
+      const finalTime = timerStartedRef.current
+        ? Date.now() - gameStartTimeRef.current
+        : 0
       clearTimer()
+      setElapsedTime(finalTime)
       setResponseTimes(prev => [...prev, responseTime])
       setMistakeSelected(selectedColor)
       setMistakeWord(currentWord)
@@ -202,6 +206,10 @@ export default function StroopTest() {
     return `${seconds}s`
   }
 
+  const formatExactTime = (ms: number) => {
+    return `${(ms / 1000).toFixed(3)}s`
+  }
+
   // Calculate current stats
   const averageTime = responseTimes.length > 0 
     ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
@@ -213,6 +221,8 @@ export default function StroopTest() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getStroopTestScores}
+      scoreTable="stroop_test_scores"
       formatScore={formatScore}
       sortKey="correct_answers"
       sortDirection="desc"
@@ -316,7 +326,7 @@ export default function StroopTest() {
                   </div>
                   <div>
                     <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
-                      {formatTime(elapsedTime)}
+                      {formatExactTime(elapsedTime)}
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                       Time

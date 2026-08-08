@@ -215,6 +215,8 @@ export default function ReactionTime() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getReactionTimeScores}
+      scoreTable="reaction_time_scores"
       formatScore={formatScore}
       sortKey="average_time"
       sortDirection="asc"

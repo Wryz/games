@@ -184,7 +184,11 @@ export default function Arithmetic() {
       
       if (newCorrectCount >= 20) {
         // Reached 20 correct answers - game finished!
+        const finalTime = timerStartedRef.current
+          ? Date.now() - gameStartTimeRef.current
+          : 0
         clearTimer()
+        setElapsedTime(finalTime)
         setGameState('finished')
         
         // Submit score
@@ -282,12 +286,18 @@ export default function Arithmetic() {
     return `${seconds}s`
   }
 
+  const formatExactTime = (ms: number) => {
+    return `${(ms / 1000).toFixed(3)}s`
+  }
+
   return (
     <GameWrapper
       gameType="Arithmetic"
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getArithmeticScores}
+      scoreTable="arithmetic_scores"
       formatScore={formatScore}
       sortKey="correct_answers"
       sortDirection="desc"
@@ -388,7 +398,7 @@ export default function Arithmetic() {
                 You completed all 20 questions correctly!
               </div>
               <div className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                Time: {formatTime(elapsedTime)}
+                Time: {formatExactTime(elapsedTime)}
               </div>
               <button
                 onClick={resetGame}

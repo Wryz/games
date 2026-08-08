@@ -679,6 +679,8 @@ export default function WordSearch() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getWordSearchScores}
+      scoreTable="word_search_scores"
       formatScore={formatScore}
       sortKey="characters_found"
       sortDirection="desc"

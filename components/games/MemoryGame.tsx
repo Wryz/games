@@ -216,6 +216,8 @@ export default function MemoryGame() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getMemoryScores}
+      scoreTable="memory_scores"
       formatScore={formatScore}
       sortKey="level_reached"
       sortDirection="desc"

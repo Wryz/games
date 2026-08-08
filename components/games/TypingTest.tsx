@@ -276,6 +276,8 @@ export default function TypingTest() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getTypingTestScores}
+      scoreTable="typing_test_scores"
       formatScore={formatScore}
       sortKey="wpm"
       sortDirection="desc"

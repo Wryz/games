@@ -126,7 +126,11 @@ export default function AimTrainer() {
   // Start new target
   const spawnTarget = useCallback(() => {
     if (gameStats.totalTargets >= TOTAL_TARGETS) {
+      const finalTime = gameStartTimeRef.current > 0
+        ? Date.now() - gameStartTimeRef.current
+        : 0
       clearTimer()
+      setElapsedTime(finalTime)
       setGameState('finished')
       return
     }
@@ -292,6 +296,10 @@ export default function AimTrainer() {
     return `${seconds}s`
   }
 
+  const formatExactTime = (ms: number) => {
+    return `${(ms / 1000).toFixed(3)}s`
+  }
+
   // Custom sort function for aim trainer: prioritize accuracy, then reaction time
   const customSort = (a: AimTrainerScore, b: AimTrainerScore) => {
     // First, sort by accuracy (descending - higher is better)
@@ -313,6 +321,8 @@ export default function AimTrainer() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getAimTrainerScores}
+      scoreTable="aim_trainer_scores"
       formatScore={formatScore}
       sortKey="accuracy"
       sortDirection="desc"
@@ -340,7 +350,7 @@ export default function AimTrainer() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatTime(elapsedTime)}
+                    {formatExactTime(elapsedTime)}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Time</div>
                 </div>

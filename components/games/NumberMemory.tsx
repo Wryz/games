@@ -184,6 +184,8 @@ export default function NumberMemory() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getNumberMemoryScores}
+      scoreTable="number_memory_scores"
       formatScore={formatScore}
       sortKey="longest_sequence"
       sortDirection="desc"

@@ -518,6 +518,10 @@ export default function Tangrams() {
     return `${seconds}s`
   }
 
+  const formatExactTime = (ms: number) => {
+    return `${(ms / 1000).toFixed(3)}s`
+  }
+
   const clearTimer = useCallback(() => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
@@ -725,6 +729,8 @@ export default function Tangrams() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getTangramsScores}
+      scoreTable="tangrams_scores"
       formatScore={formatScore}
       sortKey="time_taken"
       sortDirection="asc"
@@ -757,7 +763,7 @@ export default function Tangrams() {
               <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
                 <div className="text-center">
                   <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatTime(elapsedTime)}
+                    {formatExactTime(elapsedTime)}
                   </div>
                   <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                     {solved ? 'Completion Time' : 'Time'}

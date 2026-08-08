@@ -231,6 +231,8 @@ export default function VisualMemory() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getVisualMemoryScores}
+      scoreTable="visual_memory_scores"
       formatScore={formatScore}
       sortKey="level_reached"
       sortDirection="desc"
