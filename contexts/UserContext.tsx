@@ -14,17 +14,20 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
 export function UserProvider({ children }: { children: ReactNode }) {
   const [username, setUsernameState] = useState<string | null>(null)
 
-  // Load username from localStorage on mount
+  // Load username from localStorage on mount (client-only to avoid SSR mismatch)
   useEffect(() => {
-    const savedUsername = localStorage.getItem('brainbench-username')
-    if (savedUsername) {
-      setUsernameState(savedUsername)
-      // Identify user in PostHog if username is already saved
-      if (typeof window !== 'undefined' && posthog) {
-        posthog.identify(savedUsername, {
-          username: savedUsername
-        })
+    try {
+      const savedUsername = localStorage.getItem('brainbench-username')
+      if (savedUsername) {
+        setUsernameState(savedUsername)
+        if (typeof window !== 'undefined' && posthog) {
+          posthog.identify(savedUsername, {
+            username: savedUsername
+          })
+        }
       }
+    } catch {
+      // ignore storage errors
     }
   }, [])
 

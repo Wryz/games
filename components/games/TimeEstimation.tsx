@@ -253,6 +253,8 @@ export default function TimeEstimation() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getTimeEstimationScores}
+      scoreTable="time_estimation_scores"
       formatScore={formatScore}
       sortKey="average_accuracy"
       sortDirection="asc"

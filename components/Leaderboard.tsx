@@ -1,7 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useUser } from '@/contexts/UserContext'
+import { supabase } from '@/lib/supabase'
+
+export type FetchScoresFn = (filters?: {
+  username?: string
+  limit?: number
+}) => Promise<any[]>
 
 interface LeaderboardProps {
   gameType: string
@@ -12,26 +18,117 @@ interface LeaderboardProps {
   sortKey: string
   sortDirection?: 'asc' | 'desc'
   customSort?: (a: any, b: any) => number
+  /** Fetches scores; called without limit for My Scores so all user runs are returned */
+  fetchScores: FetchScoresFn
+  /** Table name for realtime INSERT updates on My Scores */
+  scoreTable: string
 }
 
-export default function Leaderboard({ 
-  gameType, 
-  scores, 
-  loading, 
-  onRefresh, 
-  formatScore, 
+export default function Leaderboard({
+  gameType,
+  scores,
+  loading,
+  onRefresh,
+  formatScore,
   sortKey,
   sortDirection = 'desc',
-  customSort
+  customSort,
+  fetchScores,
+  scoreTable
 }: LeaderboardProps) {
   const { username } = useUser()
   const [filter, setFilter] = useState<'all' | 'personal'>('all')
   const [searchUsername, setSearchUsername] = useState('')
+  const [personalScores, setPersonalScores] = useState<any[]>([])
+  const [personalLoading, setPersonalLoading] = useState(false)
+  const fetchScoresRef = useRef(fetchScores)
+  fetchScoresRef.current = fetchScores
 
-  const filteredScores = scores.filter(score => {
-    if (filter === 'personal' && username) {
-      return score.username === username
+  const loadPersonalScores = useCallback(async () => {
+    if (!username) {
+      setPersonalScores([])
+      return
     }
+
+    setPersonalLoading(true)
+    try {
+      const data = await fetchScoresRef.current({ username })
+      setPersonalScores(data || [])
+    } catch (error) {
+      console.error('Error loading personal scores:', error)
+      setPersonalScores([])
+    } finally {
+      setPersonalLoading(false)
+    }
+  }, [username])
+
+  // Load all of the current user's scores (no top-50 limit)
+  useEffect(() => {
+    let cancelled = false
+
+    const run = async () => {
+      if (!username) {
+        setPersonalScores([])
+        return
+      }
+
+      setPersonalLoading(true)
+      try {
+        const data = await fetchScoresRef.current({ username })
+        if (!cancelled) setPersonalScores(data || [])
+      } catch (error) {
+        console.error('Error loading personal scores:', error)
+        if (!cancelled) setPersonalScores([])
+      } finally {
+        if (!cancelled) setPersonalLoading(false)
+      }
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [username])
+
+  // Auto-update My Scores when a new score is inserted for this user
+  useEffect(() => {
+    if (!username || !scoreTable) return
+
+    const channel = supabase
+      .channel(`${scoreTable}_personal_${username}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: scoreTable
+        },
+        (payload) => {
+          const row = payload.new as { username?: string; id?: number }
+          if (row.username !== username) return
+
+          setPersonalScores(prev => {
+            if (row.id != null && prev.some(s => s.id === row.id)) return prev
+            return [payload.new, ...prev]
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [username, scoreTable])
+
+  const handleRefresh = () => {
+    onRefresh()
+    loadPersonalScores()
+  }
+
+  const sourceScores = filter === 'personal' ? personalScores : scores
+
+  const filteredScores = sourceScores.filter(score => {
+    if (filter === 'personal') return true
     if (searchUsername) {
       return score.username.toLowerCase().includes(searchUsername.toLowerCase())
     }
@@ -39,26 +136,24 @@ export default function Leaderboard({
   })
 
   const sortedScores = [...filteredScores].sort((a, b) => {
-    // Use custom sort function if provided
     if (customSort) {
       return customSort(a, b)
     }
-    
-    // Default sorting by sortKey
+
     const aVal = a[sortKey]
     const bVal = b[sortKey]
-    
-    // Handle null/undefined values
+
     if (aVal == null && bVal == null) return 0
     if (aVal == null) return 1
     if (bVal == null) return -1
-    
+
     if (sortDirection === 'asc') {
       return aVal - bVal
-    } else {
-      return bVal - aVal
     }
+    return bVal - aVal
   })
+
+  const isLoading = filter === 'personal' ? personalLoading : loading
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A'
@@ -77,11 +172,11 @@ export default function Leaderboard({
           {gameType} Leaderboard
         </h3>
         <button
-          onClick={onRefresh}
-          disabled={loading}
+          onClick={handleRefresh}
+          disabled={isLoading}
           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm"
         >
-          {loading ? 'Loading...' : 'Refresh'}
+          {isLoading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
 
@@ -111,19 +206,21 @@ export default function Leaderboard({
             </button>
           )}
         </div>
-        
-        <input
-          type="text"
-          placeholder="Search username..."
-          value={searchUsername}
-          onChange={(e) => setSearchUsername(e.target.value)}
-          className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-        />
+
+        {filter === 'all' && (
+          <input
+            type="text"
+            placeholder="Search username..."
+            value={searchUsername}
+            onChange={(e) => setSearchUsername(e.target.value)}
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          />
+        )}
       </div>
 
       {/* Scores list */}
       <div className="space-y-2 max-h-96 overflow-y-auto">
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Loading scores...
           </div>

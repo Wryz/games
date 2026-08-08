@@ -239,6 +239,8 @@ export default function ChimpTest() {
       scores={scores}
       loading={loading}
       onRefresh={loadScores}
+      fetchScores={getChimpTestScores}
+      scoreTable="chimp_test_scores"
       formatScore={formatScore}
       sortKey="patterns_remembered"
       sortDirection="desc"
