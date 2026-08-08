@@ -540,6 +540,8 @@ export default function Geometry() {
     timerStartedRef.current = true
     const now = Date.now()
     gameStartTimeRef.current = now
+    // Align Q1 response clock with display timer (exclude idle before first click)
+    setQuestionStartTime(now)
     setElapsedTime(0)
     timerIntervalRef.current = setInterval(() => {
       setElapsedTime(Date.now() - gameStartTimeRef.current)
@@ -803,9 +805,12 @@ export default function Geometry() {
   const handleAnswerSelect = useCallback((selectedAnswer: number) => {
     if (gameState !== 'playing' || !currentProblem) return
 
+    // First click starts the clock; Q1 must not include pre-click idle
+    // (setState in ensureTimerStarted would not apply until next render)
+    const justStarted = !timerStartedRef.current
     ensureTimerStarted()
     
-    const responseTime = Date.now() - questionStartTime
+    const responseTime = justStarted ? 0 : Date.now() - questionStartTime
     
     if (selectedAnswer === currentProblem.answer) {
       // Correct!
