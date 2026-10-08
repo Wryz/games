@@ -327,3 +327,82 @@ export const TangramsIcon = ({ className = "", size = 24 }: IconProps) => (
     <path d="M8 13h8l-4 8H8v-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none"/>
   </svg>
 )
+
+export const VerbalMemoryIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M4 5h11a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3V5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M8 10h6M8 14h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M18 8h2v11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+export const MentalRotationIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M4 4h6v3H7v6H4V4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M20 20h-6v-3h3v-6h3v9z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M15 4a6 6 0 0 1 5 5M9 20a6 6 0 0 1-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M20 5.5V9h-3.5M4 18.5V15h3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+export const ColorPerceptionIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
+    <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
+    <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
+    <rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/>
+  </svg>
+)
+
+export const FlankerIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path d="M2 12h4M3.5 10L2 12l1.5 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.55"/>
+    <path d="M18 12h4M20.5 10L22 12l-1.5 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.55"/>
+    <path d="M8 12h8M13 8.5l3.5 3.5-3.5 3.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+/** Brand mark: a measurement bracket around a pulse trace. */
+export const LogoMark = ({ className = "", size = 28 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 32 32"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden
+  >
+    <rect width="32" height="32" rx="9" className="fill-gray-950 dark:fill-gray-50"/>
+    <path d="M9 9H7v14h2M23 9h2v14h-2" className="stroke-gray-50 dark:stroke-gray-950" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M10.5 17h3l1.5-5 2.5 9 1.5-4h2.5" className="stroke-volt dark:stroke-signal-600" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)

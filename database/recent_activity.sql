@@ -39,7 +39,7 @@ BEGIN
     -- Memory Game
     SELECT 
       'memory' as game_id,
-      'Memory Game' as game_name,
+      'Sequence Memory' as game_name,
       username,
       json_build_object('level_reached', level_reached) as score_value,
       date_submitted
@@ -188,6 +188,50 @@ BEGIN
       date_submitted
     FROM tangrams_scores
     
+    UNION ALL
+
+    -- Verbal Memory
+    SELECT
+      'verbal-memory' as game_id,
+      'Verbal Memory' as game_name,
+      username,
+      json_build_object('words_remembered', words_remembered) as score_value,
+      date_submitted
+    FROM verbal_memory_scores
+
+    UNION ALL
+
+    -- Flanker
+    SELECT
+      'flanker' as game_id,
+      'Flanker' as game_name,
+      username,
+      json_build_object('correct_answers', correct_answers, 'average_time', average_time) as score_value,
+      date_submitted
+    FROM flanker_scores
+
+    UNION ALL
+
+    -- Color Perception
+    SELECT
+      'color-perception' as game_id,
+      'Color Perception' as game_name,
+      username,
+      json_build_object('level_reached', level_reached) as score_value,
+      date_submitted
+    FROM color_perception_scores
+
+    UNION ALL
+
+    -- Mental Rotation
+    SELECT
+      'mental-rotation' as game_id,
+      'Mental Rotation' as game_name,
+      username,
+      json_build_object('correct_answers', correct_answers, 'average_time', average_time) as score_value,
+      date_submitted
+    FROM mental_rotation_scores
+
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;

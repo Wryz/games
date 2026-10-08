@@ -755,3 +755,95 @@ export async function getAllScores(): Promise<AllScoresEntry[]> {
 
   return allScores
 }
+
+// ── New tests (see database/new_tests.sql) ─────────────────────────────
+
+type ScoreFilters = { username?: string; limit?: number }
+
+export async function submitVerbalMemoryScore(score: { username: string; words_remembered: number }) {
+  const { data, error } = await supabase.rpc('submit_verbal_memory_score', {
+    p_username: score.username,
+    p_words_remembered: score.words_remembered
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getVerbalMemoryScores(filters?: ScoreFilters) {
+  let query = supabase
+    .from('verbal_memory_scores')
+    .select('*')
+    .order('words_remembered', { ascending: false })
+  if (filters?.username) query = query.eq('username', filters.username)
+  if (filters?.limit) query = query.limit(filters.limit)
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
+export async function submitFlankerScore(score: { username: string; correct_answers: number; average_time: number }) {
+  const { data, error } = await supabase.rpc('submit_flanker_score', {
+    p_username: score.username,
+    p_correct_answers: score.correct_answers,
+    p_average_time: score.average_time
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getFlankerScores(filters?: ScoreFilters) {
+  let query = supabase
+    .from('flanker_scores')
+    .select('*')
+    .order('correct_answers', { ascending: false })
+    .order('average_time', { ascending: true })
+  if (filters?.username) query = query.eq('username', filters.username)
+  if (filters?.limit) query = query.limit(filters.limit)
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
+export async function submitColorPerceptionScore(score: { username: string; level_reached: number }) {
+  const { data, error } = await supabase.rpc('submit_color_perception_score', {
+    p_username: score.username,
+    p_level_reached: score.level_reached
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getColorPerceptionScores(filters?: ScoreFilters) {
+  let query = supabase
+    .from('color_perception_scores')
+    .select('*')
+    .order('level_reached', { ascending: false })
+  if (filters?.username) query = query.eq('username', filters.username)
+  if (filters?.limit) query = query.limit(filters.limit)
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
+export async function submitMentalRotationScore(score: { username: string; correct_answers: number; average_time: number }) {
+  const { data, error } = await supabase.rpc('submit_mental_rotation_score', {
+    p_username: score.username,
+    p_correct_answers: score.correct_answers,
+    p_average_time: score.average_time
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getMentalRotationScores(filters?: ScoreFilters) {
+  let query = supabase
+    .from('mental_rotation_scores')
+    .select('*')
+    .order('correct_answers', { ascending: false })
+    .order('average_time', { ascending: true })
+  if (filters?.username) query = query.eq('username', filters.username)
+  if (filters?.limit) query = query.limit(filters.limit)
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}

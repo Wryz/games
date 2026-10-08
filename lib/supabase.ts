@@ -47,3 +47,8 @@ export type GeometryScoreInsert = Database['public']['Tables']['geometry_scores'
 export type WordSearchScoreInsert = Database['public']['Tables']['word_search_scores']['Insert']
 export type SudokuScoreInsert = Database['public']['Tables']['sudoku_scores']['Insert']
 export type TangramsScoreInsert = Database['public']['Tables']['tangrams_scores']['Insert']
+
+export type VerbalMemoryScore = Database['public']['Tables']['verbal_memory_scores']['Row']
+export type FlankerScore = Database['public']['Tables']['flanker_scores']['Row']
+export type ColorPerceptionScore = Database['public']['Tables']['color_perception_scores']['Row']
+export type MentalRotationScore = Database['public']['Tables']['mental_rotation_scores']['Row']
