@@ -29,40 +29,168 @@ interface Cell {
   foundWord?: string // Track which word this cell belongs to
 }
 
+// Generate a random letter
+function getRandomLetter() {
+  return String.fromCharCode(65 + Math.floor(Math.random() * 26))
+}
+
+// Generate word search grid
+function generateGrid(): { grid: Cell[][], words: string[] } {
+  // Select random words (6-10 words for 8x8 grid)
+  const numWords = Math.floor(Math.random() * 5) + 6
+  const selectedWords = [...WORD_LIST]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, numWords)
+    .map(w => w.toUpperCase())
+  
+  // Initialize empty grid
+  const newGrid: Cell[][] = []
+  for (let row = 0; row < GRID_SIZE; row++) {
+    newGrid[row] = []
+    for (let col = 0; col < GRID_SIZE; col++) {
+      newGrid[row][col] = {
+        row,
+        col,
+        letter: '',
+        isSelected: false,
+        isFound: false
+      }
+    }
+  }
+
+  // Directions: left-to-right, top-to-bottom, top-left to bottom-right only
+  const directions = [
+    { dr: 0, dc: 1 },   // horizontal left-to-right
+    { dr: 1, dc: 0 },   // vertical top-to-bottom
+    { dr: 1, dc: 1 }    // diagonal top-left to bottom-right
+  ]
+
+  const placedWords: string[] = []
+
+  // Try to place each word
+  for (const word of selectedWords) {
+    let placed = false
+    let attempts = 0
+    
+    while (!placed && attempts < 200) {
+      attempts++
+      const direction = directions[Math.floor(Math.random() * directions.length)]
+      
+      // Calculate valid start positions to ensure word fits in 8x8 grid
+      let maxStartRow = GRID_SIZE - 1
+      let maxStartCol = GRID_SIZE - 1
+      
+      if (direction.dr > 0) {
+        // Vertical or diagonal: need room for word.length rows
+        maxStartRow = GRID_SIZE - word.length
+      }
+      if (direction.dc > 0) {
+        // Horizontal or diagonal: need room for word.length cols
+        maxStartCol = GRID_SIZE - word.length
+      }
+      
+      // Ensure we have valid positions
+      if (maxStartRow < 0 || maxStartCol < 0) {
+        continue // Word is too long for this direction, skip
+      }
+      
+      const startRow = Math.floor(Math.random() * (maxStartRow + 1))
+      const startCol = Math.floor(Math.random() * (maxStartCol + 1))
+      
+      // Double-check that word fits (safety check)
+      const endRow = startRow + direction.dr * (word.length - 1)
+      const endCol = startCol + direction.dc * (word.length - 1)
+      
+      if (endRow >= 0 && endRow < GRID_SIZE && endCol >= 0 && endCol < GRID_SIZE) {
+        // Check if cells are empty or have matching letters
+        let canPlace = true
+        for (let i = 0; i < word.length; i++) {
+          const row = startRow + direction.dr * i
+          const col = startCol + direction.dc * i
+          const cell = newGrid[row][col]
+          if (cell.letter !== '' && cell.letter !== word[i]) {
+            canPlace = false
+            break
+          }
+        }
+        
+        if (canPlace) {
+          // Place the word
+          for (let i = 0; i < word.length; i++) {
+            const row = startRow + direction.dr * i
+            const col = startCol + direction.dc * i
+            newGrid[row][col].letter = word[i]
+          }
+          placedWords.push(word)
+          placed = true
+        }
+      }
+    }
+  }
+
+  // Fill remaining cells with random letters
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      if (newGrid[row][col].letter === '') {
+        newGrid[row][col].letter = getRandomLetter()
+      }
+    }
+  }
+
+  return { grid: newGrid, words: placedWords }
+}
+
 export default function WordSearch() {
   const [scores, setScores] = useState<WordSearchScore[]>([])
   const [loading, setLoading] = useState(true)
   const [gameState, setGameState] = useState<GameState>('playing')
-  const [grid, setGrid] = useState<Cell[][]>([])
+  // Games are client-only (ssr: false in GameRenderer), so Math.random() here can't cause a hydration mismatch
+  const [firstPuzzle] = useState(generateGrid)
+  const [grid, setGrid] = useState<Cell[][]>(firstPuzzle.grid)
   const [selectedCells, setSelectedCells] = useState<Cell[]>([])
   const [foundWords, setFoundWords] = useState<Set<string>>(new Set())
   const [foundWordPaths, setFoundWordPaths] = useState<Map<string, Cell[]>>(new Map())
   const [timeLeft, setTimeLeft] = useState(GAME_TIME)
   const [isDragging, setIsDragging] = useState(false)
-  const [wordsInGrid, setWordsInGrid] = useState<string[]>([])
+  const [wordsInGrid, setWordsInGrid] = useState<string[]>(firstPuzzle.words)
   const [timerStarted, setTimerStarted] = useState(false)
   const { username } = useUser()
   const hasSubmittedScore = useRef(false)
   const gridRef = useRef<HTMLDivElement>(null)
+  // Grid size for the found-word overlay, measured outside render
+  const [gridBox, setGridBox] = useState<{ width: number; height: number } | null>(null)
+  const attachGrid = useCallback((el: HTMLDivElement | null) => {
+    gridRef.current = el
+    if (!el) return
+    const observer = new ResizeObserver(() => {
+      const rect = el.getBoundingClientRect()
+      setGridBox({ width: rect.width, height: rect.height })
+    })
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      gridRef.current = null
+    }
+  }, [])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getWordSearchScores({ limit: 50 })
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getWordSearchScores({ limit: 50 })
+      .then(data => {
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
-  // Generate a random letter
-  const getRandomLetter = () => {
-    return String.fromCharCode(65 + Math.floor(Math.random() * 26))
-  }
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   // Check if a path is valid (straight line: left-to-right, top-to-bottom, or top-left to bottom-right only)
   const isValidPath = (cells: Cell[]): boolean => {
@@ -105,114 +233,8 @@ export default function WordSearch() {
     return false
   }
 
-  // Generate word search grid
-  const generateGrid = useCallback((): { grid: Cell[][], words: string[] } => {
-    // Select random words (6-10 words for 8x8 grid)
-    const numWords = Math.floor(Math.random() * 5) + 6
-    const selectedWords = [...WORD_LIST]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, numWords)
-      .map(w => w.toUpperCase())
-    
-    // Initialize empty grid
-    const newGrid: Cell[][] = []
-    for (let row = 0; row < GRID_SIZE; row++) {
-      newGrid[row] = []
-      for (let col = 0; col < GRID_SIZE; col++) {
-        newGrid[row][col] = {
-          row,
-          col,
-          letter: '',
-          isSelected: false,
-          isFound: false
-        }
-      }
-    }
-
-    // Directions: left-to-right, top-to-bottom, top-left to bottom-right only
-    const directions = [
-      { dr: 0, dc: 1 },   // horizontal left-to-right
-      { dr: 1, dc: 0 },   // vertical top-to-bottom
-      { dr: 1, dc: 1 }    // diagonal top-left to bottom-right
-    ]
-
-    const placedWords: string[] = []
-
-    // Try to place each word
-    for (const word of selectedWords) {
-      let placed = false
-      let attempts = 0
-      
-      while (!placed && attempts < 200) {
-        attempts++
-        const direction = directions[Math.floor(Math.random() * directions.length)]
-        
-        // Calculate valid start positions to ensure word fits in 8x8 grid
-        let maxStartRow = GRID_SIZE - 1
-        let maxStartCol = GRID_SIZE - 1
-        
-        if (direction.dr > 0) {
-          // Vertical or diagonal: need room for word.length rows
-          maxStartRow = GRID_SIZE - word.length
-        }
-        if (direction.dc > 0) {
-          // Horizontal or diagonal: need room for word.length cols
-          maxStartCol = GRID_SIZE - word.length
-        }
-        
-        // Ensure we have valid positions
-        if (maxStartRow < 0 || maxStartCol < 0) {
-          continue // Word is too long for this direction, skip
-        }
-        
-        const startRow = Math.floor(Math.random() * (maxStartRow + 1))
-        const startCol = Math.floor(Math.random() * (maxStartCol + 1))
-        
-        // Double-check that word fits (safety check)
-        const endRow = startRow + direction.dr * (word.length - 1)
-        const endCol = startCol + direction.dc * (word.length - 1)
-        
-        if (endRow >= 0 && endRow < GRID_SIZE && endCol >= 0 && endCol < GRID_SIZE) {
-          // Check if cells are empty or have matching letters
-          let canPlace = true
-          for (let i = 0; i < word.length; i++) {
-            const row = startRow + direction.dr * i
-            const col = startCol + direction.dc * i
-            const cell = newGrid[row][col]
-            if (cell.letter !== '' && cell.letter !== word[i]) {
-              canPlace = false
-              break
-            }
-          }
-          
-          if (canPlace) {
-            // Place the word
-            for (let i = 0; i < word.length; i++) {
-              const row = startRow + direction.dr * i
-              const col = startCol + direction.dc * i
-              newGrid[row][col].letter = word[i]
-            }
-            placedWords.push(word)
-            placed = true
-          }
-        }
-      }
-    }
-
-    // Fill remaining cells with random letters
-    for (let row = 0; row < GRID_SIZE; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        if (newGrid[row][col].letter === '') {
-          newGrid[row][col].letter = getRandomLetter()
-        }
-      }
-    }
-
-    return { grid: newGrid, words: placedWords }
-  }, [])
-
   // Get cell from coordinates
-  const getCellFromPoint = (clientX: number, clientY: number): Cell | null => {
+  const getCellFromPoint = useCallback((clientX: number, clientY: number): Cell | null => {
     if (!gridRef.current) return null
     
     const rect = gridRef.current.getBoundingClientRect()
@@ -226,7 +248,7 @@ export default function WordSearch() {
     }
     
     return null
-  }
+  }, [grid])
 
   // Handle mouse/touch start
   const handleStart = useCallback((clientX: number, clientY: number) => {
@@ -243,7 +265,7 @@ export default function WordSearch() {
         )
       ))
     }
-  }, [gameState, grid])
+  }, [gameState, getCellFromPoint, grid.length])
 
   // Handle mouse/touch move
   const handleMove = useCallback((clientX: number, clientY: number) => {
@@ -374,7 +396,7 @@ export default function WordSearch() {
         }
       }
     }
-  }, [isDragging, gameState, selectedCells, grid])
+  }, [isDragging, gameState, grid.length, getCellFromPoint, selectedCells])
 
   // Mouse event handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -446,7 +468,7 @@ export default function WordSearch() {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-  }, [generateGrid])
+  }, [])
 
   // Calculate outline path for a word
   const getWordOutlinePath = (cells: Cell[], cellSize: number, gap: number, padding: number): string => {
@@ -637,12 +659,7 @@ export default function WordSearch() {
   }, [])
 
   useEffect(() => {
-    loadScores()
-    
-    // Generate initial grid
-    const { grid: newGrid, words: newWords } = generateGrid()
-    setGrid(newGrid)
-    setWordsInGrid(newWords)
+    fetchScores()
     
     // Set up realtime listener
     const channel = supabase
@@ -667,7 +684,7 @@ export default function WordSearch() {
         clearInterval(timerRef.current)
       }
     }
-  }, [generateGrid])
+  }, [fetchScores])
 
   const formatScore = (score: WordSearchScore) => {
     return `${formatNumber(score.characters_found)} characters`
@@ -723,7 +740,7 @@ export default function WordSearch() {
               <div className="relative">
                 {/* Grid */}
                 <div
-                  ref={gridRef}
+                  ref={attachGrid}
                   className="grid grid-cols-8 gap-1 select-none touch-none"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -756,8 +773,8 @@ export default function WordSearch() {
                 </div>
               
                 {/* SVG Overlay for Word Outlines */}
-                {foundWordPaths.size > 0 && gridRef.current && (() => {
-                  const gridRect = gridRef.current.getBoundingClientRect()
+                {foundWordPaths.size > 0 && gridBox && (() => {
+                  const gridRect = gridBox
                   const cellSize = (gridRect.width - 7 * 4) / 8 // Account for gaps (8x8 grid, no padding)
                   const gap = 4 // gap-1 = 4px
                   const padding = 0 // No padding

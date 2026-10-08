@@ -435,6 +435,10 @@ function borderSlots(targets: PuzzleTarget[]): PiecePlacement[] {
   })
 }
 
+function originsOf(placements: PiecePlacement[]): Record<string, Point> {
+  return Object.fromEntries(placements.map(p => [p.id, { x: p.x, y: p.y }]))
+}
+
 function createNewGame() {
   const targets = generatePuzzle()
   return {
@@ -446,10 +450,13 @@ function createNewGame() {
 export default function Tangrams() {
   const [scores, setScores] = useState<TangramsScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [ready, setReady] = useState(false)
+  // Games are client-only (ssr: false in GameRenderer), so Math.random() here can't cause a hydration mismatch
+  const [firstGame] = useState(createNewGame)
   const [gameState, setGameState] = useState<GameState>('playing')
-  const [targets, setTargets] = useState<PuzzleTarget[]>([])
-  const [placements, setPlacements] = useState<PiecePlacement[]>([])
+  const [targets, setTargets] = useState<PuzzleTarget[]>(firstGame.targets)
+  const [placements, setPlacements] = useState<PiecePlacement[]>(firstGame.placements)
+  // Where each piece started, to tell when every piece has been moved
+  const [origins, setOrigins] = useState<Record<string, Point>>(() => originsOf(firstGame.placements))
   const [elapsedTime, setElapsedTime] = useState(0)
   const [timerStarted, setTimerStarted] = useState(false)
   const [dragId, setDragId] = useState<string | null>(null)
@@ -462,26 +469,30 @@ export default function Tangrams() {
   const dragOffsetRef = useRef({ x: 0, y: 0 })
   const pointerStartRef = useRef<{ id: string; x: number; y: number } | null>(null)
   const didDragRef = useRef(false)
-  const originPositionsRef = useRef<Record<string, Point>>({})
 
   const DRAG_THRESHOLD = 6
   const MOVE_EPS = 12
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getTangramsScores({ limit: 50 })
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading tangrams scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getTangramsScores({ limit: 50 })
+      .then(data => {
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading tangrams scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     const channel = supabase
       .channel('tangrams_scores_changes')
@@ -502,7 +513,7 @@ export default function Tangrams() {
       supabase.removeChannel(channel)
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: TangramsScore) => {
     if (!score || score.time_taken === undefined || score.time_taken === null) {
@@ -541,9 +552,7 @@ export default function Tangrams() {
 
   const startGame = useCallback(() => {
     const next = createNewGame()
-    originPositionsRef.current = Object.fromEntries(
-      next.placements.map(p => [p.id, { x: p.x, y: p.y }])
-    )
+    setOrigins(originsOf(next.placements))
     setTargets(next.targets)
     setPlacements(next.placements)
     setDragId(null)
@@ -551,17 +560,10 @@ export default function Tangrams() {
     setSolved(false)
     setElapsedTime(0)
     setTimerStarted(false)
-    setReady(true)
     hasSubmittedScore.current = false
     startTimeRef.current = 0
     clearTimer()
   }, [clearTimer])
-
-  // Generate puzzle on client only — Math.random() during SSR causes hydration mismatches
-  useEffect(() => {
-    startGame()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const finishGame = useCallback(
     (finalTime: number, isSolved: boolean) => {
@@ -586,20 +588,19 @@ export default function Tangrams() {
           })
       }
     },
-    [username, clearTimer]
+    [clearTimer, username, loadScores]
   )
 
   const allMoved =
-    ready &&
     placements.length > 0 &&
     placements.every(p => {
-      const origin = originPositionsRef.current[p.id]
+      const origin = origins[p.id]
       if (!origin) return false
       return Math.hypot(p.x - origin.x, p.y - origin.y) > MOVE_EPS
     })
 
   const handleSubmit = useCallback(() => {
-    if (!ready || gameState !== 'playing') return
+    if (gameState !== 'playing') return
     if (!allMoved) return
 
     const finalTime =
@@ -608,7 +609,7 @@ export default function Tangrams() {
       placements.length === targets.length &&
       targets.every(t => isTargetFilled(placements, t.id))
     finishGame(finalTime, isSolved)
-  }, [ready, gameState, allMoved, placements, targets, elapsedTime, finishGame])
+  }, [gameState, allMoved, placements, targets, elapsedTime, finishGame])
 
   const trySnap = useCallback(
     (placement: PiecePlacement, current: PiecePlacement[]): PiecePlacement => {
@@ -649,7 +650,7 @@ export default function Tangrams() {
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent, id: string) => {
-      if (!ready || gameState !== 'playing') return
+      if (gameState !== 'playing') return
       e.preventDefault()
       e.stopPropagation()
       ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
@@ -661,12 +662,12 @@ export default function Tangrams() {
       didDragRef.current = false
       setDragId(null)
     },
-    [ready, gameState, clientToBoard, placements]
+    [gameState, clientToBoard, placements]
   )
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!ready || gameState !== 'playing' || !pointerStartRef.current) return
+      if (gameState !== 'playing' || !pointerStartRef.current) return
       const pos = clientToBoard(e.clientX, e.clientY)
       const start = pointerStartRef.current
       const dist = Math.hypot(pos.x - start.x, pos.y - start.y)
@@ -697,11 +698,11 @@ export default function Tangrams() {
         })
       )
     },
-    [ready, gameState, clientToBoard]
+    [gameState, clientToBoard]
   )
 
   const onPointerUp = useCallback(() => {
-    if (!ready || gameState !== 'playing' || !pointerStartRef.current) return
+    if (gameState !== 'playing' || !pointerStartRef.current) return
     const { id } = pointerStartRef.current
     pointerStartRef.current = null
 
@@ -721,7 +722,7 @@ export default function Tangrams() {
     })
     setDragId(null)
     didDragRef.current = false
-  }, [ready, gameState, trySnap, startTimer])
+  }, [gameState, trySnap, startTimer])
 
   return (
     <GameWrapper

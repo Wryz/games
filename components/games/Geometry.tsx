@@ -499,14 +499,236 @@ const TriangleAreaShape = ({ base, height }: { base: number, height: number }) =
   )
 }
 
+// Generate a random geometry problem
+function generateProblem(): Problem {
+  const types: ProblemType[] = ['triangle_angles', 'quadrilateral_angles', 'pythagorean', 'area']
+  const type = types[Math.floor(Math.random() * types.length)]
+  
+  switch (type) {
+    case 'triangle_angles': {
+      // Triangle angles sum to 180° — keep each angle visually distinct (≥25°)
+      let angle1 = 0
+      let angle2 = 0
+      let angle3 = 0
+      do {
+        angle1 = Math.floor(Math.random() * 70) + 25 // 25-94
+        angle2 = Math.floor(Math.random() * 70) + 25 // 25-94
+        angle3 = 180 - angle1 - angle2
+      } while (angle3 < 25 || angle3 > 130)
+      const missingIndex = Math.floor(Math.random() * 3) // 0, 1, or 2
+      const angles = [angle1, angle2, angle3]
+      const answer = angles[missingIndex]
+      
+      // Generate wrong options
+      const options = [answer]
+      while (options.length < 4) {
+        const wrong = Math.floor(Math.random() * 150) + 20 // 20-169
+        if (!options.includes(wrong) && wrong !== 180 - angles[(missingIndex + 1) % 3] - angles[(missingIndex + 2) % 3]) {
+          options.push(wrong)
+        }
+      }
+      // Shuffle options
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]]
+      }
+      
+      const missingLabels = ['a', 'b', 'c'] as const
+      const shape = (
+        <TriangleShape
+          angle1={angle1}
+          angle2={angle2}
+          angle3={angle3}
+          missingAngle={missingLabels[missingIndex]}
+        />
+      )
+      
+      return {
+        type,
+        question: `What is the measure of angle ${missingLabels[missingIndex].toUpperCase()}?`,
+        shape,
+        answer,
+        options
+      }
+    }
+    
+    case 'quadrilateral_angles': {
+      // Quadrilateral angles sum to 360° — keep each angle in a drawable convex range
+      let angle1 = 0
+      let angle2 = 0
+      let angle3 = 0
+      let angle4 = 0
+      do {
+        angle1 = Math.floor(Math.random() * 80) + 50 // 50-129
+        angle2 = Math.floor(Math.random() * 80) + 50 // 50-129
+        angle3 = Math.floor(Math.random() * 80) + 50 // 50-129
+        angle4 = 360 - angle1 - angle2 - angle3
+      } while (angle4 < 50 || angle4 > 140)
+      const missingIndex = Math.floor(Math.random() * 4) // 0, 1, 2, or 3
+      const angles = [angle1, angle2, angle3, angle4]
+      const answer = angles[missingIndex]
+      
+      // Generate wrong options
+      const options = [answer]
+      while (options.length < 4) {
+        const wrong = Math.floor(Math.random() * 250) + 50 // 50-299
+        if (!options.includes(wrong)) {
+          options.push(wrong)
+        }
+      }
+      // Shuffle options
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]]
+      }
+      
+      const missingLabels = ['a', 'b', 'c', 'd'] as const
+      const shape = (
+        <QuadrilateralShape
+          angle1={angle1}
+          angle2={angle2}
+          angle3={angle3}
+          angle4={angle4}
+          missingAngle={missingLabels[missingIndex]}
+        />
+      )
+      
+      return {
+        type,
+        question: `What is the measure of angle ${missingLabels[missingIndex].toUpperCase()}?`,
+        shape,
+        answer,
+        options
+      }
+    }
+    
+    case 'pythagorean': {
+      // Right triangle: a² + b² = c²
+      // Use small Pythagorean triples: (3,4,5), (5,12,13), (6,8,10), (8,15,17)
+      const triples = [
+        [3, 4, 5],
+        [5, 12, 13],
+        [6, 8, 10],
+        [8, 15, 17],
+        [9, 12, 15]
+      ]
+      const triple = triples[Math.floor(Math.random() * triples.length)]
+      const missingIndex = Math.floor(Math.random() * 3) // 0, 1, or 2
+      const [a, b, c] = triple
+      const sides = [a, b, c]
+      const answer = sides[missingIndex]
+      
+      // Generate wrong options
+      const options = [answer]
+      while (options.length < 4) {
+        const wrong = Math.floor(Math.random() * 15) + 1 // 1-15
+        if (!options.includes(wrong)) {
+          options.push(wrong)
+        }
+      }
+      // Shuffle options
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]]
+      }
+      
+      const missingLabels = ['a', 'b', 'c'] as const
+      const shape = (
+        <RightTriangleShape
+          sideA={a}
+          sideB={b}
+          sideC={c}
+          missingSide={missingLabels[missingIndex]}
+        />
+      )
+      
+      return {
+        type,
+        question: `What is the length of side ${missingLabels[missingIndex].toUpperCase()}?`,
+        shape,
+        answer,
+        options
+      }
+    }
+    
+    case 'area': {
+      // Area problems: rectangle or triangle
+      const isRectangle = Math.random() > 0.5
+      
+      if (isRectangle) {
+        const width = Math.floor(Math.random() * 8) + 3 // 3-10
+        const height = Math.floor(Math.random() * 8) + 3 // 3-10
+        const answer = width * height
+        
+        // Generate wrong options
+        const options = [answer]
+        while (options.length < 4) {
+          const wrong = Math.floor(Math.random() * 80) + 10 // 10-89
+          if (!options.includes(wrong)) {
+            options.push(wrong)
+          }
+        }
+        // Shuffle options
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]]
+        }
+        
+        const shape = <RectangleShape width={width} height={height} />
+        
+        return {
+          type,
+          question: `What is the area of this rectangle?`,
+          shape,
+          answer,
+          options
+        }
+      } else {
+        // Ensure area is a whole number: at least one of base/height must be even
+        let base = Math.floor(Math.random() * 8) + 3 // 3-10
+        let height = Math.floor(Math.random() * 8) + 3 // 3-10
+        if ((base * height) % 2 !== 0) {
+          height += 1 // both odd → make height even (stays ≤10)
+        }
+        const answer = (base * height) / 2
+        
+        // Generate wrong options
+        const options = [answer]
+        while (options.length < 4) {
+          const wrong = Math.floor(Math.random() * 40) + 5 // 5-44
+          if (!options.includes(wrong)) {
+            options.push(wrong)
+          }
+        }
+        // Shuffle options
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]]
+        }
+        
+        const shape = <TriangleAreaShape base={base} height={height} />
+        
+        return {
+          type,
+          question: `What is the area of this triangle?`,
+          shape,
+          answer,
+          options
+        }
+      }
+    }
+  }
+}
+
 export default function Geometry() {
   const [scores, setScores] = useState<GeometryScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameState, setGameState] = useState<GameState>('idle')
-  const [currentProblem, setCurrentProblem] = useState<Problem | null>(null)
+  const [gameState, setGameState] = useState<GameState>('playing')
+  // Games are client-only (ssr: false in GameRenderer), so the first question can be generated here
+  const [currentProblem, setCurrentProblem] = useState<Problem | null>(generateProblem)
   const [correctCount, setCorrectCount] = useState(0)
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
-  const [questionStartTime, setQuestionStartTime] = useState(0)
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now)
   const [responseTimes, setResponseTimes] = useState<number[]>([])
   const [elapsedTime, setElapsedTime] = useState(0)
   const { username } = useUser()
@@ -515,18 +737,23 @@ export default function Geometry() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerStartedRef = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getGeometryScores({ limit: 50 })
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getGeometryScores({ limit: 50 })
+      .then(data => {
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   const clearTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -548,229 +775,8 @@ export default function Geometry() {
     }, 1000)
   }, [])
 
-  // Generate a random geometry problem
-  const generateProblem = useCallback((): Problem => {
-    const types: ProblemType[] = ['triangle_angles', 'quadrilateral_angles', 'pythagorean', 'area']
-    const type = types[Math.floor(Math.random() * types.length)]
-    
-    switch (type) {
-      case 'triangle_angles': {
-        // Triangle angles sum to 180° — keep each angle visually distinct (≥25°)
-        let angle1 = 0
-        let angle2 = 0
-        let angle3 = 0
-        do {
-          angle1 = Math.floor(Math.random() * 70) + 25 // 25-94
-          angle2 = Math.floor(Math.random() * 70) + 25 // 25-94
-          angle3 = 180 - angle1 - angle2
-        } while (angle3 < 25 || angle3 > 130)
-        const missingIndex = Math.floor(Math.random() * 3) // 0, 1, or 2
-        const angles = [angle1, angle2, angle3]
-        const answer = angles[missingIndex]
-        
-        // Generate wrong options
-        const options = [answer]
-        while (options.length < 4) {
-          const wrong = Math.floor(Math.random() * 150) + 20 // 20-169
-          if (!options.includes(wrong) && wrong !== 180 - angles[(missingIndex + 1) % 3] - angles[(missingIndex + 2) % 3]) {
-            options.push(wrong)
-          }
-        }
-        // Shuffle options
-        for (let i = options.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [options[i], options[j]] = [options[j], options[i]]
-        }
-        
-        const missingLabels = ['a', 'b', 'c'] as const
-        const shape = (
-          <TriangleShape
-            angle1={angle1}
-            angle2={angle2}
-            angle3={angle3}
-            missingAngle={missingLabels[missingIndex]}
-          />
-        )
-        
-        return {
-          type,
-          question: `What is the measure of angle ${missingLabels[missingIndex].toUpperCase()}?`,
-          shape,
-          answer,
-          options
-        }
-      }
-      
-      case 'quadrilateral_angles': {
-        // Quadrilateral angles sum to 360° — keep each angle in a drawable convex range
-        let angle1 = 0
-        let angle2 = 0
-        let angle3 = 0
-        let angle4 = 0
-        do {
-          angle1 = Math.floor(Math.random() * 80) + 50 // 50-129
-          angle2 = Math.floor(Math.random() * 80) + 50 // 50-129
-          angle3 = Math.floor(Math.random() * 80) + 50 // 50-129
-          angle4 = 360 - angle1 - angle2 - angle3
-        } while (angle4 < 50 || angle4 > 140)
-        const missingIndex = Math.floor(Math.random() * 4) // 0, 1, 2, or 3
-        const angles = [angle1, angle2, angle3, angle4]
-        const answer = angles[missingIndex]
-        
-        // Generate wrong options
-        const options = [answer]
-        while (options.length < 4) {
-          const wrong = Math.floor(Math.random() * 250) + 50 // 50-299
-          if (!options.includes(wrong)) {
-            options.push(wrong)
-          }
-        }
-        // Shuffle options
-        for (let i = options.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [options[i], options[j]] = [options[j], options[i]]
-        }
-        
-        const missingLabels = ['a', 'b', 'c', 'd'] as const
-        const shape = (
-          <QuadrilateralShape
-            angle1={angle1}
-            angle2={angle2}
-            angle3={angle3}
-            angle4={angle4}
-            missingAngle={missingLabels[missingIndex]}
-          />
-        )
-        
-        return {
-          type,
-          question: `What is the measure of angle ${missingLabels[missingIndex].toUpperCase()}?`,
-          shape,
-          answer,
-          options
-        }
-      }
-      
-      case 'pythagorean': {
-        // Right triangle: a² + b² = c²
-        // Use small Pythagorean triples: (3,4,5), (5,12,13), (6,8,10), (8,15,17)
-        const triples = [
-          [3, 4, 5],
-          [5, 12, 13],
-          [6, 8, 10],
-          [8, 15, 17],
-          [9, 12, 15]
-        ]
-        const triple = triples[Math.floor(Math.random() * triples.length)]
-        const missingIndex = Math.floor(Math.random() * 3) // 0, 1, or 2
-        const [a, b, c] = triple
-        const sides = [a, b, c]
-        const answer = sides[missingIndex]
-        
-        // Generate wrong options
-        const options = [answer]
-        while (options.length < 4) {
-          const wrong = Math.floor(Math.random() * 15) + 1 // 1-15
-          if (!options.includes(wrong)) {
-            options.push(wrong)
-          }
-        }
-        // Shuffle options
-        for (let i = options.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [options[i], options[j]] = [options[j], options[i]]
-        }
-        
-        const missingLabels = ['a', 'b', 'c'] as const
-        const shape = (
-          <RightTriangleShape
-            sideA={a}
-            sideB={b}
-            sideC={c}
-            missingSide={missingLabels[missingIndex]}
-          />
-        )
-        
-        return {
-          type,
-          question: `What is the length of side ${missingLabels[missingIndex].toUpperCase()}?`,
-          shape,
-          answer,
-          options
-        }
-      }
-      
-      case 'area': {
-        // Area problems: rectangle or triangle
-        const isRectangle = Math.random() > 0.5
-        
-        if (isRectangle) {
-          const width = Math.floor(Math.random() * 8) + 3 // 3-10
-          const height = Math.floor(Math.random() * 8) + 3 // 3-10
-          const answer = width * height
-          
-          // Generate wrong options
-          const options = [answer]
-          while (options.length < 4) {
-            const wrong = Math.floor(Math.random() * 80) + 10 // 10-89
-            if (!options.includes(wrong)) {
-              options.push(wrong)
-            }
-          }
-          // Shuffle options
-          for (let i = options.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [options[i], options[j]] = [options[j], options[i]]
-          }
-          
-          const shape = <RectangleShape width={width} height={height} />
-          
-          return {
-            type,
-            question: `What is the area of this rectangle?`,
-            shape,
-            answer,
-            options
-          }
-        } else {
-          // Ensure area is a whole number: at least one of base/height must be even
-          let base = Math.floor(Math.random() * 8) + 3 // 3-10
-          let height = Math.floor(Math.random() * 8) + 3 // 3-10
-          if ((base * height) % 2 !== 0) {
-            height += 1 // both odd → make height even (stays ≤10)
-          }
-          const answer = (base * height) / 2
-          
-          // Generate wrong options
-          const options = [answer]
-          while (options.length < 4) {
-            const wrong = Math.floor(Math.random() * 40) + 5 // 5-44
-            if (!options.includes(wrong)) {
-              options.push(wrong)
-            }
-          }
-          // Shuffle options
-          for (let i = options.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [options[i], options[j]] = [options[j], options[i]]
-          }
-          
-          const shape = <TriangleAreaShape base={base} height={height} />
-          
-          return {
-            type,
-            question: `What is the area of this triangle?`,
-            shape,
-            answer,
-            options
-          }
-        }
-      }
-    }
-  }, [])
-
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for geometry scores
     const channel = supabase
@@ -789,17 +795,11 @@ export default function Geometry() {
       )
       .subscribe()
 
-    // Start game automatically
-    const problem = generateProblem()
-    setCurrentProblem(problem)
-    setGameState('playing')
-    setQuestionStartTime(Date.now())
-
     return () => {
       clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [generateProblem, clearTimer])
+  }, [clearTimer, fetchScores])
 
   // Handle answer selection
   const handleAnswerSelect = useCallback((selectedAnswer: number) => {
@@ -879,7 +879,7 @@ export default function Geometry() {
         })
       }
     }
-  }, [gameState, currentProblem, correctCount, questionStartTime, responseTimes, username, generateProblem, loadScores, clearTimer, ensureTimerStarted])
+  }, [gameState, currentProblem, correctCount, questionStartTime, responseTimes, username, loadScores, clearTimer, ensureTimerStarted])
 
   // Reset game
   const resetGame = useCallback(() => {
@@ -899,7 +899,7 @@ export default function Geometry() {
       setGameState('playing')
       setQuestionStartTime(Date.now())
     }, 100)
-  }, [generateProblem, clearTimer])
+  }, [clearTimer])
 
   const formatScore = (score: GeometryScore) => {
     return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`

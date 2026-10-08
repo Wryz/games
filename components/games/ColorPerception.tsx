@@ -66,7 +66,7 @@ export default function ColorPerception() {
   const [levelReached, setLevelReached] = useState(0)
   const [resolvedDelta, setResolvedDelta] = useState<number | null>(null)
   const [wrongIndex, setWrongIndex] = useState<number | null>(null)
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const { username } = useUser()
 
   const phaseRef = useRef<Phase>('idle')
@@ -83,20 +83,25 @@ export default function ColorPerception() {
     }
   }, [])
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getColorPerceptionScores({ limit: 50 })
-      setScores(data ?? [])
-    } catch (error) {
-      console.error('Error loading color perception scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getColorPerceptionScores({ limit: 50 })
+      .then(data => {
+        setScores(data ?? [])
+      })
+      .catch(error => {
+        console.error('Error loading color perception scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     let channel: ReturnType<typeof supabase.channel> | null = null
     try {
@@ -128,7 +133,7 @@ export default function ColorPerception() {
       }
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   const goToRound = useCallback((level: number) => {
     roundIdRef.current += 1
@@ -189,7 +194,6 @@ export default function ColorPerception() {
     hasSubmittedScore.current = true
     if (levelReached <= 0) return
 
-    setSaveState('saving')
     submitColorPerceptionScore({ username, level_reached: levelReached })
       .then(() => {
         setSaveState('saved')
@@ -199,7 +203,7 @@ export default function ColorPerception() {
         console.error('Error submitting color perception score:', error)
         setSaveState('error')
       })
-  }, [phase, username, levelReached])
+  }, [phase, username, levelReached, loadScores])
 
   const resetGame = useCallback(() => {
     clearTimers()

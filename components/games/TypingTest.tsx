@@ -12,11 +12,22 @@ import { formatNumber } from '@/lib/levels'
 
 type GameState = 'idle' | 'playing' | 'finished'
 
+function generateWords(): string[] {
+  const wordCount = 200 // Generate enough words
+  const shuffled = [...wordsData.words].sort(() => Math.random() - 0.5)
+  const selectedWords: string[] = []
+  for (let i = 0; i < wordCount; i++) {
+    selectedWords.push(shuffled[i % shuffled.length])
+  }
+  return selectedWords
+}
+
 export default function TypingTest() {
   const [scores, setScores] = useState<TypingTestScore[]>([])
   const [loading, setLoading] = useState(true)
   const [gameState, setGameState] = useState<GameState>('idle')
-  const [words, setWords] = useState<string[]>([])
+  // Games are client-only (ssr: false in GameRenderer), so shuffling here can't cause a hydration mismatch
+  const [words, setWords] = useState<string[]>(generateWords)
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [currentInput, setCurrentInput] = useState('')
   const [correctChars, setCorrectChars] = useState(0)
@@ -31,20 +42,25 @@ export default function TypingTest() {
 
   const TEST_DURATION = 60 // seconds
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getTypingTestScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getTypingTestScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for typing test scores
     const channel = supabase
@@ -66,19 +82,9 @@ export default function TypingTest() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchScores])
 
   // Generate random word sequence
-  const generateWords = useCallback(() => {
-    const wordCount = 200 // Generate enough words
-    const shuffled = [...wordsData.words].sort(() => Math.random() - 0.5)
-    const selectedWords: string[] = []
-    for (let i = 0; i < wordCount; i++) {
-      selectedWords.push(shuffled[i % shuffled.length])
-    }
-    return selectedWords
-  }, [])
-
   // Initialize game
   const initializeGame = useCallback(() => {
     setGameState('idle')
@@ -93,7 +99,7 @@ export default function TypingTest() {
     hasSubmittedScore.current = false
     // Focus input after state is set
     setTimeout(() => inputRef.current?.focus(), 100)
-  }, [generateWords])
+  }, [])
 
   // Keep typing input focused while the test is ready or in progress
   useEffect(() => {
@@ -212,7 +218,7 @@ export default function TypingTest() {
       console.error('Error submitting score:', error)
       hasSubmittedScore.current = false
     }
-  }, [username, calculateStats])
+  }, [username, calculateStats, loadScores])
 
   // Submit score when game finishes
   useEffect(() => {
@@ -221,10 +227,6 @@ export default function TypingTest() {
     }
   }, [gameState, submitScore])
 
-  // Initialize on mount
-  useEffect(() => {
-    initializeGame()
-  }, [initializeGame])
 
   // Auto-scroll to current word
   useEffect(() => {

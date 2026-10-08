@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useSyncExternalStore, ReactNode } from 'react'
 import posthog from 'posthog-js'
 
 interface UserContextType {
@@ -11,29 +11,54 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [username, setUsernameState] = useState<string | null>(null)
+const STORAGE_KEY = 'brainbench-username'
 
-  // Load username from localStorage on mount (client-only to avoid SSR mismatch)
+// The username lives in localStorage; read it as an external store so the
+// server render (null) and the client hydrate cleanly, and other tabs stay in sync.
+const listeners = new Set<() => void>()
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  window.addEventListener('storage', listener)
+  return () => {
+    listeners.delete(listener)
+    window.removeEventListener('storage', listener)
+  }
+}
+
+function getSnapshot(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+function getServerSnapshot(): string | null {
+  return null
+}
+
+function writeUsername(value: string | null) {
+  if (value === null) localStorage.removeItem(STORAGE_KEY)
+  else localStorage.setItem(STORAGE_KEY, value)
+  listeners.forEach(listener => listener())
+}
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  const username = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+
+  // Identify a returning user in PostHog once on load
   useEffect(() => {
-    try {
-      const savedUsername = localStorage.getItem('brainbench-username')
-      if (savedUsername) {
-        setUsernameState(savedUsername)
-        if (typeof window !== 'undefined' && posthog) {
-          posthog.identify(savedUsername, {
-            username: savedUsername
-          })
-        }
-      }
-    } catch {
-      // ignore storage errors
+    const savedUsername = getSnapshot()
+    if (savedUsername && posthog) {
+      posthog.identify(savedUsername, {
+        username: savedUsername
+      })
     }
   }, [])
 
   const setUsername = (newUsername: string) => {
-    setUsernameState(newUsername)
-    localStorage.setItem('brainbench-username', newUsername)
+    writeUsername(newUsername)
     
     // Identify user in PostHog
     if (typeof window !== 'undefined' && posthog) {
@@ -48,8 +73,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const clearUsername = () => {
     const previousUsername = username
-    setUsernameState(null)
-    localStorage.removeItem('brainbench-username')
+    writeUsername(null)
     
     // Reset PostHog identity
     if (typeof window !== 'undefined' && posthog) {

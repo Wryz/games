@@ -34,20 +34,25 @@ export default function MemoryGame() {
   const hasSubmittedScore = useRef(false)
   const isPlayingSequence = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getMemoryScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getMemoryScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for memory scores
     const channel = supabase
@@ -69,7 +74,7 @@ export default function MemoryGame() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: MemoryScore) => {
     return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.correct_sequences)} correct)`
@@ -192,7 +197,7 @@ export default function MemoryGame() {
         }, 1000)
       }
     }
-  }, [gameState, playerSequence, sequence, level, correctSequences, totalSequences, username, generateSequence, playSequence, loadScores])
+  }, [gameState, playerSequence, sequence, level, correctClicks, totalSequences, username, generateSequence, playSequence, loadScores])
 
   // Reset game
   const resetGame = useCallback(() => {

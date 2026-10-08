@@ -73,20 +73,25 @@ export default function VerbalMemory() {
     }
   }, [])
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getVerbalMemoryScores({ limit: 50 })
-      setScores(data ?? [])
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getVerbalMemoryScores({ limit: 50 })
+      .then(data => {
+        setScores(data ?? [])
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     // Set up realtime listener for verbal memory scores
     let channel: ReturnType<typeof supabase.channel> | null = null
@@ -119,7 +124,7 @@ export default function VerbalMemory() {
       }
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   const showWord = useCallback((next: CurrentWord) => {
     currentRef.current = next
@@ -268,7 +273,7 @@ export default function VerbalMemory() {
         hasSubmittedScore.current = false
       })
     }
-  }, [phase, score, username])
+  }, [loadScores, phase, score, username])
 
   // Reset game
   const resetGame = useCallback(() => {

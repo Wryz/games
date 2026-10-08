@@ -46,22 +46,27 @@ export default function Maze() {
   const hasStartedRef = useRef(false)
   const timerStartedRef = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getMazeScores({ limit: 50 })
-      console.log('Maze scores loaded:', data)
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading maze scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getMazeScores({ limit: 50 })
+      .then(data => {
+        console.log('Maze scores loaded:', data)
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading maze scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for maze scores
     const channel = supabase
@@ -86,7 +91,7 @@ export default function Maze() {
         clearInterval(timerIntervalRef.current)
       }
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: MazeScore) => {
     if (!score || score.time_taken === undefined || score.time_taken === null) {
@@ -424,7 +429,7 @@ export default function Maze() {
         }
       }
     }
-  }, [gameState, maze, playerPos, exitPos, username, beginTimer])
+  }, [gameState, maze, playerPos.row, playerPos.col, beginTimer, exitPos.row, exitPos.col, username, loadScores])
 
   // Handle arrow key movement
   const handleKeyPress = useCallback((e: KeyboardEvent) => {

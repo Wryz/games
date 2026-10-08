@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
 import { getFlankerScores, submitFlankerScore } from '@/lib/scores'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
@@ -116,20 +116,25 @@ export default function Flanker() {
     setPhase(p)
   }
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getFlankerScores({ limit: 50 })
-      setScores(data ?? [])
-    } catch (error) {
-      console.error('Error loading flanker scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getFlankerScores({ limit: 50 })
+      .then(data => {
+        setScores(data ?? [])
+      })
+      .catch(error => {
+        console.error('Error loading flanker scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     let channel: ReturnType<typeof supabase.channel> | null = null
     try {
@@ -158,7 +163,7 @@ export default function Flanker() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   // --- Trial engine (reads only refs + stable setters, so timer closures never go stale) ---
 
@@ -168,6 +173,7 @@ export default function Flanker() {
     setTrialIndex(index)
     setFeedback(null)
     setPhaseBoth('fixation')
+    // eslint-disable-next-line react-hooks/purity -- runs from start()/timers only, never during render
     const delay = FIXATION_MIN + Math.random() * (FIXATION_MAX - FIXATION_MIN)
     timeoutRef.current = setTimeout(showStimulus, delay)
   }
@@ -175,6 +181,7 @@ export default function Flanker() {
   const showStimulus = () => {
     timeoutRef.current = null
     setPhaseBoth('stimulus')
+    // eslint-disable-next-line react-hooks/purity -- runs from a timer only, never during render
     onsetRef.current = performance.now()
     // Refine onset to the frame the stimulus is actually painted in
     rafRef.current = requestAnimationFrame(() => {
@@ -242,8 +249,10 @@ export default function Flanker() {
   }
 
   // Keyboard: latest handlers via ref so the listener is attached once
-  const handlersRef = useRef({ start, respond })
-  handlersRef.current = { start, respond }
+  const handlersRef = useRef<{ start: () => void; respond: (dir: Direction) => void } | null>(null)
+  useLayoutEffect(() => {
+    handlersRef.current = { start, respond }
+  })
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -257,7 +266,7 @@ export default function Flanker() {
       if (p === 'idle') {
         if (key === ' ' || key === 'Enter') {
           e.preventDefault()
-          if (!e.repeat) handlersRef.current.start()
+          if (!e.repeat) handlersRef.current?.start()
         }
         return
       }
@@ -269,7 +278,7 @@ export default function Flanker() {
         else if (key === ' ') e.preventDefault() // avoid page scroll mid-run
         if (dir) {
           e.preventDefault()
-          if (!e.repeat) handlersRef.current.respond(dir)
+          if (!e.repeat) handlersRef.current?.respond(dir)
         }
       }
     }
@@ -289,7 +298,7 @@ export default function Flanker() {
       .catch(error => {
         console.error('Error submitting flanker score:', error)
       })
-  }, [phase, username])
+  }, [loadScores, phase, username])
 
   const formatScore = (s: FlankerScore) =>
     `${formatNumber(s.correct_answers)} correct · ${formatNumber(s.average_time)}ms`

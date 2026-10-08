@@ -10,13 +10,9 @@ interface CountUpAnimationProps {
 
 export default function CountUpAnimation({ end, duration = 2000, className = '' }: CountUpAnimationProps) {
   const [count, setCount] = useState(0)
-  const [hasStarted, setHasStarted] = useState(false)
-  const countRef = useRef(0)
   const animationFrameRef = useRef<number | null>(null)
 
   useEffect(() => {
-    // Start animation when component mounts
-    setHasStarted(true)
     const startTime = Date.now()
     const startValue = 0
 
@@ -29,7 +25,6 @@ export default function CountUpAnimation({ end, duration = 2000, className = '' 
       const easeOutQuart = 1 - Math.pow(1 - progress, 4)
       const currentCount = Math.floor(startValue + (end - startValue) * easeOutQuart)
       
-      countRef.current = currentCount
       setCount(currentCount)
 
       if (progress < 1) {

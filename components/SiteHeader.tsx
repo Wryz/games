@@ -69,11 +69,14 @@ export default function SiteHeader() {
   const pathname = usePathname()
   const { username } = useUser()
 
-  // Close menus on navigation
-  useEffect(() => {
+  // Close menus on navigation (adjusting state during render, not in an effect:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+  const [menuPath, setMenuPath] = useState(pathname)
+  if (pathname !== menuPath) {
+    setMenuPath(pathname)
     setTestsOpen(false)
     setMobileOpen(false)
-  }, [pathname])
+  }
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''

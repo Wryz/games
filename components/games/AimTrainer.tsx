@@ -19,11 +19,28 @@ interface Target {
   clickTime?: number
 }
 
+const GRID_SIZE = 8
+
+function buildGrid(): Target[] {
+  const grid: Target[] = []
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      grid.push({
+        id: row * GRID_SIZE + col,
+        row,
+        col,
+        isActive: false
+      })
+    }
+  }
+  return grid
+}
+
 export default function AimTrainer() {
   const [scores, setScores] = useState<AimTrainerScore[]>([])
   const [loading, setLoading] = useState(true)
   const [gameState, setGameState] = useState<GameState>('idle')
-  const [targets, setTargets] = useState<Target[]>([])
+  const [targets, setTargets] = useState<Target[]>(buildGrid)
   const [currentTarget, setCurrentTarget] = useState<Target | null>(null)
   const [gameStats, setGameStats] = useState({
     targetsHit: 0,
@@ -40,20 +57,24 @@ export default function AimTrainer() {
   const gameStartTimeRef = useRef(0)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const GRID_SIZE = 8
   const TOTAL_TARGETS = 30
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getAimTrainerScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getAimTrainerScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   const clearTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -73,7 +94,7 @@ export default function AimTrainer() {
   }, [clearTimer])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for aim trainer scores
     const channel = supabase
@@ -98,24 +119,9 @@ export default function AimTrainer() {
       clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [clearTimer])
+  }, [clearTimer, fetchScores])
 
   // Initialize grid
-  const initializeGrid = useCallback(() => {
-    const grid: Target[] = []
-    for (let row = 0; row < GRID_SIZE; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        grid.push({
-          id: row * GRID_SIZE + col,
-          row,
-          col,
-          isActive: false
-        })
-      }
-    }
-    return grid
-  }, [])
-
   // Get random target position
   const getRandomTarget = useCallback((currentTargets: Target[], excludeId?: number): Target => {
     const availableTargets = currentTargets.filter(t => t.id !== excludeId)
@@ -206,24 +212,8 @@ export default function AimTrainer() {
     }
   }, [gameState, currentTarget, gameStats.startTime, spawnTarget, startTimer])
 
-  // Initialize game (show grid with first target)
-  const initializeGame = useCallback(() => {
-    clearTimer()
-    setElapsedTime(0)
-    setGameState('idle')
-    const initialGrid = initializeGrid()
-    setTargets(initialGrid)
-    setGameStats({
-      targetsHit: 0,
-      totalTargets: 0,
-      totalClicks: 0,
-      reactionTimes: [],
-      startTime: 0,
-      gameStartTime: 0
-    })
-    setCurrentTarget(null)
-    
-    // Show first target immediately after grid is set
+  // Show the first target just after the grid renders
+  const scheduleFirstTarget = useCallback((initialGrid: Target[]) => {
     setTimeout(() => {
       if (initialGrid.length > 0) {
         const firstTarget = initialGrid[Math.floor(Math.random() * initialGrid.length)]
@@ -239,12 +229,31 @@ export default function AimTrainer() {
         }))
       }
     }, 10)
-  }, [initializeGrid, clearTimer])
+  }, [])
 
-  // Initialize game when component mounts
+  // Initialize game (show grid with first target)
+  const initializeGame = useCallback(() => {
+    clearTimer()
+    setElapsedTime(0)
+    setGameState('idle')
+    const initialGrid = buildGrid()
+    setTargets(initialGrid)
+    setGameStats({
+      targetsHit: 0,
+      totalTargets: 0,
+      totalClicks: 0,
+      reactionTimes: [],
+      startTime: 0,
+      gameStartTime: 0
+    })
+    setCurrentTarget(null)
+    scheduleFirstTarget(initialGrid)
+  }, [clearTimer, scheduleFirstTarget])
+
+  // The grid is initial state; on mount only the first target needs scheduling
   useEffect(() => {
-    initializeGame()
-  }, [initializeGame])
+    scheduleFirstTarget(buildGrid())
+  }, [scheduleFirstTarget])
 
   // Submit score
   const submitScore = useCallback(async () => {
@@ -271,7 +280,7 @@ export default function AimTrainer() {
       console.error('Error submitting score:', error)
       hasSubmittedScore.current = false // Reset on error to allow retry
     }
-  }, [username, gameStats])
+  }, [username, gameStats.reactionTimes, gameStats.totalClicks, gameStats.targetsHit, gameStats.totalTargets, loadScores])
 
   // Reset game
   const resetGame = useCallback(() => {

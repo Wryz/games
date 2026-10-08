@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { getObjectTrackingScores, submitObjectTrackingScore } from '@/lib/scores'
 import { useUser } from '@/contexts/UserContext'
@@ -230,11 +230,14 @@ export default function ObjectTracking() {
   const [lives, setLives] = useState(MAX_LIVES)
   const [best, setBest] = useState(0)
   const [results, setResults] = useState<RoundResult[]>([])
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const { username } = useUser()
 
   const phaseRef = useRef<Phase>('idle')
   const dotsRef = useRef<Dot[]>([])
+  // Positions at the start of the round, for rendering. The animation then moves the
+  // circles by writing to the DOM; React leaves cx/cy alone while this snapshot is unchanged.
+  const [roundDots, setRoundDots] = useState<Dot[]>([])
   const circleRefs = useRef<(SVGCircleElement | null)[]>([])
   const svgRef = useRef<SVGSVGElement | null>(null)
   const targetsRef = useRef<number[]>([])
@@ -273,20 +276,25 @@ export default function ObjectTracking() {
     }
   }
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getObjectTrackingScores({ limit: 50 })
-      setScores(data ?? [])
-    } catch (error) {
-      console.error('Error loading object tracking scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getObjectTrackingScores({ limit: 50 })
+      .then(data => {
+        setScores(data ?? [])
+      })
+      .catch(error => {
+        console.error('Error loading object tracking scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     let channel: ReturnType<typeof supabase.channel> | null = null
     try {
@@ -315,7 +323,7 @@ export default function ObjectTracking() {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   // --- Animation loop (refs only, so the closure never goes stale) ---
 
@@ -359,6 +367,8 @@ export default function ObjectTracking() {
       }
       paintDots()
       if (t >= trackMsRef.current) {
+        // Motion is over: hand the final positions back to React (matches the DOM, so no jump)
+        setRoundDots(dotsRef.current.map(d => ({ ...d })))
         setPhaseBoth('respond')
         return
       }
@@ -387,6 +397,7 @@ export default function ObjectTracking() {
     setRoundId(roundIdRef.current)
     setTargetCount(k)
     setDotCount(total)
+    setRoundDots(dots.map(d => ({ ...d })))
     setTargets(t)
     setSelected([])
     setCueOn(true)
@@ -470,6 +481,7 @@ export default function ObjectTracking() {
     clearTimers()
     roundIdRef.current += 1
     dotsRef.current = []
+    setRoundDots([])
     targetsRef.current = []
     selectedRef.current = []
     resultsRef.current = []
@@ -489,7 +501,9 @@ export default function ObjectTracking() {
 
   // Keyboard: Space / Enter starts. Latest handler via ref so the listener is attached once.
   const startRef = useRef(startGame)
-  startRef.current = startGame
+  useLayoutEffect(() => {
+    startRef.current = startGame
+  })
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -514,7 +528,6 @@ export default function ObjectTracking() {
     hasSubmittedScore.current = true
     if (best <= 0) return
 
-    setSaveState('saving')
     submitObjectTrackingScore({ username, objects_tracked: best })
       .then(() => {
         setSaveState('saved')
@@ -524,7 +537,7 @@ export default function ObjectTracking() {
         console.error('Error submitting object tracking score:', error)
         setSaveState('error')
       })
-  }, [phase, username, best])
+  }, [phase, username, best, loadScores])
 
   const formatScore = useCallback(
     (s: ObjectTrackingScore) => `${formatNumber(s.objects_tracked)} objects`,
@@ -670,7 +683,7 @@ export default function ObjectTracking() {
                   aria-label={`${dotCount} dots. ${caption}`}
                 >
                   {Array.from({ length: dotCount }, (_, i) => {
-                    const d = dotsRef.current[i]
+                    const d = roundDots[i]
                     if (!d) return null
                     const showRing = phase === 'feedback' && targetSet.has(i)
                     return (

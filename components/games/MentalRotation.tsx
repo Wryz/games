@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { getMentalRotationScores, submitMentalRotationScore } from '@/lib/scores'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
@@ -187,10 +187,13 @@ export default function MentalRotation() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const hasSubmittedScore = useRef(false)
 
-  phaseRef.current = phase
-  trialsRef.current = trials
-  trialIndexRef.current = trialIndex
-  resultsRef.current = results
+  // Keep the refs read by timers and handlers in sync with state (before paint)
+  useLayoutEffect(() => {
+    phaseRef.current = phase
+    trialsRef.current = trials
+    trialIndexRef.current = trialIndex
+    resultsRef.current = results
+  })
 
   const clearTimers = useCallback(() => {
     if (timeoutRef.current) {
@@ -199,20 +202,25 @@ export default function MentalRotation() {
     }
   }, [])
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getMentalRotationScores({ limit: 50 })
-      setScores(data ?? [])
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getMentalRotationScores({ limit: 50 })
+      .then(data => {
+        setScores(data ?? [])
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     let channel: ReturnType<typeof supabase.channel> | null = null
     try {
@@ -244,7 +252,7 @@ export default function MentalRotation() {
       }
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   // Stimulus onset: stamp after the new trial has been committed and painted
   useEffect(() => {
@@ -348,7 +356,7 @@ export default function MentalRotation() {
       .catch(error => {
         console.error('Error submitting score:', error)
       })
-  }, [phase, username])
+  }, [loadScores, phase, username])
 
   const resetGame = useCallback(() => {
     clearTimers()

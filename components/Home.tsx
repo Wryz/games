@@ -123,28 +123,26 @@ export default function Home() {
     })
   }
 
-  const loadRecentScores = useCallback(async () => {
-    try {
-      const { data, error } = (await supabase.rpc('get_recent_activity', { p_limit: 8 })) as {
-        data: any[] | null
-        error: any
-      }
-      if (error) throw error
-      setRecentScores(
-        (Array.isArray(data) ? data : []).map((item, index) => ({
-          key: `${item.game_id}-${item.date_submitted}-${index}`,
-          username: item.username,
-          gameId: item.game_id,
-          gameName: GAME_BY_ID[item.game_id]?.name ?? item.game_name,
-          value: formatScoreSummary(item.game_id, item.score_value),
-          dateSubmitted: item.date_submitted,
-        }))
-      )
-    } catch (error) {
-      console.error('Error loading recent scores:', error)
-    } finally {
-      setFeedLoading(false)
-    }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const loadRecentScores = useCallback(() => {
+    return Promise.resolve(supabase.rpc('get_recent_activity', { p_limit: 8 }))
+      .then(({ data, error }) => {
+        if (error) throw error
+        setRecentScores(
+          (Array.isArray(data) ? (data as any[]) : []).map((item, index) => ({
+            key: `${item.game_id}-${item.date_submitted}-${index}`,
+            username: item.username,
+            gameId: item.game_id,
+            gameName: GAME_BY_ID[item.game_id]?.name ?? item.game_name,
+            value: formatScoreSummary(item.game_id, item.score_value),
+            dateSubmitted: item.date_submitted,
+          }))
+        )
+      })
+      .catch(error => {
+        console.error('Error loading recent scores:', error)
+      })
+      .finally(() => setFeedLoading(false))
   }, [])
 
   const loadAllData = useCallback(
