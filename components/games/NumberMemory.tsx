@@ -190,19 +190,25 @@ export default function NumberMemory() {
       sortKey="longest_sequence"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Digits: <span className="font-bold text-blue-600 dark:text-blue-400">{digitCount}</span>
-          </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Best: <span className="font-bold text-green-600 dark:text-green-400">{longestSequence}</span>
+      <div className="w-full">
+        {/* Status row */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-baseline gap-2">
+              <span className="eyebrow">Digits</span>
+              <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{digitCount}</span>
+            </div>
+            <span className="text-gray-300 dark:text-gray-700" aria-hidden="true">·</span>
+            <div className="flex items-baseline gap-2">
+              <span className="eyebrow">Best</span>
+              <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{longestSequence}</span>
+            </div>
           </div>
           <button
             onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
             title="Reset"
+            aria-label="Reset"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -210,64 +216,75 @@ export default function NumberMemory() {
           </button>
         </div>
 
-        {/* Game Area */}
-        <div className="w-full max-w-2xl">
-          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-2xl text-center h-[280px] flex items-center justify-center p-8 mb-6">
-            {gameState === 'idle' || gameState === 'finished' ? (
-              <div className="text-6xl font-bold text-gray-400 dark:text-gray-500">
-                ?
+        {/* Stage */}
+        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white p-6 text-center dark:border-gray-800 dark:bg-gray-900 sm:min-h-[480px]">
+          {gameState === 'idle' ? (
+            <div className="flex max-w-md flex-col items-center">
+              <div className="num mb-6 text-6xl font-bold text-gray-300 dark:text-gray-700">?</div>
+              <p className="mb-8 text-base text-gray-600 dark:text-gray-400">
+                Memorise the number while it is shown, then type it back. Each round adds a digit.
+              </p>
+              <button onClick={startGame} className="btn-primary">
+                Start
+              </button>
+            </div>
+          ) : gameState === 'finished' ? (
+            <div className="flex w-full max-w-2xl flex-col items-center">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {longestSequence}
               </div>
-            ) : gameState === 'showing' ? (
-              <div className="text-6xl font-bold text-gray-800 dark:text-gray-100 tracking-wider">
-                {currentNumber}
-              </div>
-            ) : gameState === 'wrong' && showCorrectAnswer ? (
-              <div className="w-full flex flex-col items-center justify-center gap-4">
-                <div className="text-2xl text-red-600 dark:text-red-400 font-semibold mb-2">
-                  Wrong Answer!
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">digits remembered</div>
+              <div className="mt-8 grid w-full max-w-xs grid-cols-1 gap-3">
+                <div className="card p-4 text-left">
+                  <div className="eyebrow">Missed at</div>
+                  <div className="num mt-2 text-lg font-semibold text-gray-950 dark:text-gray-50">{digitCount} digits</div>
                 </div>
-                <div className="text-4xl text-gray-600 dark:text-gray-400 mb-2">
-                  Your answer: <span className="text-red-600 dark:text-red-400 font-bold">{userInput}</span>
-                </div>
-                <div className="text-4xl text-gray-600 dark:text-gray-400">
-                  Correct answer: <span className="text-green-600 dark:text-green-400 font-bold">{currentNumber}</span>
-                </div>
               </div>
-            ) : (
-              <div className="w-full flex flex-col items-center justify-center gap-4">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value.replace(/[^0-9]/g, ''))}
-                  onKeyPress={handleKeyPress}
-                  disabled={gameState !== 'input'}
-                  placeholder="Type the number..."
-                  className="w-full text-4xl text-center rounded-lg border-4 border-blue-500 dark:border-blue-400 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-600 disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={handleSubmit}
-                  disabled={gameState !== 'input' || !userInput.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-                >
-                  Submit
-                </button>
+              <button onClick={startGame} className="btn-ink mt-8">
+                Try again
+              </button>
+            </div>
+          ) : gameState === 'showing' ? (
+            <div className="num break-all text-5xl font-bold tracking-wider text-gray-950 dark:text-gray-50 sm:text-6xl">
+              {currentNumber}
+            </div>
+          ) : gameState === 'wrong' && showCorrectAnswer ? (
+            <div className="flex w-full flex-col items-center justify-center gap-6">
+              <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong</span>
+              <div className="flex flex-col items-center gap-2">
+                <span className="eyebrow">Your answer</span>
+                <span className="num break-all text-3xl font-bold text-red-600 dark:text-red-400 sm:text-4xl">{userInput}</span>
               </div>
-            )}
-          </div>
-          
-          {/* Start/Play Again Button */}
-          {(gameState === 'idle' || gameState === 'finished') && (
-            <button
-              onClick={startGame}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors text-lg"
-            >
-              {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-            </button>
+              <div className="flex flex-col items-center gap-2">
+                <span className="eyebrow">Correct answer</span>
+                <span className="num break-all text-3xl font-bold text-green-600 dark:text-green-400 sm:text-4xl">{currentNumber}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex w-full max-w-xl flex-col items-center justify-center gap-6">
+              <input
+                ref={inputRef}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value.replace(/[^0-9]/g, ''))}
+                onKeyPress={handleKeyPress}
+                disabled={gameState !== 'input'}
+                placeholder="Type the number"
+                className="input num py-4 text-center text-3xl sm:text-4xl disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleSubmit}
+                disabled={gameState !== 'input' || !userInput.trim()}
+                className="btn-primary"
+              >
+                Submit
+              </button>
+            </div>
           )}
         </div>
       </div>

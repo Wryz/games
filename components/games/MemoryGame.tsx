@@ -222,19 +222,25 @@ export default function MemoryGame() {
       sortKey="level_reached"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Level: <span className="font-bold text-blue-600 dark:text-blue-400">{level}</span>
-          </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctClicks}</span>
+      <div className="w-full">
+        {/* Status row */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-baseline gap-2">
+              <span className="eyebrow">Level</span>
+              <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{level}</span>
+            </div>
+            <span className="text-gray-300 dark:text-gray-700" aria-hidden="true">·</span>
+            <div className="flex items-baseline gap-2">
+              <span className="eyebrow">Correct</span>
+              <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{correctClicks}</span>
+            </div>
           </div>
           <button
             onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
             title="Reset"
+            aria-label="Reset"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -242,56 +248,77 @@ export default function MemoryGame() {
           </button>
         </div>
 
-        {/* Game Board */}
-        <div className="w-full max-w-2xl mb-6">
-          {gameState === 'wrong' && showCorrectSequence ? (
-            <div className="text-center mb-4">
-              <div className="text-xl text-red-600 dark:text-red-400 font-semibold mb-2">
-                Wrong! Here's the correct sequence:
+        {/* Stage */}
+        <div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+          {gameState === 'finished' ? (
+            /* Results Screen */
+            <div className="flex min-h-[380px] w-full flex-col items-center justify-center text-center sm:min-h-[440px]">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {level}
               </div>
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">level reached</div>
+              <div className="mt-8 grid w-full max-w-xs grid-cols-1 gap-3">
+                <div className="card p-4 text-left">
+                  <div className="eyebrow">Correct clicks</div>
+                  <div className="num mt-2 text-lg font-semibold text-gray-950 dark:text-gray-50">{correctClicks}</div>
+                </div>
+              </div>
+              <button onClick={startGame} className="btn-ink mt-8">
+                Try again
+              </button>
             </div>
-          ) : null}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 aspect-square">
-            {COLORS.map((color) => {
-              const isWrongSquare = gameState === 'wrong' && wrongSquareId === color.id && !showCorrectSequence
-              const isInCorrectSequence = gameState === 'wrong' && showCorrectSequence && sequence.includes(color.id)
-              
-              return (
-              <button
-                key={color.id}
-                onClick={() => handleSquareClick(color.id)}
-                disabled={gameState !== 'playing'}
-                className={`
-                  ${color.bg}
-                  ${color.border}
-                  border-4 rounded-lg transition-all duration-150
-                  ${gameState === 'playing' ? 'cursor-pointer' : 'cursor-not-allowed'}
-                    ${isWrongSquare ? 'opacity-100 shadow-2xl ring-4 ring-red-500 animate-shake' : ''}
-                    ${isInCorrectSequence ? 'opacity-100 shadow-2xl ring-4 ring-green-500' : ''}
-                    ${!isWrongSquare && !isInCorrectSequence && activeSquare === color.id ? 'opacity-100 shadow-2xl' : ''}
-                    ${!isWrongSquare && !isInCorrectSequence && activeSquare !== color.id && !isInCorrectSequence ? 'opacity-40 shadow-lg' : ''}
-                `}
-              />
-              )
-            })}
-          </div>
-        </div>
+          ) : (
+            <div className="w-full max-w-xl">
+              {/* Feedback line (fixed height so the board never jumps) */}
+              <div className="mb-4 flex min-h-[20px] items-center justify-center">
+                {gameState === 'wrong' && showCorrectSequence ? (
+                  <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong — here&apos;s the correct sequence</span>
+                ) : null}
+              </div>
 
-        {/* Control Buttons */}
-        {(gameState === 'idle' || gameState === 'finished') && (
-          <button
-            onClick={startGame}
-            className="w-full max-w-2xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg transition-colors"
-          >
-            {gameState === 'finished' ? 'Play Again' : 'Start Game'}
-          </button>
-        )}
+              {/* Game Board */}
+              <div className="grid aspect-square grid-cols-2 gap-3 sm:gap-4">
+                {COLORS.map((color) => {
+                  const isWrongSquare = gameState === 'wrong' && wrongSquareId === color.id && !showCorrectSequence
+                  const isInCorrectSequence = gameState === 'wrong' && showCorrectSequence && sequence.includes(color.id)
 
-        {/* Progress indicator during player's turn */}
-        <div className="mt-4 text-center min-h-[20px]">
-          {gameState === 'playing' && playerSequence.length > 0 && (
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Progress: {playerSequence.length} / {sequence.length}
+                  return (
+                  <button
+                    key={color.id}
+                    onClick={() => handleSquareClick(color.id)}
+                    disabled={gameState !== 'playing'}
+                    className={`
+                      ${color.bg}
+                      ${color.border}
+                      border-4 rounded-2xl transition-all duration-150
+                      ${gameState === 'playing' ? 'cursor-pointer' : 'cursor-not-allowed'}
+                        ${isWrongSquare ? 'opacity-100 shadow-2xl ring-4 ring-red-500 animate-shake' : ''}
+                        ${isInCorrectSequence ? 'opacity-100 shadow-2xl ring-4 ring-green-500' : ''}
+                        ${!isWrongSquare && !isInCorrectSequence && activeSquare === color.id ? 'opacity-100 shadow-2xl' : ''}
+                        ${!isWrongSquare && !isInCorrectSequence && activeSquare !== color.id && !isInCorrectSequence ? 'opacity-40 shadow-lg' : ''}
+                    `}
+                  />
+                  )
+                })}
+              </div>
+
+              {/* Start button / progress indicator */}
+              <div className="mt-6 flex min-h-[44px] items-center justify-center">
+                {gameState === 'idle' && (
+                  <button onClick={startGame} className="btn-primary">
+                    Start
+                  </button>
+                )}
+                {gameState === 'playing' && playerSequence.length > 0 && (
+                  <div className="flex items-baseline gap-2">
+                    <span className="eyebrow">Progress</span>
+                    <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {playerSequence.length}/{sequence.length}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

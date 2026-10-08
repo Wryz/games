@@ -227,20 +227,26 @@ export default function StroopTest() {
       sortKey="correct_answers"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        <div className="w-full max-w-2xl">
-          {/* Stats */}
-          <div className="flex justify-between items-center mb-6 text-sm sm:text-base">
-            <div className="text-gray-600 dark:text-gray-400">
-              Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctAnswers}</span>
-            </div>
-            <div className="text-gray-600 dark:text-gray-400">
-              Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-2xl">
+          {/* Status row */}
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex items-baseline gap-2">
+                <span className="eyebrow">Correct</span>
+                <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{correctAnswers}</span>
+              </div>
+              <span className="text-gray-300 dark:text-gray-700" aria-hidden="true">·</span>
+              <div className="flex items-baseline gap-2">
+                <span className="eyebrow">Time</span>
+                <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{formatTime(elapsedTime)}</span>
+              </div>
             </div>
             <button
               onClick={resetGame}
-              className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
               title="Reset"
+              aria-label="Reset"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -252,15 +258,15 @@ export default function StroopTest() {
           {(gameState === 'playing' || gameState === 'wrong') && (
             <div className="flex flex-col items-center">
               {/* Word Display */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8 min-h-[200px] flex items-center justify-center w-full">
+              <div className="mb-6 flex min-h-[200px] w-full select-none items-center justify-center rounded-2xl border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-gray-900 sm:min-h-[240px]">
                 <h2 
-                  className={`text-6xl sm:text-8xl font-bold ${
+                  className={`text-6xl sm:text-8xl font-bold tracking-tight ${
                     gameState === 'wrong' ? 'opacity-60' : ''
                   }`}
                   style={{ color: COLORS.find(c => c.value === currentColor)?.cssColor || '#000' }}
                 >
                   {currentWord}
-        </h2>
+                </h2>
               </div>
 
               {/* Color Buttons */}
@@ -275,8 +281,8 @@ export default function StroopTest() {
                       onClick={() => handleColorSelect(color.value)}
                       disabled={gameState === 'wrong'}
                       className={`
-                        aspect-square rounded-lg font-semibold text-sm sm:text-lg transition-all flex items-center justify-center
-                        ${gameState === 'wrong' ? 'cursor-not-allowed opacity-50' : 'hover:scale-105 cursor-pointer'}
+                        aspect-square rounded-2xl font-mono text-xs font-semibold uppercase tracking-[0.14em] sm:text-sm transition-colors active:scale-[0.98] flex items-center justify-center
+                        ${gameState === 'wrong' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
                         ${isCorrectAnswer 
                           ? 'bg-green-500 dark:bg-green-600' 
                           : isWrongSelection
@@ -291,7 +297,6 @@ export default function StroopTest() {
                           color.value === 'cyan' ? 'bg-cyan-400 dark:bg-cyan-500 text-cyan-900 dark:text-cyan-200 hover:bg-cyan-500 dark:hover:bg-cyan-400' :
                           color.value === 'brown' ? 'bg-amber-600 dark:bg-amber-700 text-amber-50 dark:text-amber-100 hover:bg-amber-700 dark:hover:bg-amber-600' : ''
                         }
-                        shadow-md
                       `}
                     >
                       {color.name}
@@ -302,7 +307,7 @@ export default function StroopTest() {
 
               {/* Instruction */}
               {gameState === 'playing' && (
-                <p className="mt-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
                   Click the color of the text (not the word)
                 </p>
               )}
@@ -310,43 +315,31 @@ export default function StroopTest() {
           )}
 
           {gameState === 'finished' && (
-            <div className="text-center w-full max-w-2xl">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
-                {mistakeSelected ? 'Game Over!' : 'Test Complete!'}
-              </h2>
-              <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
-                      {correctAnswers}
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                      Correct Answers
-                    </div>
+            <div className="flex w-full flex-col items-center rounded-2xl border border-gray-200 bg-white p-6 text-center dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {correctAnswers}
+              </div>
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">correct answers</div>
+              <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-3">
+                <div className="card p-4 text-left">
+                  <div className="eyebrow">Time</div>
+                  <div className="num mt-2 text-lg font-semibold text-gray-950 dark:text-gray-50">
+                    {formatExactTime(elapsedTime)}
                   </div>
-                  <div>
-                    <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
-                      {formatExactTime(elapsedTime)}
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                      Time
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">
-                      {averageTime}ms
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                      Average Time
-                    </div>
+                </div>
+                <div className="card p-4 text-left">
+                  <div className="eyebrow">Avg response</div>
+                  <div className="num mt-2 text-lg font-semibold text-signal-600 dark:text-signal-400">
+                    {averageTime} ms
                   </div>
                 </div>
               </div>
               <button
                 onClick={startNewGame}
-                className="w-full max-w-2xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           )}
