@@ -685,118 +685,140 @@ export default function WordSearch() {
       sortKey="characters_found"
       sortDirection="desc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Characters: <span className="font-bold text-green-600 dark:text-green-400">
-              {formatNumber(Array.from(foundWords).reduce((sum, word) => sum + word.length, 0))}
-            </span>
-          </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Time: <span className={`font-bold ${timeLeft <= 10 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
-              {timeLeft}s
-            </span>
+      <div className="w-full">
+        {/* Status row */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-baseline gap-2">
+              <span className="eyebrow">Characters</span>
+              <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(Array.from(foundWords).reduce((sum, word) => sum + word.length, 0))}
+              </span>
+            </div>
+            <span className="text-gray-300 dark:text-gray-700" aria-hidden="true">·</span>
+            <div className="flex items-baseline gap-2">
+              <span className="eyebrow">Time</span>
+              <span className={`num text-sm font-medium ${timeLeft <= 10 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                {timeLeft}s
+              </span>
+            </div>
           </div>
           <button
             onClick={resetGame}
-            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white"
+            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+            title="New puzzle"
+            aria-label="New puzzle"
           >
-            Play Again
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
           </button>
         </div>
 
-        {/* Game Area */}
+        {/* Stage */}
         {grid.length > 0 && (
-          <div className="w-full max-w-2xl">
-            {/* Grid Container with SVG Overlay */}
-            <div className="relative">
-              {/* Grid */}
-              <div
-                ref={gridRef}
-                className="grid grid-cols-8 gap-1 select-none touch-none"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-              >
-                {grid.map((row, rowIdx) =>
-                  row.map((cell, colIdx) => (
-                    <div
-                      key={`${rowIdx}-${colIdx}`}
-                      className={`
-                        aspect-square flex items-center justify-center text-lg sm:text-xl font-bold rounded
-                        transition-all duration-150
-                        ${cell.isSelected
-                          ? 'bg-blue-500 text-white scale-110 shadow-lg'
-                          : cell.isFound
-                          ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 opacity-70'
-                          : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
-                        }
-                      `}
-                    >
-                      {cell.letter}
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              {/* SVG Overlay for Word Outlines */}
-              {foundWordPaths.size > 0 && gridRef.current && (() => {
-                const gridRect = gridRef.current.getBoundingClientRect()
-                const cellSize = (gridRect.width - 7 * 4) / 8 // Account for gaps (8x8 grid, no padding)
-                const gap = 4 // gap-1 = 4px
-                const padding = 0 // No padding
-                
-                return (
-                  <svg
-                    className="absolute top-0 left-0 pointer-events-none"
-                    width={gridRect.width}
-                    height={gridRect.height}
-                    style={{ zIndex: 10 }}
-                  >
-                    {Array.from(foundWordPaths.entries()).map(([word, cells]) => {
-                      const path = getWordOutlinePath(cells, cellSize, gap, padding)
-                      return (
-                        <path
-                          key={word}
-                          d={path}
-                          fill="none"
-                          stroke="rgba(74, 222, 128, 0.2)"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      )
-                    })}
-                  </svg>
-                )
-              })()}
-            </div>
-
-            {/* Found Words List */}
-            {foundWords.size > 0 && (
-              <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Words Found:
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(foundWords).map((word, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium"
-                    >
-                      {word}
-                    </span>
-                  ))}
+          <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+            <div className="mx-auto max-w-2xl">
+              {/* Grid Container with SVG Overlay */}
+              <div className="relative">
+                {/* Grid */}
+                <div
+                  ref={gridRef}
+                  className="grid grid-cols-8 gap-1 select-none touch-none"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                >
+                  {grid.map((row, rowIdx) =>
+                    row.map((cell, colIdx) => (
+                      <div
+                        key={`${rowIdx}-${colIdx}`}
+                        className={`
+                          aspect-square flex items-center justify-center text-lg sm:text-xl font-bold rounded-md
+                          transition-all duration-150
+                          ${cell.isSelected
+                            ? 'bg-blue-600 text-white scale-110'
+                            : cell.isFound
+                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 opacity-70'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700'
+                          }
+                        `}
+                      >
+                        {cell.letter}
+                      </div>
+                    ))
+                  )}
                 </div>
+              
+                {/* SVG Overlay for Word Outlines */}
+                {foundWordPaths.size > 0 && gridRef.current && (() => {
+                  const gridRect = gridRef.current.getBoundingClientRect()
+                  const cellSize = (gridRect.width - 7 * 4) / 8 // Account for gaps (8x8 grid, no padding)
+                  const gap = 4 // gap-1 = 4px
+                  const padding = 0 // No padding
+                
+                  return (
+                    <svg
+                      className="absolute top-0 left-0 pointer-events-none"
+                      width={gridRect.width}
+                      height={gridRect.height}
+                      style={{ zIndex: 10 }}
+                    >
+                      {Array.from(foundWordPaths.entries()).map(([word, cells]) => {
+                        const path = getWordOutlinePath(cells, cellSize, gap, padding)
+                        return (
+                          <path
+                            key={word}
+                            d={path}
+                            fill="none"
+                            stroke="rgba(74, 222, 128, 0.2)"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        )
+                      })}
+                    </svg>
+                  )
+                })()}
               </div>
-            )}
 
+              {/* Result */}
+              {gameState === 'finished' && (
+                <div className="mt-8 flex flex-col items-center text-center">
+                  <span className="eyebrow">Result</span>
+                  <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                    {formatNumber(Array.from(foundWords).reduce((sum, word) => sum + word.length, 0))}
+                  </div>
+                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Characters found</p>
+                  <button onClick={resetGame} className="btn-ink mt-8">
+                    Play again
+                  </button>
+                </div>
+              )}
+
+              {/* Found Words List */}
+              {foundWords.size > 0 && (
+                <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
+                  <div className="eyebrow mb-3">Words found</div>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from(foundWords).map((word, idx) => (
+                      <span
+                        key={idx}
+                        className="rounded-full bg-green-100 px-3 py-1 font-mono text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                      >
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -309,35 +309,42 @@ export default function Arithmetic() {
         return a.average_time - b.average_time
       }}
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctCount}</span> / 20
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-2xl">
+          {/* Status row */}
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex items-baseline gap-2">
+                <span className="eyebrow">Correct</span>
+                <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{correctCount}/20</span>
+              </div>
+              <span className="text-gray-300 dark:text-gray-700" aria-hidden="true">·</span>
+              <div className="flex items-baseline gap-2">
+                <span className="eyebrow">Time</span>
+                <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{formatTime(elapsedTime)}</span>
+              </div>
+            </div>
+            <button
+              onClick={resetGame}
+              className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+              title="Reset"
+              aria-label="Reset"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
-          </div>
-          <button
-            onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            title="Reset"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
 
-        {/* Game Area */}
-        <div className="w-full max-w-2xl">
+          {/* Stage */}
+          <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 sm:min-h-[420px]">
           {gameState === 'playing' && currentProblem && (
-            <div className="flex flex-col items-center">
-              <div className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-gray-100 mb-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+            <div className="flex w-full flex-col items-center">
+              <div className="num mb-8 text-4xl font-bold tracking-tight text-gray-950 dark:text-gray-50 sm:text-6xl">
                 {currentProblem.problem} = ?
               </div>
               
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-sm">
                 <input
                   ref={inputRef}
                   type="number"
@@ -349,7 +356,7 @@ export default function Arithmetic() {
                   }}
                   onKeyPress={handleKeyPress}
                   placeholder="Enter answer"
-                  className="w-full px-4 py-3 text-2xl text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                  className="input num py-3 text-center text-2xl"
                   autoFocus
                   autoComplete="off"
                 />
@@ -357,7 +364,7 @@ export default function Arithmetic() {
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSubmit}
-                  className="w-full mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+                  className="btn-primary mt-4 w-full"
                 >
                   Submit
                 </button>
@@ -366,48 +373,61 @@ export default function Arithmetic() {
           )}
 
           {gameState === 'wrong' && currentProblem && (
-            <div className="flex flex-col items-center">
-              <div className="text-6xl mb-4">✗</div>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
-                Wrong Answer!
+            <div className="flex w-full flex-col items-center text-center">
+              <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong answer</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {correctCount}/20
               </div>
               {showCorrectAnswer && (
-                <div className="text-xl text-gray-600 dark:text-gray-400 mt-4 mb-6">
-                  <div className="mb-2">Your answer: {userInput}</div>
-                  <div className="mb-2">Correct answer: {currentProblem.answer}</div>
-                  <div className="text-lg mt-4">
+                <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-3">
+                  <div className="card p-4 text-left">
+                    <div className="eyebrow">Your answer</div>
+                    <div className="num mt-2 text-lg font-semibold text-red-600 dark:text-red-400">{userInput}</div>
+                  </div>
+                  <div className="card p-4 text-left">
+                    <div className="eyebrow">Correct answer</div>
+                    <div className="num mt-2 text-lg font-semibold text-green-600 dark:text-green-400">{currentProblem.answer}</div>
+                  </div>
+                  <div className="num col-span-2 mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {currentProblem.problem} = {currentProblem.answer}
                   </div>
                 </div>
               )}
               <button
                 onClick={resetGame}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           )}
 
           {gameState === 'finished' && (
-            <div className="flex flex-col items-center">
-              <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Congratulations!
+            <div className="flex w-full flex-col items-center text-center">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                20/20
               </div>
-              <div className="text-xl text-gray-600 dark:text-gray-400 mb-2">
-                You completed all 20 questions correctly!
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                All 20 questions answered correctly
               </div>
-              <div className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                Time: {formatExactTime(elapsedTime)}
+              <div className="mt-8 grid w-full max-w-xs grid-cols-1 gap-3">
+                <div className="card p-4 text-left">
+                  <div className="eyebrow">Time</div>
+                  <div className="num mt-2 text-lg font-semibold text-signal-600 dark:text-signal-400">
+                    {formatExactTime(elapsedTime)}
+                  </div>
+                </div>
               </div>
               <button
                 onClick={resetGame}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </GameWrapper>

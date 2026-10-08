@@ -288,7 +288,7 @@ const AngleLabel = ({
     y={point.y}
     textAnchor="middle"
     dominantBaseline="middle"
-    className={`text-sm font-bold fill-current ${isMissing ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}
+    className={`font-mono text-sm font-bold fill-current ${isMissing ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}
   >
     {isMissing ? '?' : `${value}°`}
   </text>
@@ -308,7 +308,7 @@ const SideLabel = ({
     y={point.y}
     textAnchor="middle"
     dominantBaseline="middle"
-    className={`text-sm font-bold fill-current ${isMissing ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}
+    className={`font-mono text-sm font-bold fill-current ${isMissing ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}
   >
     {isMissing ? '?' : value}
   </text>
@@ -443,10 +443,10 @@ const RectangleShape = ({ width, height }: { width: number, height: number }) =>
         strokeWidth="3"
         className="text-gray-800 dark:text-gray-200"
       />
-      <text x={topLabel.x} y={topLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
+      <text x={topLabel.x} y={topLabel.y} textAnchor="middle" dominantBaseline="middle" className="font-mono text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {width}
       </text>
-      <text x={leftLabel.x} y={leftLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
+      <text x={leftLabel.x} y={leftLabel.y} textAnchor="middle" dominantBaseline="middle" className="font-mono text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {height}
       </text>
     </svg>
@@ -489,10 +489,10 @@ const TriangleAreaShape = ({ base, height }: { base: number, height: number }) =
         strokeDasharray="5,5"
         className="text-gray-500 dark:text-gray-400"
       />
-      <text x={heightLabel.x} y={heightLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
+      <text x={heightLabel.x} y={heightLabel.y} textAnchor="middle" dominantBaseline="middle" className="font-mono text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {height}
       </text>
-      <text x={baseLabel.x} y={baseLabel.y} textAnchor="middle" dominantBaseline="middle" className="text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
+      <text x={baseLabel.x} y={baseLabel.y} textAnchor="middle" dominantBaseline="middle" className="font-mono text-sm font-bold fill-current text-blue-600 dark:text-blue-400">
         {base}
       </text>
     </svg>
@@ -933,47 +933,54 @@ export default function Geometry() {
         return a.average_time - b.average_time
       }}
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Correct: <span className="font-bold text-green-600 dark:text-green-400">{correctCount}</span> / 10
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-2xl">
+          {/* Status row */}
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex items-baseline gap-2">
+                <span className="eyebrow">Correct</span>
+                <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{correctCount}/10</span>
+              </div>
+              <span className="text-gray-300 dark:text-gray-700" aria-hidden="true">·</span>
+              <div className="flex items-baseline gap-2">
+                <span className="eyebrow">Time</span>
+                <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">{formatTime(elapsedTime)}</span>
+              </div>
+            </div>
+            <button
+              onClick={resetGame}
+              className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+              title="Reset"
+              aria-label="Reset"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
-            Time: <span className="font-bold text-blue-600 dark:text-blue-400">{formatTime(elapsedTime)}</span>
-          </div>
-          <button
-            onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            title="Reset"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
 
-        {/* Game Area */}
-        <div className="w-full max-w-2xl">
+          {/* Stage */}
+          <div className="flex min-h-[420px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 sm:min-h-[480px]">
           {gameState === 'playing' && currentProblem && (
-            <div className="flex flex-col items-center">
+            <div className="flex w-full flex-col items-center">
               {/* Question */}
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
+              <p className="mb-4 text-center text-lg font-semibold tracking-tight text-gray-950 dark:text-gray-50 sm:text-xl">
                 {currentProblem.question}
-              </h3>
+              </p>
               
               {/* Shape */}
-              <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+              <div className="mb-6 max-w-full overflow-hidden">
                 {currentProblem.shape}
               </div>
               
               {/* Multiple Choice Options */}
-              <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+              <div className="grid w-full max-w-sm grid-cols-2 gap-3">
                 {currentProblem.options.map((option, index) => (
                   <button
                     key={index}
                     onClick={() => handleAnswerSelect(option)}
-                    className="px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 text-lg"
+                    className="num flex h-16 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 transition-colors hover:border-signal-500 hover:text-signal-600 active:bg-gray-100 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-signal-400 dark:hover:text-signal-400 dark:active:bg-gray-800"
                   >
                     {option}
                   </button>
@@ -983,47 +990,57 @@ export default function Geometry() {
           )}
 
           {gameState === 'wrong' && currentProblem && (
-            <div className="flex flex-col items-center">
-              <div className="text-6xl mb-4">✗</div>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
-                Wrong Answer!
+            <div className="flex w-full flex-col items-center text-center">
+              <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong answer</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {correctCount}/10
               </div>
               {showCorrectAnswer && (
-                <div className="text-xl text-gray-600 dark:text-gray-400 mt-4 mb-6 text-center">
-                  <div className="mb-4">The correct answer is: <span className="font-bold text-green-600 dark:text-green-400">{currentProblem.answer}</span></div>
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                <div className="mt-8 flex w-full flex-col items-center gap-4">
+                  <div className="card w-full max-w-xs p-4 text-left">
+                    <div className="eyebrow">Correct answer</div>
+                    <div className="num mt-2 text-lg font-semibold text-green-600 dark:text-green-400">{currentProblem.answer}</div>
+                  </div>
+                  <div className="max-w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
                     {currentProblem.shape}
                   </div>
                 </div>
               )}
               <button
                 onClick={resetGame}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           )}
 
           {gameState === 'finished' && (
-            <div className="flex flex-col items-center">
-              <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Congratulations!
+            <div className="flex w-full flex-col items-center text-center">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                10/10
               </div>
-              <div className="text-xl text-gray-600 dark:text-gray-400 mb-2">
-                You completed all 10 questions correctly!
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                All 10 questions answered correctly
               </div>
-              <div className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                Time: {formatExactTime(elapsedTime)}
+              <div className="mt-8 grid w-full max-w-xs grid-cols-1 gap-3">
+                <div className="card p-4 text-left">
+                  <div className="eyebrow">Time</div>
+                  <div className="num mt-2 text-lg font-semibold text-signal-600 dark:text-signal-400">
+                    {formatExactTime(elapsedTime)}
+                  </div>
+                </div>
               </div>
               <button
                 onClick={resetGame}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </GameWrapper>
