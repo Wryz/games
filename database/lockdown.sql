@@ -34,24 +34,25 @@ DECLARE
     'maze_scores', 'algebra_scores', 'arithmetic_scores', 'geometry_scores',
     'word_search_scores', 'sudoku_scores', 'tangrams_scores'
   ];
-  -- Tables from new_tests.sql. Supabase's default privileges grant them ALL,
-  -- so normalise them too. Skipped if new_tests.sql hasn't been run yet.
-  optional_tables TEXT[] := ARRAY[
-    'verbal_memory_scores', 'flanker_scores', 'color_perception_scores',
-    'mental_rotation_scores'
-  ];
   t   TEXT;
   seq TEXT;
 BEGIN
-  FOREACH t IN ARRAY core_tables || optional_tables
+  FOREACH t IN ARRAY core_tables
   LOOP
     IF to_regclass(format('public.%I', t)) IS NULL THEN
-      IF t = ANY (core_tables) THEN
-        RAISE EXCEPTION 'Table public.% does not exist - is this the right project?', t;
-      END IF;
-      RAISE NOTICE 'Skipping public.% (not created yet)', t;
-      CONTINUE;
+      RAISE EXCEPTION 'Table public.% does not exist - is this the right project?', t;
     END IF;
+  END LOOP;
+
+  -- Every score table in public: the 16 originals, the new_tests.sql tables
+  -- and any added later (Supabase's default privileges grant new tables ALL).
+  FOR t IN
+    SELECT c.relname
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname LIKE '%\_scores'
+    ORDER BY c.relname
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
 
     EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', 'Allow public update access on ' || t, t);
     EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', 'Allow public insert access on ' || t, t);
