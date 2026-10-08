@@ -50,6 +50,8 @@ export function formatScoreSummary(gameId: string, score: ScoreLike): string {
       return `${formatNumber(score.correct_answers)} correct · ${formatNumber(score.average_time)}ms`
     case 'word-search':
       return `${formatNumber(score.characters_found)} letters`
+    case 'object-tracking':
+      return `${formatNumber(score.objects_tracked)} objects`
     default:
       return score.level_reached != null ? `Level ${formatNumber(score.level_reached)}` : '—'
   }

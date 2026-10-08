@@ -390,6 +390,23 @@ export const FlankerIcon = ({ className = "", size = 24 }: IconProps) => (
   </svg>
 )
 
+export const ObjectTrackingIcon = ({ className = "", size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <circle cx="17" cy="16" r="2.5" fill="currentColor"/>
+    <circle cx="17" cy="16" r="5" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M4 5.5c2.5 0 4.5 2 6.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="0.1 3"/>
+    <circle cx="18" cy="5" r="2" stroke="currentColor" strokeWidth="1.6" opacity="0.55"/>
+    <circle cx="5" cy="18" r="2" stroke="currentColor" strokeWidth="1.6" opacity="0.55"/>
+  </svg>
+)
+
 /** Brand mark: a measurement bracket around a pulse trace. */
 export const LogoMark = ({ className = "", size = 28 }: IconProps) => (
   <svg

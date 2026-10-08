@@ -104,6 +104,27 @@ export type Database = {
         }
         Relationships: []
       }
+      object_tracking_scores: {
+        Row: {
+          date_submitted: string | null
+          id: number
+          objects_tracked: number
+          username: string
+        }
+        Insert: {
+          date_submitted?: string | null
+          id?: number
+          objects_tracked: number
+          username: string
+        }
+        Update: {
+          date_submitted?: string | null
+          id?: number
+          objects_tracked?: number
+          username?: string
+        }
+        Relationships: []
+      }
       aim_trainer_scores: {
         Row: {
           accuracy: number
@@ -569,6 +590,21 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "mental_rotation_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_object_tracking_score: {
+        Args: { p_objects_tracked: number; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          objects_tracked: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "object_tracking_scores"
           isOneToOne: true
           isSetofReturn: false
         }

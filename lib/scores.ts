@@ -847,3 +847,24 @@ export async function getMentalRotationScores(filters?: ScoreFilters) {
   if (error) throw error
   return data
 }
+
+export async function submitObjectTrackingScore(score: { username: string; objects_tracked: number }) {
+  const { data, error } = await supabase.rpc('submit_object_tracking_score', {
+    p_username: score.username,
+    p_objects_tracked: score.objects_tracked
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getObjectTrackingScores(filters?: ScoreFilters) {
+  let query = supabase
+    .from('object_tracking_scores')
+    .select('*')
+    .order('objects_tracked', { ascending: false })
+  if (filters?.username) query = query.eq('username', filters.username)
+  if (filters?.limit) query = query.limit(filters.limit)
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
