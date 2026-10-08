@@ -46,8 +46,10 @@ CREATE INDEX IF NOT EXISTS mental_rotation_scores_username_idx ON mental_rotatio
 CREATE INDEX IF NOT EXISTS mental_rotation_scores_date_idx ON mental_rotation_scores (date_submitted DESC);
 
 -- ── Row Level Security ──────────────────────────────────────────────────
--- Public read + insert only. No UPDATE/DELETE policy, so existing scores
--- cannot be edited with the anon key.
+-- Public read only. No INSERT/UPDATE/DELETE policy: scores are written only
+-- through the submit_* functions below (SECURITY DEFINER), so clients can't
+-- edit rows or insert with a chosen id / date_submitted. The insert-policy
+-- DROPs remove the policy an earlier version of this file created.
 
 ALTER TABLE verbal_memory_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE flanker_scores ENABLE ROW LEVEL SECURITY;
@@ -57,30 +59,26 @@ ALTER TABLE mental_rotation_scores ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public read access on verbal_memory_scores" ON verbal_memory_scores;
 DROP POLICY IF EXISTS "Allow public insert access on verbal_memory_scores" ON verbal_memory_scores;
 CREATE POLICY "Allow public read access on verbal_memory_scores" ON verbal_memory_scores FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on verbal_memory_scores" ON verbal_memory_scores FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow public read access on flanker_scores" ON flanker_scores;
 DROP POLICY IF EXISTS "Allow public insert access on flanker_scores" ON flanker_scores;
 CREATE POLICY "Allow public read access on flanker_scores" ON flanker_scores FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on flanker_scores" ON flanker_scores FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow public read access on color_perception_scores" ON color_perception_scores;
 DROP POLICY IF EXISTS "Allow public insert access on color_perception_scores" ON color_perception_scores;
 CREATE POLICY "Allow public read access on color_perception_scores" ON color_perception_scores FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on color_perception_scores" ON color_perception_scores FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow public read access on mental_rotation_scores" ON mental_rotation_scores;
 DROP POLICY IF EXISTS "Allow public insert access on mental_rotation_scores" ON mental_rotation_scores;
 CREATE POLICY "Allow public read access on mental_rotation_scores" ON mental_rotation_scores FOR SELECT USING (true);
-CREATE POLICY "Allow public insert access on mental_rotation_scores" ON mental_rotation_scores FOR INSERT WITH CHECK (true);
 
 -- Supabase's default privileges grant ALL on new public tables to anon and
--- authenticated, so revoke what the app never uses before granting the rest.
--- (TRUNCATE is not subject to RLS.)
+-- authenticated, so revoke everything before granting back SELECT.
+-- (TRUNCATE is not subject to RLS.) Clients don't need the id sequences:
+-- only the submit_* functions call nextval().
 REVOKE ALL ON verbal_memory_scores, flanker_scores, color_perception_scores, mental_rotation_scores FROM anon, authenticated;
-GRANT SELECT, INSERT ON verbal_memory_scores, flanker_scores, color_perception_scores, mental_rotation_scores TO anon, authenticated;
+GRANT SELECT ON verbal_memory_scores, flanker_scores, color_perception_scores, mental_rotation_scores TO anon, authenticated;
 REVOKE ALL ON SEQUENCE verbal_memory_scores_id_seq, flanker_scores_id_seq, color_perception_scores_id_seq, mental_rotation_scores_id_seq FROM anon, authenticated;
-GRANT USAGE, SELECT ON SEQUENCE verbal_memory_scores_id_seq, flanker_scores_id_seq, color_perception_scores_id_seq, mental_rotation_scores_id_seq TO anon, authenticated;
 
 -- ── Realtime (live feed + leaderboards) ─────────────────────────────────
 
