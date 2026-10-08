@@ -3,11 +3,12 @@ import UserProfileClient from '@/components/UserProfileClient'
 import { isReservedUsername, isValidUsernameLength } from '@/lib/username-validation'
 
 interface UserProfilePageProps {
-  params: { username: string }
+  params: Promise<{ username: string }>
 }
 
-export default function UserProfilePage({ params }: UserProfilePageProps) {
-  const profileUsername = decodeURIComponent(params.username)
+export default async function UserProfilePage({ params }: UserProfilePageProps) {
+  const { username } = await params
+  const profileUsername = decodeURIComponent(username)
 
   if (
     !profileUsername ||

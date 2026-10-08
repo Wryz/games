@@ -5,11 +5,12 @@ import { lowerFirst } from '@/lib/format-score'
 import { GAME_BY_ID } from '@/types/games'
 
 interface GamePageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
-export function generateMetadata({ params }: GamePageProps): Metadata {
-  const game = GAME_BY_ID[params.id]
+export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
+  const { id } = await params
+  const game = GAME_BY_ID[id]
   if (!game) return { title: 'Test not found' }
   const description = `${game.description} A free ${game.duration} test of ${lowerFirst(game.measures)} — ranked against everyone on Brain Benchmark.`
   return {
@@ -21,10 +22,11 @@ export function generateMetadata({ params }: GamePageProps): Metadata {
   }
 }
 
-export default function GamePage({ params }: GamePageProps) {
+export default async function GamePage({ params }: GamePageProps) {
+  const { id } = await params
   return (
     <SiteShell>
-      <TestPage gameId={params.id} />
+      <TestPage gameId={id} />
     </SiteShell>
   )
 }

@@ -6,30 +6,29 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "types": "supabase gen types typescript --project-id snzsigjseoduyjhqxbwn > types/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.80.0",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "an-array-of-english-words": "^2.0.0",
     "autoprefixer": "^10.0.1",
     "bad-words": "^4.0.0",
     "html2canvas": "^1.4.1",
-    "lucide-react": "^0.294.0",
-    "next": "14.0.4",
+    "next": "^16.4.0",
     "postcss": "^8",
     "posthog-js": "^1.290.0",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "14.0.4",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.0",
     "supabase": "^2.54.11"
   }
 }
