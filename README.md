@@ -52,6 +52,18 @@ yarn dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Database
+
+Scores live in Supabase (project ref `snzsigjseoduyjhqxbwn`, see the `types` script in `package.json`). The SQL in `database/` is not applied automatically; run it in the Supabase SQL editor. Every file is safe to re-run.
+
+- `game_submitting.sql`: the `submit_*_score` RPCs the app uses to insert scores
+- `rls-policies.sql`: Row Level Security and grants. Score tables are public **read-only**; scores are written only through the `submit_*_score` RPCs.
+- `game_stats.sql`, `recent_activity.sql`: the overview and live feed RPCs
+- `lockdown.sql`: **must be run once on the existing database.** Older versions of `rls-policies.sql` added a public UPDATE policy and `GRANT ALL` to `anon`, which let anyone with the public anon key edit or delete leaderboard rows through the REST API. This script removes those and leaves clients with SELECT only (inserts go through the RPCs). The query at the end of the script lets you confirm the result.
+- `proposed-score-checks.sql`: optional plausibility CHECK constraints (e.g. reaction times > 50 ms). Review the ranges before running.
+
+The anon key is public, so never add INSERT, UPDATE or DELETE policies or grants for `anon`/`authenticated` on score tables; add a `SECURITY DEFINER` submit RPC instead. Supabase grants `ALL` on new tables by default, so new score tables need an explicit `REVOKE ALL` followed by `GRANT SELECT`.
+
 ## Project Structure
 
 ```
