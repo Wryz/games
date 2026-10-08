@@ -14,40 +14,24 @@ DO $$
 DECLARE
   t TEXT;
 BEGIN
-  FOREACH t IN ARRAY ARRAY[
-    'aim_trainer_scores',
-    'typing_test_scores',
-    'memory_scores',
-    'reaction_time_scores',
-    'number_memory_scores',
-    'visual_memory_scores',
-    'stroop_test_scores',
-    'chimp_test_scores',
-    'time_estimation_scores',
-    'maze_scores',
-    'algebra_scores',
-    'arithmetic_scores',
-    'geometry_scores',
-    'word_search_scores',
-    'sudoku_scores',
-    'tangrams_scores'
-  ]
+  -- Every score table in public (the 16 originals, the newer tests, and any
+  -- added later), so re-running this keeps all of them locked down.
+  FOR t IN
+    SELECT c.relname
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname LIKE '%\_scores'
+    ORDER BY c.relname
   LOOP
-    -- Skip tables that don't exist in this project
-    IF to_regclass(format('public.%I', t)) IS NULL THEN
-      RAISE NOTICE 'Skipping missing table %', t;
-      CONTINUE;
-    END IF;
-
     -- 1. Remove the policy that let anyone edit any row
     EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', 'Allow public update access on ' || t, t);
 
     -- 2. Make sure RLS stays on
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
 
-    -- 3. Defense in depth: revoke privileges the app never uses.
-    --    TRUNCATE is not subject to RLS, so it must be revoked explicitly.
-    EXECUTE format('REVOKE UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON public.%I FROM anon, authenticated', t);
+    -- 3. Revoke privileges the app never uses (including the ALL that
+    --    Supabase's default privileges grant on new tables), then grant back
+    --    read + insert. TRUNCATE is not subject to RLS.
+    EXECUTE format('REVOKE ALL ON public.%I FROM anon, authenticated', t);
     EXECUTE format('GRANT SELECT, INSERT ON public.%I TO anon, authenticated', t);
   END LOOP;
 END $$;
