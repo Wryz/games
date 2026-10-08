@@ -25,9 +25,9 @@ const PARADIGMS: { domain: string; title: string; body: string; ref: string }[] 
   },
   {
     domain: 'cognitive',
-    title: 'Interference control',
-    body: 'The Stroop and Flanker tasks measure how well you hold a goal while something else pulls at your attention — conflicting word meaning in one, conflicting neighbours in the other. Flanker reports your "interference cost" directly.',
-    ref: 'MacLeod, C. M. (1991). Half a century of research on the Stroop effect. Psychological Bulletin, 109(2), 163–203. · Eriksen, B. A., & Eriksen, C. W. (1974). Effects of noise letters upon the identification of a target letter. Perception & Psychophysics, 16(1), 143–149.',
+    title: 'Interference control and tracking',
+    body: 'The Stroop and Flanker tasks measure how well you hold a goal while something else pulls at your attention — conflicting word meaning in one, conflicting neighbours in the other. Flanker reports your "interference cost" directly. Object Tracking is multiple object tracking: following several identical moving dots at once, a test of how many things your attention can hold.',
+    ref: 'MacLeod, C. M. (1991). Half a century of research on the Stroop effect. Psychological Bulletin, 109(2), 163–203. · Eriksen, B. A., & Eriksen, C. W. (1974). Effects of noise letters upon the identification of a target letter. Perception & Psychophysics, 16(1), 143–149. · Pylyshyn, Z. W., & Storm, R. W. (1988). Tracking multiple independent targets: Evidence for a parallel tracking mechanism. Spatial Vision, 3(3), 179–197.',
   },
   {
     domain: 'perception',

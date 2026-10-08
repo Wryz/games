@@ -6,19 +6,19 @@ Live at [brain-benchmark.com](https://brain-benchmark.com).
 
 ## The tests
 
-20 tests across 7 capabilities. The taxonomy lives in [`lib/domains.ts`](lib/domains.ts); every test is registered in [`types/games.ts`](types/games.ts).
+21 tests across 7 capabilities. The taxonomy lives in [`lib/domains.ts`](lib/domains.ts); every test is registered in [`types/games.ts`](types/games.ts).
 
 | Capability | Tests |
 | --- | --- |
 | **Speed** | Reaction Time, Aim Trainer |
 | **Memory** | Number Memory, Verbal Memory ✦, Visual Memory, Chimp Test, Sequence Memory |
-| **Attention** | Stroop Test, Flanker ✦ |
+| **Attention** | Stroop Test, Flanker ✦, Object Tracking ✦ |
 | **Perception** | Color Perception ✦, Time Estimation |
 | **Reasoning** | Mental Rotation ✦, Tangrams, Maze, Sudoku |
 | **Numeracy** | Arithmetic, Algebra, Geometry |
 | **Language** | Typing Test, Word Search |
 
-✦ = added in the 2026 revamp. Each new test fills a gap so every capability has at least two tests, and each is a classic cognitive-psychology paradigm (continuous recognition, Eriksen flanker, colour-discrimination staircase, Shepard–Metzler rotation). Sources are listed on the [About page](app/about/page.tsx).
+✦ = added in the 2026 revamp. Each new test fills a gap so every capability has at least two tests, and each is a classic cognitive-psychology paradigm (continuous recognition, Eriksen flanker, colour-discrimination staircase, Shepard–Metzler rotation, Pylyshyn–Storm multiple object tracking). Sources are listed on the [About page](app/about/page.tsx).
 
 ## Stack
 
@@ -46,9 +46,10 @@ NEXT_PUBLIC_SITE_URL=https://brain-benchmark.com
 
 SQL lives in [`database/`](database). Nothing is applied automatically: run it in the Supabase SQL editor (project ref `snzsigjseoduyjhqxbwn`, see the `types` script in `package.json`). Every file is safe to re-run.
 
-1. `new_tests.sql` — tables, RLS (read-only), realtime and submit functions for the four new tests.
-2. **Then** `game_stats.sql` and `recent_activity.sql` — the overview and live-feed RPCs. These reference the new tables, so apply step 1 first or the RPCs will error.
-3. **`lockdown.sql` — must be run once on the existing database.** Older versions of `rls-policies.sql` added a public UPDATE policy and `GRANT ALL` to `anon` on the original 16 tables, which let anyone with the public anon key edit leaderboard rows through the REST API. This script leaves clients with SELECT only on every `*_scores` table; scores are written only through the `submit_*_score` RPCs. The query at the end of the script confirms the result.
+1. `new_tests.sql` — tables, RLS (read-only), realtime and submit functions for Verbal Memory, Flanker, Color Perception and Mental Rotation.
+2. `object_tracking.sql` — the same for Object Tracking.
+3. **Then** `game_stats.sql` and `recent_activity.sql` — the overview and live-feed RPCs. These reference the new tables, so apply steps 1–2 first or the RPCs will error.
+4. **`lockdown.sql` — must be run once on the existing database.** Older versions of `rls-policies.sql` added a public UPDATE policy and `GRANT ALL` to `anon` on the original 16 tables, which let anyone with the public anon key edit leaderboard rows through the REST API. This script leaves clients with SELECT only on every `*_scores` table; scores are written only through the `submit_*_score` RPCs. The query at the end of the script confirms the result.
 
 Other files: `game_submitting.sql` (submit RPCs for the original 16 tests), `rls-policies.sql` (RLS and grants for the original 16 tables), and `proposed-score-checks.sql` (optional plausibility CHECK constraints, e.g. reaction times > 50 ms — review the ranges before running).
 
@@ -80,7 +81,7 @@ types/games.ts            Test registry (name, capability, how-to, metric, table
 
 ## Adding a test
 
-1. **SQL** — create `<test>_scores`, RLS (select only), a `SECURITY DEFINER` `submit_<test>_score` function, and add the table to the `supabase_realtime` publication. Add a block to `game_stats.sql` and `recent_activity.sql`. `database/new_tests.sql` is a template.
+1. **SQL** — create `<test>_scores`, RLS (select only), a `SECURITY DEFINER` `submit_<test>_score` function, and add the table to the `supabase_realtime` publication. Add a block to `game_stats.sql` and `recent_activity.sql`. `database/object_tracking.sql` is a single-test template.
 2. **Types & API** — add the table to `types/database.types.ts` (or run `npm run types`), and `submit…`/`get…` functions to `lib/scores.ts`.
 3. **Registry** — add an entry to `GAMES` in `types/games.ts` and an icon in `components/icons/GameIcons.tsx`.
 4. **Scoring** — add a case to `formatScoreSummary` (`lib/format-score.ts`) and `getGameStrength` (`lib/radar.ts`).

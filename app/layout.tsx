@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     template: '%s · Brain Benchmark',
   },
   description: 'Short, free tests of what a human mind can do — reaction time, memory, attention, perception, reasoning, numeracy and language. Ranked against everyone, mapped into your own capability profile.',
-  keywords: ['human benchmark', 'reaction time test', 'memory test', 'cognitive test', 'attention test', 'mental rotation', 'color perception test', 'verbal memory', 'chimp test', 'typing test', 'brain test'],
+  keywords: ['human benchmark', 'reaction time test', 'memory test', 'cognitive test', 'attention test', 'multiple object tracking', 'mental rotation', 'color perception test', 'verbal memory', 'chimp test', 'typing test', 'brain test'],
   authors: [{ name: 'Brain Benchmark' }],
   creator: 'Brain Benchmark',
   publisher: 'Brain Benchmark',

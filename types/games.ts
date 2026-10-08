@@ -20,6 +20,7 @@ import {
   MentalRotationIcon,
   ColorPerceptionIcon,
   FlankerIcon,
+  ObjectTrackingIcon,
 } from '@/components/icons/GameIcons'
 import type { DomainKey } from '@/lib/domains'
 
@@ -159,6 +160,19 @@ export const GAMES: Game[] = [
     duration: '~1 min',
     metric: 'Correct, then average ms',
     table: 'flanker_scores',
+    isNew: true,
+  },
+  {
+    id: 'object-tracking',
+    name: 'Object Tracking',
+    description: 'Follow the flashed dots once they blend into the crowd.',
+    icon: ObjectTrackingIcon,
+    category: 'cognitive',
+    measures: 'Divided attention (multiple object tracking)',
+    howTo: 'Some dots flash blue, then every dot turns the same and starts moving. When they stop, tap the ones that flashed. Each perfect round adds a target; a miss costs one of three lives.',
+    duration: '2–3 min',
+    metric: 'Objects tracked',
+    table: 'object_tracking_scores',
     isNew: true,
   },
 
