@@ -26,6 +26,7 @@ const GAME_COMPONENTS: Record<string, ComponentType> = {
   'verbal-memory': load(() => import('./games/VerbalMemory')),
   'stroop-test': load(() => import('./games/StroopTest')),
   'flanker': load(() => import('./games/Flanker')),
+  'object-tracking': load(() => import('./games/ObjectTracking')),
   'chimp-test': load(() => import('./games/ChimpTest')),
   'algebra': load(() => import('./games/Algebra')),
   'arithmetic': load(() => import('./games/Arithmetic')),

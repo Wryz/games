@@ -105,6 +105,8 @@ export function getGameStrength(
     }
     case 'word-search':
       return ratioHigher(num(userScore, 'characters_found'), num(topScore, 'characters_found'))
+    case 'object-tracking':
+      return ratioHigher(num(userScore, 'objects_tracked'), num(topScore, 'objects_tracked'))
     default:
       return 0
   }
