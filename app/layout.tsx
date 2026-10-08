@@ -9,14 +9,14 @@ import { PostHogProvider } from './providers'
 const sans = Space_Grotesk({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-sans',
+  variable: '--font-space-grotesk',
   display: 'swap',
 })
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-mono',
+  variable: '--font-jetbrains-mono',
   display: 'swap',
 })
 

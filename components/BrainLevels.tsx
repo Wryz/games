@@ -126,7 +126,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow mb-3">Capability profile</p>
-          <h1 className="text-display font-bold break-words">{username}</h1>
+          <h1 className="text-display font-bold wrap-break-word">{username}</h1>
           <p className="mt-3 max-w-xl text-gray-600 dark:text-gray-400">
             Each axis is this player&apos;s average strength against the current record in that capability (0–100).
             Pick a capability to see the tests behind it.
@@ -169,7 +169,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                 </span>
               </div>
 
-              <ul className="divide-y divide-gray-100 dark:divide-gray-800 max-h-[28rem] overflow-y-auto">
+              <ul className="divide-y divide-gray-100 dark:divide-gray-800 max-h-112 overflow-y-auto">
                 {selectedAxis.games.map(game => {
                   const stat = gameStats.find(gs => gs.id === game.id)
                   const played = Boolean(stat?.userBest)

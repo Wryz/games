@@ -284,18 +284,18 @@ export default function ReactionTime() {
             )}
             {gameState === 'finished' && (
               <div className="flex w-full max-w-md flex-col items-center">
-                <span className="eyebrow !text-white/70">Result</span>
+                <span className="eyebrow text-white/70!">Result</span>
                 <div className="num mt-3 text-6xl font-bold tracking-tight sm:text-7xl">
                   {averageTime}
                   <span className="ml-1 text-2xl font-medium text-white/70 sm:text-3xl">ms</span>
                 </div>
                 <div className="mt-8 grid w-full grid-cols-2 gap-3">
                   <div className="rounded-xl bg-white/10 p-4 text-left">
-                    <div className="eyebrow !text-white/70">Fastest</div>
+                    <div className="eyebrow text-white/70!">Fastest</div>
                     <div className="num mt-2 text-lg font-semibold">{fastestTime} ms</div>
                   </div>
                   <div className="rounded-xl bg-white/10 p-4 text-left">
-                    <div className="eyebrow !text-white/70">Attempts</div>
+                    <div className="eyebrow text-white/70!">Attempts</div>
                     <div className="num mt-2 text-lg font-semibold">{reactionTimes.length}</div>
                   </div>
                 </div>

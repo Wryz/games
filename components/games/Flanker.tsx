@@ -408,7 +408,7 @@ export default function Flanker() {
                   </svg>
                 )}
                 {phase === 'feedback' && feedback === 'timeout' && (
-                  <span className="eyebrow !text-red-600 dark:!text-red-400">Too slow</span>
+                  <span className="eyebrow text-red-600! dark:text-red-400!">Too slow</span>
                 )}
               </div>
 

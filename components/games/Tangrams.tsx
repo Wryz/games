@@ -839,7 +839,7 @@ export default function Tangrams() {
                         return pointsToPath(world)
                       })
                       .join(' ')}
-                    className="pointer-events-none fill-gray-200 dark:fill-gray-700 [filter:url(#tangram-outline-light)] dark:[filter:url(#tangram-outline-dark)]"
+                    className="pointer-events-none fill-gray-200 dark:fill-gray-700 filter-[url(#tangram-outline-light)] dark:filter-[url(#tangram-outline-dark)]"
                   />
 
                   {[...placements]

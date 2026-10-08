@@ -311,7 +311,7 @@ export default function ColorPerception() {
                       disabled={revealing}
                       onClick={() => handleTile(round.id, i)}
                       style={{ backgroundColor: isOdd ? round.oddColor : round.baseColor }}
-                      className={`rounded-lg outline-none transition-[transform,opacity] duration-100 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-signal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 disabled:cursor-default disabled:active:scale-100 ${
+                      className={`rounded-lg outline-hidden transition-[transform,opacity] duration-100 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-signal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 disabled:cursor-default disabled:active:scale-100 ${
                         highlight
                           ? 'ring-[3px] ring-gray-950 ring-offset-2 ring-offset-white dark:ring-white dark:ring-offset-gray-900'
                           : ''
