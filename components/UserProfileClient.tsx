@@ -1,63 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import BackgroundPattern from '@/components/BackgroundPattern'
-import FloatingParticles from '@/components/FloatingParticles'
-import GameHeader from '@/components/GameHeader'
-import GameFooter from '@/components/GameFooter'
-import GameSidebar from '@/components/GameSidebar'
-import MobileGameDrawer from '@/components/MobileGameDrawer'
+import SiteShell from '@/components/SiteShell'
 import BrainLevels from '@/components/BrainLevels'
-import { useUser } from '@/contexts/UserContext'
-import { useSidebar } from '@/contexts/SidebarContext'
 
 interface UserProfileClientProps {
   username: string
 }
 
-export default function UserProfileClient({ username: profileUsername }: UserProfileClientProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { username } = useUser()
-  const { isSidebarOpen } = useSidebar()
-
-  const isOwnProfile = Boolean(username && username === profileUsername)
-
-  const handleMobileMenuToggle = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
-
-  const handleMobileMenuClose = () => {
-    setIsMobileMenuOpen(false)
-  }
-
+export default function UserProfileClient({ username }: UserProfileClientProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-blue-50 dark:from-neutral-900 dark:via-gray-900 dark:to-blue-900/20 relative overflow-x-hidden transition-colors duration-300">
-      <BackgroundPattern />
-      <FloatingParticles />
-      
-      <div className={`relative z-10 transition-[margin] duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-80' : 'lg:ml-0'}`}>
-        <div className="p-4 sm:p-6 md:p-8">
-          <GameHeader onMobileMenuToggle={handleMobileMenuToggle} />
-          
-          <main className="mt-8 mb-16">
-            <BrainLevels username={profileUsername} />
-          </main>
-          
-          <GameFooter />
-        </div>
+    <SiteShell>
+      <div className="container-page py-10 sm:py-14">
+        <BrainLevels username={username} />
       </div>
-      
-      <GameSidebar 
-        selectedGame={isOwnProfile ? 'brain-levels' : null} 
-        onGameSelect={() => {}} 
-      />
-      
-      <MobileGameDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={handleMobileMenuClose}
-        selectedGame={isOwnProfile ? 'brain-levels' : null}
-        onGameSelect={() => {}}
-      />
-    </div>
+    </SiteShell>
   )
 }

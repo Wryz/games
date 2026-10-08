@@ -165,115 +165,100 @@ export default function Leaderboard({
     })
   }
 
+  const tabClass = (active: boolean) =>
+    `rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+      active
+        ? 'bg-gray-950 text-gray-50 dark:bg-gray-50 dark:text-gray-950'
+        : 'text-gray-600 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white'
+    }`
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-100 mb-4 sm:mb-0">
-          {gameType} Leaderboard
-        </h3>
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm"
-        >
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-md text-sm transition-colors ${
-              filter === 'all'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-            }`}
-          >
-            All Players
-          </button>
-          {username && (
-            <button
-              onClick={() => setFilter('personal')}
-              className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                filter === 'personal'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              My Scores
-            </button>
-          )}
+    <section className="card overflow-hidden" aria-label={`${gameType} leaderboard`}>
+      <div className="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="eyebrow">Leaderboard</p>
+          <h3 className="text-lg font-semibold tracking-tight">{gameType}</h3>
         </div>
-
-        {filter === 'all' && (
-          <input
-            type="text"
-            placeholder="Search username..."
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.target.value)}
-            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          />
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-full border border-gray-200 p-0.5 dark:border-gray-800">
+            <button onClick={() => setFilter('all')} className={tabClass(filter === 'all')}>
+              Everyone
+            </button>
+            {username && (
+              <button onClick={() => setFilter('personal')} className={tabClass(filter === 'personal')}>
+                My runs
+              </button>
+            )}
+          </div>
+          {filter === 'all' && (
+            <input
+              type="text"
+              placeholder="Find a player"
+              value={searchUsername}
+              onChange={(e) => setSearchUsername(e.target.value)}
+              className="input w-40 rounded-full py-1.5 text-xs"
+              aria-label="Find a player"
+            />
+          )}
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            aria-label="Refresh leaderboard"
+            title="Refresh"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isLoading ? 'animate-spin' : ''} aria-hidden>
+              <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Scores list */}
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <ol className="max-h-[28rem] overflow-y-auto">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            Loading scores...
-          </div>
+          [...Array(5)].map((_, i) => (
+            <li key={i} className="flex items-center gap-4 border-b border-gray-100 px-5 py-3.5 last:border-0 dark:border-gray-800/70">
+              <div className="h-4 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+              <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+              <div className="ml-auto h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+            </li>
+          ))
         ) : sortedScores.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            {filter === 'personal' ? 'No personal scores yet' : 'No scores yet'}
-          </div>
+          <li className="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+            {filter === 'personal' ? 'You have no runs on this test yet.' : 'No scores yet — set the first record.'}
+          </li>
         ) : (
-          sortedScores.map((score, index) => (
-            <div
-              key={score.id}
-              className={`flex items-center justify-between p-3 rounded-lg ${
-                score.username === username
-                  ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                  : 'bg-gray-50 dark:bg-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  index === 0 ? 'bg-yellow-500 text-white' :
-                  index === 1 ? 'bg-gray-400 text-white' :
-                  index === 2 ? 'bg-orange-600 text-white' :
-                  'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
-                }`}>
-                  {index + 1}
-                </div>
-                <div>
-                  <div className={`font-medium ${
-                    score.username === username
-                      ? 'text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-100'
-                  }`}>
-                    {score.username}
-                    {score.username === username && (
-                      <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
-                        You
-                      </span>
-                    )}
+          sortedScores.map((score, index) => {
+            const isYou = score.username === username
+            return (
+              <li
+                key={score.id}
+                className={`flex items-center gap-4 border-b border-gray-100 px-5 py-3 last:border-0 dark:border-gray-800/70 ${
+                  isYou ? 'bg-volt/15 dark:bg-volt/[0.07]' : ''
+                }`}
+              >
+                <span
+                  className={`num w-7 shrink-0 text-sm font-semibold ${
+                    index === 0 ? 'text-gray-950 dark:text-white' : 'text-gray-400 dark:text-gray-500'
+                  }`}
+                >
+                  {index === 0 ? '★' : String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium text-gray-900 dark:text-gray-100">{score.username}</span>
+                    {isYou && <span className="chip-volt">YOU</span>}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(score.date_submitted)}
-                  </div>
+                  <div className="num text-[11px] text-gray-500 dark:text-gray-500">{formatDate(score.date_submitted)}</div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold text-gray-700 dark:text-gray-100">
+                <div className="num shrink-0 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
                   {formatScore(score)}
                 </div>
-              </div>
-            </div>
-          ))
+              </li>
+            )
+          })
         )}
-      </div>
-    </div>
+      </ol>
+    </section>
   )
 }

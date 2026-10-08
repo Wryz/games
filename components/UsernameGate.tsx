@@ -11,34 +11,25 @@ interface UsernameGateProps {
 export default function UsernameGate({ children }: UsernameGateProps) {
   const { username, setUsername } = useUser()
   const [inputValue, setInputValue] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSkipped, setHasSkipped] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const showGate = !username && !hasSkipped
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputValue.trim()) return
+    const name = inputValue.trim()
+    if (!name) return
 
-    const validation = validateUsername(inputValue.trim())
+    const validation = validateUsername(name)
     if (!validation.isValid) {
       setError(validation.error || 'Invalid username')
       return
     }
 
     setError(null)
-    setIsSubmitting(true)
-    try {
-      setUsername(inputValue.trim())
-      setHasSkipped(false)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleSkip = () => {
-    setHasSkipped(true)
+    setUsername(name)
+    setHasSkipped(false)
   }
 
   // Keep a single children tree so loading username does not remount the game
@@ -46,76 +37,48 @@ export default function UsernameGate({ children }: UsernameGateProps) {
   return (
     <div className="relative">
       {showGate && (
-        <div className="absolute inset-0 backdrop-blur-xs z-50 flex items-start justify-center pt-12 sm:pt-16 md:pt-20 rounded-lg">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-md w-full mx-4">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Assess with a Username (Optional)
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                To track your scores on the leaderboard, please enter a username
-              </p>
-            </div>
+        <div className="absolute inset-0 z-30 flex items-start justify-center px-4 pt-12 sm:pt-20">
+          <div className="w-full max-w-sm animate-scale-in rounded-2xl border border-gray-200 bg-white p-6 shadow-lift dark:border-gray-800 dark:bg-gray-900 sm:p-7">
+            <p className="eyebrow mb-2">Before you start</p>
+            <h2 className="text-2xl font-bold tracking-tight">Who&apos;s being measured?</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Add a name to put your result on the leaderboard and into your capability profile. No account, no email.
+            </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="mt-5 space-y-3">
               <div>
                 <input
                   type="text"
                   value={inputValue}
-                  onChange={(e) => {
+                  onChange={e => {
                     setInputValue(e.target.value)
                     setError(null)
                   }}
-                  placeholder="Your username"
-                  className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors ${
-                    error
-                      ? 'border-red-500 dark:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  placeholder="Your name"
+                  className={`input ${error ? 'border-red-500 dark:border-red-500' : ''}`}
                   maxLength={MAX_USERNAME_LENGTH}
-                  disabled={isSubmitting}
                   autoFocus
+                  aria-label="Player name"
                 />
-                {error && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-2">
-                    {error}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Maximum {MAX_USERNAME_LENGTH} characters
-                </p>
+                {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
               </div>
 
-              <div className="flex flex-col gap-3">
-                <button
-                  type="submit"
-                  disabled={!inputValue.trim() || isSubmitting}
-                  className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
-                >
-                  {isSubmitting ? 'Setting...' : 'Start Assessment'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSkip}
-                  disabled={isSubmitting}
-                  className="w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium"
-                >
-                  Skip (Scores Won&apos;t Be Tracked)
-                </button>
-              </div>
+              <button type="submit" disabled={!inputValue.trim()} className="btn-primary w-full">
+                Start the test
+              </button>
+              <button
+                type="button"
+                onClick={() => setHasSkipped(true)}
+                className="w-full py-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+              >
+                Play without saving
+              </button>
             </form>
-
-            <div className="mt-4 text-center">
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                ⚠️ Without a username, your scores won&apos;t be saved to the leaderboard
-              </p>
-            </div>
           </div>
         </div>
       )}
 
-      <div className={showGate ? 'blur-sm pointer-events-none' : undefined}>
+      <div className={showGate ? 'pointer-events-none select-none blur-sm' : undefined} aria-hidden={showGate || undefined}>
         {children}
       </div>
     </div>

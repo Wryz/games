@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      verbal_memory_scores: {
+        Row: {
+          date_submitted: string | null
+          id: number
+          username: string
+          words_remembered: number
+        }
+        Insert: {
+          date_submitted?: string | null
+          id?: number
+          username: string
+          words_remembered: number
+        }
+        Update: {
+          date_submitted?: string | null
+          id?: number
+          username?: string
+          words_remembered?: number
+        }
+        Relationships: []
+      }
+      flanker_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      color_perception_scores: {
+        Row: {
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          username: string
+        }
+        Insert: {
+          date_submitted?: string | null
+          id?: number
+          level_reached: number
+          username: string
+        }
+        Update: {
+          date_submitted?: string | null
+          id?: number
+          level_reached?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      mental_rotation_scores: {
+        Row: {
+          average_time: number
+          correct_answers: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        Insert: {
+          average_time: number
+          correct_answers: number
+          date_submitted?: string | null
+          id?: number
+          username: string
+        }
+        Update: {
+          average_time?: number
+          correct_answers?: number
+          date_submitted?: string | null
+          id?: number
+          username?: string
+        }
+        Relationships: []
+      }
       aim_trainer_scores: {
         Row: {
           accuracy: number
@@ -421,6 +511,68 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      submit_verbal_memory_score: {
+        Args: { p_username: string; p_words_remembered: number }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          username: string
+          words_remembered: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "verbal_memory_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_flanker_score: {
+        Args: { p_average_time: number; p_correct_answers: number; p_username: string }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "flanker_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_color_perception_score: {
+        Args: { p_level_reached: number; p_username: string }
+        Returns: {
+          date_submitted: string | null
+          id: number
+          level_reached: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "color_perception_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_mental_rotation_score: {
+        Args: { p_average_time: number; p_correct_answers: number; p_username: string }
+        Returns: {
+          average_time: number
+          correct_answers: number
+          date_submitted: string | null
+          id: number
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mental_rotation_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_game_stats_overview: { Args: { p_username?: string }; Returns: Json }
       get_recent_activity: { Args: { p_limit?: number }; Returns: Json }
       submit_aim_trainer_score: {

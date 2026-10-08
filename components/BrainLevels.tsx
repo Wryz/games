@@ -4,25 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import html2canvas from 'html2canvas'
 import { useOverview } from '@/contexts/OverviewContext'
-import { formatUserScore } from '@/lib/levels'
+import { formatScoreSummary } from '@/lib/format-score'
 import { getCategoryRadarAxes, getGameStrength, type CategoryRadarAxis } from '@/lib/radar'
 import CategoryRadar from './CategoryRadar'
 
 interface BrainLevelsProps {
   username?: string
-}
-
-function formatPercentile(value: number): string {
-  const p = Math.round(Math.min(100, Math.max(0, value)))
-  const mod100 = p % 100
-  const mod10 = p % 10
-  let suffix = 'th'
-  if (mod100 < 11 || mod100 > 13) {
-    if (mod10 === 1) suffix = 'st'
-    else if (mod10 === 2) suffix = 'nd'
-    else if (mod10 === 3) suffix = 'rd'
-  }
-  return `${p}${suffix} percentile`
 }
 
 export default function BrainLevels({ username }: BrainLevelsProps) {
@@ -128,27 +115,43 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
 
   if (gameStatsLoading && gameStats.length === 0) {
     return (
-      <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50">
-        <div className="text-center text-gray-500 dark:text-gray-400">Loading progress...</div>
+      <div className="card p-10 text-center">
+        <span className="eyebrow animate-pulse">Loading profile…</span>
       </div>
     )
   }
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2 text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-          Your Progress
-        </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Each axis is your average vs the current top score in that category (0–100).
-          Tap a category to see what to play next.
-        </p>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow mb-3">Capability profile</p>
+          <h1 className="text-display font-bold break-words">{username}</h1>
+          <p className="mt-3 max-w-xl text-gray-600 dark:text-gray-400">
+            Each axis is this player&apos;s average strength against the current record in that capability (0–100).
+            Pick a capability to see the tests behind it.
+          </p>
+        </div>
+        <dl className="flex gap-8">
+          <div>
+            <dt className="eyebrow">Tests taken</dt>
+            <dd className="num mt-1 text-3xl font-semibold">
+              {gameStats.filter(gs => gs.userBest).length}
+              <span className="text-gray-400 dark:text-gray-500">/{gameStats.length}</span>
+            </dd>
+          </div>
+          <div>
+            <dt className="eyebrow">Records held</dt>
+            <dd className="num mt-1 text-3xl font-semibold">
+              {gameStats.filter(gs => gs.topScore?.username === username).length}
+            </dd>
+          </div>
+        </dl>
       </div>
 
       <div
         ref={radarRef}
-        className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 p-4 sm:p-6 shadow-sm"
+        className="card p-4 sm:p-6"
       >
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(260px,340px)_minmax(0,1fr)] gap-6 lg:gap-8 items-start">
           {selectedAxis && (
@@ -158,20 +161,20 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                   className="h-3 w-3 rounded-full shrink-0"
                   style={{ backgroundColor: selectedAxis.color }}
                 />
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
                   {selectedAxis.label}
                 </h2>
-                <span className="text-sm text-gray-500 dark:text-gray-400 tabular-nums ml-auto">
+                <span className="num ml-auto text-sm text-gray-500 dark:text-gray-400">
                   {Math.round(selectedAxis.value)} / 100
                 </span>
               </div>
 
-              <ul className="divide-y divide-gray-200/70 dark:divide-gray-700/70 max-h-[28rem] overflow-y-auto">
+              <ul className="divide-y divide-gray-100 dark:divide-gray-800 max-h-[28rem] overflow-y-auto">
                 {selectedAxis.games.map(game => {
                   const stat = gameStats.find(gs => gs.id === game.id)
                   const played = Boolean(stat?.userBest)
                   const scoreText = played && stat?.userBest?.score
-                    ? formatUserScore(game.id, stat.userBest.score)
+                    ? formatScoreSummary(game.id, stat.userBest.score)
                     : null
                   const strength = getGameStrength(
                     game.id,
@@ -194,10 +197,10 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                             </p>
                             <Link
                               href={`/games/${game.id}`}
-                              className={`shrink-0 inline-flex justify-center items-center px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                              className={`shrink-0 inline-flex justify-center items-center px-3 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                                 played
-                                  ? 'bg-gray-200/80 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100'
-                                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  ? 'border border-gray-300 text-gray-800 hover:border-gray-950 dark:border-gray-700 dark:text-gray-100 dark:hover:border-gray-300'
+                                  : 'bg-signal-600 hover:bg-signal-500 text-white'
                               }`}
                             >
                               {played ? 'Replay' : 'Play'}
@@ -211,7 +214,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                                   {scoreText}
                                 </span>
                                 {' · '}
-                                {formatPercentile(strength)}
+                                {`${Math.round(strength)}% of record`}
                               </>
                             ) : (
                               'Not played yet'
@@ -250,7 +253,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
             href="https://brain-benchmark.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+            className="font-mono text-xs text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
           >
             brain-benchmark.com
           </a>
@@ -263,7 +266,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
           type="button"
           onClick={handleShare}
           disabled={isSharing}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
+          className="btn-ink"
         >
           {isSharing ? (
             <>
@@ -287,7 +290,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              Share as PNG
+              Share as image
             </>
           )}
         </button>

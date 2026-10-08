@@ -31,7 +31,7 @@ export default function GameWrapper({
   scoreTable
 }: GameWrapperProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {children}
 
       <Leaderboard

@@ -1,51 +1,26 @@
-'use client'
-
 import Link from 'next/link'
-import { Home, Search, ArrowLeft } from 'lucide-react'
+import SiteShell from '@/components/SiteShell'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center py-12">
-      <div className="max-w-md mx-auto text-center px-4">
-        {/* 404 Animation */}
-        <div className="mb-8">
-          <div className="text-8xl md:text-9xl font-bold text-blue-600 dark:text-blue-400 mb-4 animate-bounce">
-            404
-          </div>
-        </div>
-
-        {/* Error Message */}
-        <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-          Oops! The game you're looking for seems to have respawned elsewhere. 
-          Don't worry, we have plenty of other amazing games waiting for you!
+    <SiteShell>
+      <div className="container-page flex min-h-[60vh] flex-col items-start justify-center py-20">
+        <p className="eyebrow mb-4">Error 404</p>
+        <h1 className="text-display-xl font-bold">
+          Signal lost.
+        </h1>
+        <p className="mt-6 max-w-md text-lg text-gray-600 dark:text-gray-400">
+          There&apos;s nothing to measure at this address. The test you&apos;re after may have moved.
         </p>
-
-        {/* Action Buttons */}
-        <div className="space-y-4">
-          <Link 
-            href="/"
-            className="w-full flex items-center justify-center space-x-2 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <Home className="h-5 w-5" />
-            <span>Back to Games</span>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/" className="btn-primary px-6 py-3">
+            Browse all tests
           </Link>
-          
-          <button 
-            onClick={() => window.history.back()} 
-            className="w-full flex items-center justify-center space-x-2 py-3 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Go Back</span>
-          </button>
-        </div>
-
-        {/* Fun Gaming Quote */}
-        <div className="mt-12 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-            "The princess is in another castle... but maybe she's in our games collection!"
-          </p>
+          <Link href="/games/reaction-time" className="btn-ghost px-6 py-3">
+            Take the reaction test
+          </Link>
         </div>
       </div>
-    </div>
+    </SiteShell>
   )
 }
