@@ -232,6 +232,17 @@ BEGIN
       date_submitted
     FROM mental_rotation_scores
 
+    UNION ALL
+
+    -- Object Tracking
+    SELECT
+      'object-tracking' as game_id,
+      'Object Tracking' as game_name,
+      username,
+      json_build_object('objects_tracked', objects_tracked) as score_value,
+      date_submitted
+    FROM object_tracking_scores
+
     ORDER BY date_submitted DESC
     LIMIT p_limit
   ) as recent_scores;

@@ -52,3 +52,4 @@ export type VerbalMemoryScore = Database['public']['Tables']['verbal_memory_scor
 export type FlankerScore = Database['public']['Tables']['flanker_scores']['Row']
 export type ColorPerceptionScore = Database['public']['Tables']['color_perception_scores']['Row']
 export type MentalRotationScore = Database['public']['Tables']['mental_rotation_scores']['Row']
+export type ObjectTrackingScore = Database['public']['Tables']['object_tracking_scores']['Row']

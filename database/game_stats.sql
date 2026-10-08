@@ -579,6 +579,31 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+
+    UNION ALL
+
+    -- object-tracking
+    SELECT
+      'object-tracking' as game_id,
+      (SELECT COUNT(*) FROM object_tracking_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'objects_tracked', objects_tracked,
+        'date_submitted', date_submitted
+      ) FROM object_tracking_scores
+      ORDER BY objects_tracked DESC
+      LIMIT 1) as top_score,
+      CASE
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'objects_tracked', objects_tracked,
+            'date_submitted', date_submitted
+          ) FROM object_tracking_scores
+          WHERE username = p_username
+          ORDER BY objects_tracked DESC
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;
