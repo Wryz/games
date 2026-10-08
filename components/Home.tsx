@@ -1,649 +1,418 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { useUser } from '@/contexts/UserContext'
 import { useOverview } from '@/contexts/OverviewContext'
 import { supabase } from '@/lib/supabase'
-import { GAMES } from '@/types/games'
+import { GAMES, GAME_BY_ID, type Game } from '@/types/games'
+import { DOMAINS, getDomain } from '@/lib/domains'
+import { formatScoreSummary } from '@/lib/format-score'
+import { formatNumber } from '@/lib/levels'
 import { usePostHog } from 'posthog-js/react'
-import { useRouter } from 'next/navigation'
 
 interface RecentScore {
-  id: number
+  key: string
   username: string
-  game_type: string
-  score_value: string
-  date_submitted: string
-  accuracy?: number
-  reaction_time?: number
-  wpm?: number
-  level_reached?: number
+  gameId: string
+  gameName: string
+  value: string
+  dateSubmitted: string
 }
 
-interface HomeProps {
-  onGameSelect?: (gameId: string) => void
+type GameStat = ReturnType<typeof useOverview>['gameStats'][number]
+
+function formatTimeAgo(dateString: string) {
+  const diffInMinutes = Math.floor((Date.now() - new Date(dateString).getTime()) / 60000)
+  if (diffInMinutes < 1) return 'now'
+  if (diffInMinutes < 60) return `${diffInMinutes}m`
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `${diffInHours}h`
+  return `${Math.floor(diffInHours / 24)}d`
 }
 
-const CrownIcon = ({ className = '', size = 14 }: { className?: string; size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    aria-hidden
-  >
-    <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
-  </svg>
-)
-
-const PeopleIcon = ({ className = '', size = 14 }: { className?: string; size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    aria-hidden
-  >
-    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-  </svg>
-)
-
-const CATEGORY_BG: Record<string, string> = {
-  motor: 'bg-blue-100 dark:bg-transparent',
-  memory: 'bg-purple-100 dark:bg-transparent',
-  cognitive: 'bg-cyan-100 dark:bg-transparent',
-  perception: 'bg-pink-100 dark:bg-transparent',
-  computation: 'bg-orange-100 dark:bg-transparent',
-  linguistic: 'bg-green-100 dark:bg-transparent',
-  attention: 'bg-yellow-100 dark:bg-transparent',
-  language: 'bg-indigo-100 dark:bg-transparent',
-  social: 'bg-rose-100 dark:bg-transparent',
-  creative: 'bg-violet-100 dark:bg-transparent',
-  puzzles: 'bg-emerald-100 dark:bg-transparent',
-  other: 'bg-gray-100 dark:bg-transparent',
-}
-
-const CATEGORY_ACCENT: Record<string, string> = {
-  motor: 'text-blue-500',
-  memory: 'text-purple-500',
-  cognitive: 'text-cyan-500',
-  perception: 'text-pink-500',
-  computation: 'text-orange-500',
-  linguistic: 'text-green-500',
-  attention: 'text-yellow-500',
-  language: 'text-indigo-500',
-  social: 'text-rose-500',
-  creative: 'text-violet-500',
-  puzzles: 'text-emerald-500',
-  other: 'text-gray-500',
-}
-
-const CATEGORY_BORDER: Record<string, string> = {
-  motor: 'border-blue-200 dark:border-blue-500/30',
-  memory: 'border-purple-200 dark:border-purple-500/30',
-  cognitive: 'border-cyan-200 dark:border-cyan-500/30',
-  perception: 'border-pink-200 dark:border-pink-500/30',
-  computation: 'border-orange-200 dark:border-orange-500/30',
-  linguistic: 'border-green-200 dark:border-green-500/30',
-  attention: 'border-yellow-200 dark:border-yellow-500/30',
-  language: 'border-indigo-200 dark:border-indigo-500/30',
-  social: 'border-rose-200 dark:border-rose-500/30',
-  creative: 'border-violet-200 dark:border-violet-500/30',
-  puzzles: 'border-emerald-200 dark:border-emerald-500/30',
-  other: 'border-gray-200 dark:border-gray-500/30',
-}
-
-interface SelectableGameCardProps {
-  game: {
-    id: string
-    name: string
-    icon: any
-    category: string
-    totalGames: number
-    topScore: { username: string; value: string } | null
-    userBest: { value: string } | null
-  }
-  hasTopScore: boolean
-  index: number
+function TestCard({
+  game,
+  stat,
+  username,
+  onSelect,
+}: {
+  game: Game
+  stat: GameStat | undefined
+  username: string | null
   onSelect: () => void
-}
-
-const SelectableGameCard = ({ game, hasTopScore, index, onSelect }: SelectableGameCardProps) => {
-  const [showBest, setShowBest] = useState(false)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const skipClickRef = useRef(false)
-  const hasUserBest = Boolean(game.userBest)
-  const category = game.category || 'other'
-  const bgClass = CATEGORY_BG[category] || CATEGORY_BG.other
-  const accentClass = CATEGORY_ACCENT[category] || CATEGORY_ACCENT.other
-  const borderClass = CATEGORY_BORDER[category] || CATEGORY_BORDER.other
-  const revealBest = hasUserBest && showBest
-
-  const clearLongPress = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
-  }
-
-  const handleTouchStart = () => {
-    if (!hasUserBest) return
-    clearLongPress()
-    longPressTimer.current = setTimeout(() => {
-      setShowBest(true)
-      skipClickRef.current = true
-    }, 400)
-  }
-
-  const handleTouchEnd = () => {
-    clearLongPress()
-    setShowBest(false)
-  }
-
-  const handleClick = () => {
-    if (skipClickRef.current) {
-      skipClickRef.current = false
-      return
-    }
-    onSelect()
-  }
+}) {
+  const domain = getDomain(game.category)
+  const holdsRecord = Boolean(username && stat?.topScore?.username === username)
 
   return (
-    <div
-      onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onTouchMove={clearLongPress}
-      onMouseEnter={() => hasUserBest && setShowBest(true)}
-      onMouseLeave={() => setShowBest(false)}
-      className="group relative cursor-pointer select-none"
-      style={{
-        animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
-      }}
+    <Link
+      href={`/games/${game.id}`}
+      onClick={onSelect}
+      className="card group relative flex flex-col p-4 transition-all sm:p-5 duration-200 hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lift dark:hover:border-gray-600"
     >
-      {hasTopScore && (
-        <div className="pointer-events-none absolute -left-3 -top-3.5 z-20 -rotate-[28deg] transition-transform duration-300 group-hover:-rotate-[16deg] group-hover:scale-110">
-          <CrownIcon
-            size={56}
-            className="w-11 h-11 sm:w-14 sm:h-14 text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]"
-          />
-        </div>
-      )}
-
-      <div
-        className={`game-card-badge relative aspect-square overflow-hidden rounded-lg border-2 ${bgClass} ${borderClass} p-2 sm:p-2.5 flex flex-col shadow-sm dark:shadow-none`}
-      >
-        <div
-          className={`relative z-10 flex flex-col h-full min-h-0 transition duration-200 ${
-            revealBest ? 'blur-sm opacity-40' : ''
-          }`}
+      <div className="mb-4 flex items-start justify-between gap-3 sm:mb-5">
+        <span
+          className="flex h-10 w-10 shrink-0 sm:h-11 sm:w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105"
+          style={{ backgroundColor: `${domain.color}1a`, color: domain.color }}
         >
-          <div className="flex items-start justify-between gap-1">
-            <div className="min-w-0 max-w-full">
-              {game.topScore ? (
-                <>
-                  <div className="flex items-center gap-1">
-                    <CrownIcon
-                      size={20}
-                      className="w-4 h-4 flex-shrink-0 text-amber-500"
-                    />
-                    <span className="truncate text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-100 leading-tight">
-                      {game.topScore.username}
-                    </span>
-                  </div>
-                  <p className="truncate text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300 leading-tight mt-0.5 pl-5">
-                    {game.topScore.value}
-                  </p>
-                </>
-              ) : (
-                <span className="truncate text-[11px] italic text-gray-400 dark:text-gray-500 leading-tight">
-                  —
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center gap-1 min-h-0 py-1">
-            <div className="game-card-icon transform transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
-              <game.icon className={`w-8 h-8 sm:w-9 sm:h-9 ${accentClass} drop-shadow-sm`} />
-            </div>
-            <div className="flex items-center justify-center gap-1 flex-wrap px-0.5">
-              <h3 className={`font-bold text-lg sm:text-xl text-center leading-tight line-clamp-2 ${accentClass}`}>
-                {game.name}
-              </h3>
-            </div>
-            <div className="flex items-center gap-0.5 text-gray-500 dark:text-gray-400">
-              <PeopleIcon size={14} className="w-3.5 h-3.5" />
-              <span className="text-[11px] sm:text-xs font-medium tabular-nums leading-tight">
-                {game.totalGames.toLocaleString('en-US')} played
-              </span>
-            </div>
-          </div>
+          <game.icon size={22} />
+        </span>
+        <div className="flex flex-wrap justify-end gap-1.5">
+          {game.isNew && <span className="chip-volt">NEW</span>}
+          <span className="chip hidden sm:inline-flex">{game.duration}</span>
         </div>
-
-        {hasUserBest && (
-          <div
-            className={`pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 px-2 transition-opacity duration-200 ${
-              revealBest ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-wide ${accentClass}`}>
-              Your Best
-            </p>
-            <p className="font-extrabold text-base sm:text-lg text-center text-gray-900 dark:text-white leading-tight line-clamp-2">
-              {game.userBest!.value}
-            </p>
-          </div>
-        )}
       </div>
-    </div>
+
+      <h3 className="text-base font-semibold leading-tight tracking-tight text-gray-950 dark:text-white sm:text-lg">{game.name}</h3>
+      <p className="mt-1 hidden text-sm leading-snug text-gray-600 dark:text-gray-400 sm:block">{game.description}</p>
+      <p className="num mt-1.5 truncate text-[11px] text-gray-500 dark:text-gray-400 sm:hidden">
+        {stat?.userBest ? `Best ${stat.userBest.value}` : stat?.topScore ? `Rec ${stat.topScore.value}` : game.duration}
+      </p>
+
+      <dl className="mt-5 hidden grid-cols-2 gap-3 border-t border-gray-100 pt-4 text-xs dark:border-gray-800 sm:grid">
+        <div className="min-w-0">
+          <dt className="eyebrow mb-0.5 text-[10px]">Record</dt>
+          <dd className="num truncate font-semibold text-gray-900 dark:text-gray-100">{stat?.topScore?.value || '—'}</dd>
+          <dd className="truncate text-gray-500 dark:text-gray-500">
+            {stat?.topScore ? (holdsRecord ? 'held by you' : stat.topScore.username) : 'unclaimed'}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="eyebrow mb-0.5 text-[10px]">{stat?.userBest ? 'Your best' : 'Runs'}</dt>
+          <dd className="num truncate font-semibold text-gray-900 dark:text-gray-100">
+            {stat?.userBest ? stat.userBest.value : formatNumber(stat?.totalGames || 0)}
+          </dd>
+          <dd className="truncate text-gray-500 dark:text-gray-500">
+            {stat?.userBest ? `${formatNumber(stat.totalGames)} runs total` : 'recorded'}
+          </dd>
+        </div>
+      </dl>
+
+      {holdsRecord && (
+        <span className="chip-volt absolute -top-2.5 left-4 shadow-sm">★ RECORD</span>
+      )}
+    </Link>
   )
 }
 
-// Enhanced skeleton component for loading state
-const GameCardSkeleton = () => {
-  const colors = [
-    'bg-blue-100 dark:bg-transparent border-blue-200 dark:border-blue-500/30',
-    'bg-purple-100 dark:bg-transparent border-purple-200 dark:border-purple-500/30',
-    'bg-cyan-100 dark:bg-transparent border-cyan-200 dark:border-cyan-500/30',
-    'bg-pink-100 dark:bg-transparent border-pink-200 dark:border-pink-500/30',
-  ]
-  const color = colors[Math.floor(Math.random() * colors.length)]
-
+function CardSkeleton() {
   return (
-    <div
-      className={`relative ${color} rounded-lg p-2 aspect-square flex flex-col overflow-hidden opacity-70 border-2`}
-    >
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
-      <div className="relative z-10 flex flex-col h-full animate-pulse">
-        <div className="flex items-start justify-between gap-1">
-          <div className="space-y-1">
-            <div className="h-2.5 bg-gray-300 dark:bg-gray-600 rounded w-12" />
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-10 ml-3" />
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center gap-1">
-          <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-md" />
-          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-2/3" />
-          <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-        </div>
-      </div>
+    <div className="card relative h-[124px] overflow-hidden p-5 sm:h-[228px]">
+      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-gray-100/70 to-transparent dark:via-white/5" />
+      <div className="h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800" />
+      <div className="mt-5 h-5 w-1/2 rounded bg-gray-100 dark:bg-gray-800" />
+      <div className="mt-2 h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-800" />
     </div>
   )
 }
 
-export default function Home({ onGameSelect }: HomeProps) {
+export default function Home() {
   const [recentScores, setRecentScores] = useState<RecentScore[]>([])
-  const [loading, setLoading] = useState(true)
+  const [feedLoading, setFeedLoading] = useState(true)
   const { username } = useUser()
   const { gameStats, gameStatsLoading, loadGameStats } = useOverview()
   const posthog = usePostHog()
-  const router = useRouter()
 
-  const handleGameClick = (gameId: string, gameName: string) => {
-    // Track exercise click event
+  const trackClick = (game: Game, source: string) => {
     posthog.capture('game_clicked', {
-      game_id: gameId,
-      game_name: gameName,
-      source: 'home_page',
-      username: username || 'anonymous'
+      game_id: game.id,
+      game_name: game.name,
+      source,
+      username: username || 'anonymous',
     })
-    
-    // Navigate to the exercise URL
-    router.push(`/games/${gameId}`)
-    
-    // Call the callback for any additional handling
-    onGameSelect?.(gameId)
   }
 
-  const loadAllData = useCallback(async (forceRefresh = false) => {
-    setLoading(true)
-    // Load recent scores first (faster, less data)
-    await loadRecentScores()
-    setLoading(false)
-    
-    // Load exercise stats in the background without blocking UI
-    // This allows instant navigation while stats load asynchronously
-    loadGameStats(forceRefresh, username || undefined).catch(error => {
-      console.error('Error loading exercise stats:', error)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username])
-
-  const loadRecentScores = async () => {
+  const loadRecentScores = useCallback(async () => {
     try {
-      // Use RPC function to get recent activity across all games
-      const { data: rpcData, error } = await supabase
-        .rpc('get_recent_activity', { p_limit: 6 }) as { data: any[] | null, error: any }
-
-      if (error) throw error
-
-      // Format the scores for display
-      const formattedScores: RecentScore[] = []
-
-      if (Array.isArray(rpcData)) {
-        rpcData.forEach((item: any, index: number) => {
-          const scoreValue = item.score_value
-          let formattedValue = ''
-          
-          // Format based on exercise type
-          const formatNum = (num: number | null | undefined) => {
-            if (num === null || num === undefined) return '0'
-            return num.toLocaleString('en-US')
-          }
-          
-          switch (item.game_id) {
-            case 'aim-trainer':
-              formattedValue = `${formatNum(scoreValue.reaction_time)}ms (${formatNum(scoreValue.accuracy)}%)`
-              break
-            case 'typing-test':
-              formattedValue = `${formatNum(scoreValue.wpm)} WPM (${formatNum(scoreValue.accuracy)}%)`
-              break
-            case 'reaction-time':
-              formattedValue = `${formatNum(scoreValue.fastest_time)}ms (${formatNum(scoreValue.average_time)}ms avg)`
-              break
-            case 'visual-memory':
-              formattedValue = `Level ${formatNum(scoreValue.level_reached)} (${formatNum(scoreValue.total_patterns)} patterns)`
-              break
-            case 'stroop-test':
-              formattedValue = `${formatNum(scoreValue.correct_answers || 0)} correct (${formatNum(scoreValue.average_time || 0)}ms)`
-              break
-            case 'number-memory':
-              formattedValue = `${formatNum(scoreValue.longest_sequence)} digits`
-              break
-            case 'chimp-test':
-              formattedValue = `${formatNum(scoreValue.patterns_remembered || 0)} correct`
-              break
-            case 'time-estimation':
-              formattedValue = `${formatNum(scoreValue.average_accuracy || 0)}ms avg (${formatNum(scoreValue.best_accuracy || 0)}ms best)`
-              break
-            case 'maze':
-            case 'sudoku':
-            case 'tangrams':
-              const timeTaken = scoreValue.time_taken || 0
-              const seconds = Math.floor(timeTaken / 1000)
-              const milliseconds = Math.floor((timeTaken % 1000) / 100)
-              formattedValue = `${formatNum(seconds)}.${milliseconds}s`
-              break
-            case 'algebra':
-            case 'arithmetic':
-            case 'geometry':
-              const correctAnswers = scoreValue.correct_answers || 0
-              const avgTime = scoreValue.average_time || 0
-              formattedValue = `${formatNum(correctAnswers)} correct (${formatNum(avgTime)}ms avg)`
-              break
-            case 'word-search':
-              formattedValue = `${formatNum(scoreValue.characters_found || 0)} characters`
-              break
-            default:
-              formattedValue = `Level ${formatNum(scoreValue.level_reached)}`
-          }
-
-          formattedScores.push({
-            id: index, // Use index as ID since we don't have the original ID
-            username: item.username,
-            game_type: item.game_name,
-            score_value: formattedValue,
-            date_submitted: item.date_submitted,
-            ...scoreValue // Spread the score value for additional fields
-        })
-      })
+      const { data, error } = (await supabase.rpc('get_recent_activity', { p_limit: 8 })) as {
+        data: any[] | null
+        error: any
       }
-
-      setRecentScores(formattedScores)
-
+      if (error) throw error
+      setRecentScores(
+        (Array.isArray(data) ? data : []).map((item, index) => ({
+          key: `${item.game_id}-${item.date_submitted}-${index}`,
+          username: item.username,
+          gameId: item.game_id,
+          gameName: GAME_BY_ID[item.game_id]?.name ?? item.game_name,
+          value: formatScoreSummary(item.game_id, item.score_value),
+          dateSubmitted: item.date_submitted,
+        }))
+      )
     } catch (error) {
       console.error('Error loading recent scores:', error)
+    } finally {
+      setFeedLoading(false)
     }
-  }
+  }, [])
+
+  const loadAllData = useCallback(
+    async (forceRefresh = false) => {
+      await loadRecentScores()
+      loadGameStats(forceRefresh, username || undefined).catch(error => {
+        console.error('Error loading test stats:', error)
+      })
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [username, loadRecentScores]
+  )
 
   useEffect(() => {
     loadAllData()
 
-    // Set up realtime listeners for all score tables
-    const channels = [
-      'aim_trainer_scores',
-      'typing_test_scores', 
-      'memory_scores',
-      'reaction_time_scores',
-      'number_memory_scores',
-      'visual_memory_scores',
-      'stroop_test_scores',
-      'chimp_test_scores',
-      'time_estimation_scores',
-      'maze_scores',
-      'algebra_scores',
-      'arithmetic_scores',
-      'geometry_scores',
-      'word_search_scores',
-      'sudoku_scores',
-      'tangrams_scores'
-    ].map(tableName => {
-      return supabase
-        .channel(`${tableName}_changes`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: tableName
-          },
-          () => {
-            // Reload both scores and stats when any new score is added
-            // Force refresh to invalidate cache since new data is available
-            loadAllData(true)
-          }
-        )
+    // Live updates: any new score anywhere refreshes the feed and stats
+    const channels = GAMES.map(game =>
+      supabase
+        .channel(`${game.table}_changes`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: game.table }, () => loadAllData(true))
         .subscribe()
-    })
+    )
 
-    // Cleanup subscriptions on unmount
     return () => {
       channels.forEach(channel => supabase.removeChannel(channel))
     }
-  }, [username, loadAllData]) // Include username and loadAllData so subscriptions use current values
+  }, [username, loadAllData])
 
-  // Reload data when username changes to fetch user's best scores
-  useEffect(() => {
-    if (username) {
-      loadGameStats(true, username)
-    }
-  }, [username])
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    
-    const diffInDays = Math.floor(diffInHours / 24)
-    return `${diffInDays}d ago`
-  }
-
-  const isUserScore = (scoreUsername: string) => {
-    return username && scoreUsername === username
-  }
+  const totalRuns = gameStats.reduce((sum, s) => sum + (s.totalGames || 0), 0)
+  const statsReady = gameStats.length > 0
+  const playedCount = gameStats.filter(s => s.userBest).length
+  const startGame = GAME_BY_ID['reaction-time']
 
   return (
-    <div className="space-y-12">
-      {loading && gameStats.length === 0 ? (
-        <div>
-          {/* Games Overview Skeleton */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
-              Games Overview
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {[...Array(12)].map((_, i) => (
-                <GameCardSkeleton key={i} />
+    <div>
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-gray-200 dark:border-gray-800">
+        <div className="bg-grid absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden />
+        <div className="container-page relative grid gap-12 py-14 sm:py-20 lg:grid-cols-[1.35fr_1fr] lg:items-center lg:gap-16">
+          <div className="animate-fade-in-up">
+            <p className="eyebrow mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1.5 text-gray-900 dark:text-gray-100">
+                <span className="h-2 w-2 rounded-full bg-signal-600" />
+                The human benchmark
+              </span>
+              <span>{GAMES.length} tests</span>
+              <span>{DOMAINS.length} capabilities</span>
+            </p>
+            <h1 className="text-display-xl font-bold text-gray-950 dark:text-white">
+              How capable is
+              <br />a human mind?{' '}
+              <span className="relative whitespace-nowrap text-gray-400 dark:text-gray-500">
+                Measure yours.
+              </span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+              We benchmark machines on everything. Brain Benchmark does it for people — short, honest tests of speed,
+              memory, attention, perception, reasoning, numeracy and language. Ranked against everyone, mapped into
+              your own capability profile.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href={`/games/${startGame.id}`} onClick={() => trackClick(startGame, 'home_hero')} className="btn-primary px-6 py-3 text-base">
+                Start with {startGame.name}
+                <span aria-hidden>→</span>
+              </Link>
+              <a href="#capabilities" className="btn-ghost px-6 py-3 text-base">
+                Browse all tests
+              </a>
+            </div>
+
+            <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+              <div>
+                <dt className="eyebrow">Runs recorded</dt>
+                <dd className="num mt-1 text-2xl font-semibold text-gray-950 dark:text-white sm:text-3xl">
+                  {statsReady ? formatNumber(totalRuns) : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="eyebrow">Tests</dt>
+                <dd className="num mt-1 text-2xl font-semibold text-gray-950 dark:text-white sm:text-3xl">{GAMES.length}</dd>
+              </div>
+              <div>
+                <dt className="eyebrow">{username ? 'You’ve taken' : 'Cost'}</dt>
+                <dd className="num mt-1 text-2xl font-semibold text-gray-950 dark:text-white sm:text-3xl">
+                  {username ? `${playedCount}/${GAMES.length}` : '$0'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Live panel */}
+          <div className="card animate-fade-in-up overflow-hidden [animation-delay:120ms]">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3.5 dark:border-gray-800">
+              <p className="eyebrow flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-volt-deep opacity-60 dark:bg-volt" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-volt-deep dark:bg-volt" />
+                </span>
+                Live results
+              </p>
+              <span className="eyebrow">Latest {recentScores.length || ''}</span>
+            </div>
+            <ul className="divide-y divide-gray-100 dark:divide-gray-800/70">
+              {feedLoading
+                ? [...Array(6)].map((_, i) => (
+                    <li key={i} className="flex items-center gap-3 px-5 py-3">
+                      <div className="h-4 w-24 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+                      <div className="ml-auto h-4 w-20 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+                    </li>
+                  ))
+                : recentScores.length === 0
+                  ? (
+                    <li className="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No results yet. Be the first.
+                    </li>
+                  )
+                  : recentScores.map(score => {
+                      const isYou = Boolean(username && score.username === username)
+                      const color = getDomain(GAME_BY_ID[score.gameId]?.category ?? 'motor').color
+                      return (
+                        <li key={score.key}>
+                          <Link
+                            href={`/games/${score.gameId}`}
+                            className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                          >
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-center gap-1.5">
+                                <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{score.username}</span>
+                                {isYou && <span className="chip-volt px-1.5 py-0 text-[10px]">YOU</span>}
+                              </span>
+                              <span className="block truncate text-xs text-gray-500 dark:text-gray-400">{score.gameName}</span>
+                            </span>
+                            <span className="num shrink-0 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {score.value}
+                            </span>
+                            <span className="num w-8 shrink-0 text-right text-[11px] text-gray-400 dark:text-gray-500">
+                              {formatTimeAgo(score.dateSubmitted)}
+                            </span>
+                          </Link>
+                        </li>
+                      )
+                    })}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Capabilities ─────────────────────────────────── */}
+      <section id="capabilities" className="container-page scroll-mt-20 pt-16 sm:pt-20">
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow mb-3">The tests</p>
+            <h2 className="text-display font-bold">Seven capabilities.</h2>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {DOMAINS.map(d => (
+              <a
+                key={d.key}
+                href={`#${d.key}`}
+                className="chip transition-colors hover:border-gray-400 hover:text-gray-950 dark:hover:border-gray-600 dark:hover:text-white"
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: d.color }} />
+                {d.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-12 sm:space-y-16">
+          {DOMAINS.map((domain, domainIndex) => {
+            const tests = GAMES.filter(g => g.category === domain.key)
+            if (tests.length === 0) return null
+            return (
+              <div
+                key={domain.key}
+                id={domain.key}
+                className="grid scroll-mt-24 gap-5 border-t border-gray-200 pt-6 dark:border-gray-800 lg:grid-cols-[15rem_1fr] lg:gap-10"
+              >
+                <div className="lg:sticky lg:top-24 lg:self-start">
+                  <div className="flex items-baseline justify-between gap-4 lg:block">
+                    <span className="num text-sm text-gray-400 dark:text-gray-500">{String(domainIndex + 1).padStart(2, '0')}</span>
+                    <span className="eyebrow lg:hidden">
+                      {tests.length} {tests.length === 1 ? 'test' : 'tests'}
+                    </span>
+                  </div>
+                  <h3 className="mt-1 flex items-center gap-2.5 text-2xl font-semibold tracking-tight lg:mt-3">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: domain.color }} />
+                    {domain.label}
+                  </h3>
+                  <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-400">{domain.tagline}</p>
+                  <span className="eyebrow mt-4 hidden lg:block">
+                    {tests.length} {tests.length === 1 ? 'test' : 'tests'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+                  {!statsReady && gameStatsLoading
+                    ? tests.map(t => <CardSkeleton key={t.id} />)
+                    : tests.map(game => (
+                        <TestCard
+                          key={game.id}
+                          game={game}
+                          stat={gameStats.find(s => s.id === game.id)}
+                          username={username}
+                          onSelect={() => trackClick(game, 'home_page')}
+                        />
+                      ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* ── Method ───────────────────────────────────────── */}
+      <section className="container-page pt-24">
+        <div className="overflow-hidden rounded-3xl bg-gray-950 text-gray-100 dark:border dark:border-gray-800 dark:bg-gray-900">
+          <div className="grid gap-10 p-8 sm:p-12 lg:grid-cols-[1fr_2fr]">
+            <div>
+              <p className="eyebrow mb-3 text-gray-400">Method</p>
+              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                A benchmark,
+                <br />
+                not a brain game.
+              </h2>
+            </div>
+            <div className="grid gap-8 sm:grid-cols-3">
+              {[
+                {
+                  n: '01',
+                  title: 'Classic paradigms',
+                  body: 'Digit span, Stroop, flanker, mental rotation — tasks borrowed from decades of cognitive psychology, adapted to run in a minute or two.',
+                },
+                {
+                  n: '02',
+                  title: 'Ranked against people',
+                  body: 'Every run lands on a live leaderboard. You see the record, your best, and how many people have tried.',
+                },
+                {
+                  n: '03',
+                  title: 'Your capability map',
+                  body: 'Results roll up into a profile across seven capabilities, so you can see where you are strong and what to try next.',
+                },
+              ].map(item => (
+                <div key={item.n}>
+                  <p className="num mb-3 text-sm text-volt">{item.n}</p>
+                  <h3 className="mb-2 font-semibold text-white">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-gray-400">{item.body}</p>
+                </div>
               ))}
             </div>
           </div>
-
-          {/* Recent Activity Skeleton */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-100 mb-6">
-              Live Activity Feed
-            </h2>
-            <div className="w-full">
-              <div className="border-b border-gray-300/20 dark:border-gray-500/20 py-3 px-4 flex gap-4">
-                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16 animate-pulse" />
-                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16 animate-pulse" />
-                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16 animate-pulse" />
-                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-12 animate-pulse ml-auto" />
-              </div>
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`border-b border-gray-300/20 dark:border-gray-500/20 py-3.5 px-4 flex gap-4 animate-pulse ${
-                    i % 2 === 0 ? 'bg-transparent' : 'bg-gray-100/40 dark:bg-gray-800/40'
-                  }`}
-                >
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto" />
-                </div>
-              ))}
+          <div className="flex flex-col gap-3 border-t border-white/10 px-8 py-5 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-12">
+            <p className="text-gray-400">For curiosity and self-measurement — not a diagnostic tool.</p>
+            <div className="flex gap-4">
+              {username && (
+                <Link href={`/${encodeURIComponent(username)}`} className="font-semibold text-volt hover:underline">
+                  Your profile →
+                </Link>
+              )}
+              <Link href="/about" className="font-semibold text-white hover:underline">
+                Read the method →
+              </Link>
             </div>
           </div>
         </div>
-      ) : (
-        <>
-          {/* Games Overview - sorted by popularity */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold flex items-baseline gap-2 flex-wrap">
-                <span className="bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                  Games
-                </span>
-                <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
-                  (by popularity)
-                </span>
-              </h2>
-              {gameStatsLoading && gameStats.length > 0 && (
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                  Updating...
-                </div>
-              )}
-            </div>
-
-            {(() => {
-              const gamesByPopularity = GAMES.map(game => {
-                const stats = gameStats.find(stat => stat.id === game.id)
-                return {
-                  id: game.id,
-                  name: game.name,
-                  icon: game.icon,
-                  category: game.category,
-                  totalGames: stats?.totalGames || 0,
-                  topScore: stats?.topScore || null,
-                  userBest: stats?.userBest || null,
-                }
-              }).sort((a, b) => b.totalGames - a.totalGames)
-
-              return (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pt-2 items-stretch">
-                  {gamesByPopularity.map((game, index) => (
-                    <SelectableGameCard
-                      key={game.id}
-                      game={game}
-                      hasTopScore={Boolean(username && game.topScore?.username === username)}
-                      index={index}
-                      onSelect={() => handleGameClick(game.id, game.name)}
-                    />
-                  ))}
-                </div>
-              )
-            })()}
-          </div>
-
-          {/* Live Activity Feed */}
-          <div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-8">
-              Live Activity Feed
-            </h2>
-            {recentScores.length === 0 ? (
-              <div className="text-center py-16 border border-dashed border-gray-300/40 dark:border-gray-600/40 rounded-lg">
-                <div className="text-6xl mb-4 animate-bounce-gentle">🧠</div>
-                <p className="text-gray-600 dark:text-gray-300 font-medium">
-                  No recent scores yet. Start assessments to see activity here!
-                </p>
-              </div>
-            ) : (
-              <div className="w-full overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-300/20 dark:border-gray-500/20">
-                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
-                        Player
-                      </th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
-                        Game
-                      </th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
-                        Score
-                      </th>
-                      <th className="text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 py-3 px-4">
-                        When
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentScores.map((score, index) => (
-                      <tr
-                        key={`${score.game_type}-${score.id}`}
-                        className={`border-b border-gray-300/20 dark:border-gray-500/20 ${
-                          index % 2 === 0
-                            ? 'bg-transparent'
-                            : 'bg-gray-100/40 dark:bg-gray-800/40'
-                        }`}
-                      >
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`font-semibold ${
-                              isUserScore(score.username)
-                                ? 'text-blue-600 dark:text-blue-400'
-                                : 'text-gray-800 dark:text-gray-100'
-                            }`}
-                          >
-                            {score.username}
-                            {isUserScore(score.username) && (
-                              <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-blue-500 dark:text-blue-400">
-                                You
-                              </span>
-                            )}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-sm text-gray-600 dark:text-gray-300">
-                          {score.game_type}
-                        </td>
-                        <td className="py-3.5 px-4 text-sm font-medium text-gray-700 dark:text-gray-200">
-                          {score.score_value}
-                        </td>
-                        <td className="py-3.5 px-4 text-sm text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
-                          {formatTimeAgo(score.date_submitted)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+      </section>
     </div>
   )
 }

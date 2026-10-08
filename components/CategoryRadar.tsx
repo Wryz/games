@@ -71,7 +71,7 @@ export default function CategoryRadar({
             key={`ring-${i}`}
             points={points}
             fill="none"
-            className="stroke-gray-300 dark:stroke-gray-600"
+            className="stroke-gray-200 dark:stroke-gray-800"
             strokeWidth={1}
           />
         ))}
@@ -84,7 +84,7 @@ export default function CategoryRadar({
             y1={CENTER}
             x2={line.x2}
             y2={line.y2}
-            className="stroke-gray-300 dark:stroke-gray-600"
+            className="stroke-gray-200 dark:stroke-gray-800"
             strokeWidth={1}
           />
         ))}
@@ -92,10 +92,9 @@ export default function CategoryRadar({
         {/* Data polygon */}
         <polygon
           points={dataPolygon}
-          fill="rgba(37, 99, 235, 0.25)"
-          stroke="#2563eb"
           strokeWidth={2}
-          className="dark:fill-blue-500/30"
+          strokeLinejoin="round"
+          className="fill-signal-600/15 stroke-signal-600 dark:fill-volt/15 dark:stroke-volt"
         />
 
         {/* Data points */}
@@ -108,9 +107,9 @@ export default function CategoryRadar({
               cy={point.y}
               r={selected ? 6 : 4}
               fill={axes[i].color}
-              stroke={selected ? '#fff' : 'transparent'}
+              stroke={selected ? 'currentColor' : 'transparent'}
               strokeWidth={2}
-              className="cursor-pointer"
+              className="cursor-pointer text-gray-950 dark:text-white"
               onClick={() => onSelect(axes[i].key)}
             />
           )
@@ -141,7 +140,7 @@ export default function CategoryRadar({
                 x={x}
                 y={y + 10}
                 textAnchor="middle"
-                className="fill-gray-500 dark:fill-gray-400"
+                className="fill-gray-500 font-mono dark:fill-gray-400"
                 style={{ fontSize: 10 }}
               >
                 {Math.round(axis.value)}
@@ -162,8 +161,8 @@ export default function CategoryRadar({
               onClick={() => onSelect(axis.key)}
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-all border ${
                 selected
-                  ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200'
-                  : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-300'
+                  ? 'border-gray-950 bg-gray-950 text-gray-50 dark:border-gray-50 dark:bg-gray-50 dark:text-gray-950'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300'
               }`}
             >
               <span
@@ -171,7 +170,7 @@ export default function CategoryRadar({
                 style={{ backgroundColor: axis.color }}
               />
               {axis.label}
-              <span className="tabular-nums opacity-70">{Math.round(axis.value)}</span>
+              <span className="font-mono tabular-nums opacity-70">{Math.round(axis.value)}</span>
             </button>
           )
         })}

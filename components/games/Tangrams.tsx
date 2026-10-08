@@ -735,18 +735,20 @@ export default function Tangrams() {
       sortKey="time_taken"
       sortDirection="asc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Time:{' '}
-            <span className="font-bold text-blue-600 dark:text-blue-400">
+      <div className="w-full">
+        {/* Status row */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex items-baseline gap-2">
+            <span className="eyebrow">Time</span>
+            <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">
               {formatTime(elapsedTime)}
             </span>
           </div>
           <button
             onClick={startGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
             title="Restart"
+            aria-label="Restart"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -754,34 +756,37 @@ export default function Tangrams() {
           </button>
         </div>
 
-        <div className="w-full max-w-2xl mb-6">
+        {/* Stage */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900 sm:p-6">
           {gameState === 'finished' ? (
-            <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-700 dark:text-gray-100">
-                {solved ? 'Puzzle Complete!' : 'Not quite right'}
-              </h2>
-              <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatExactTime(elapsedTime)}
-                  </div>
-                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    {solved ? 'Completion Time' : 'Time'}
-                  </div>
-                </div>
+            <div className="flex min-h-[420px] flex-col items-center justify-center text-center sm:min-h-[480px]">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {formatExactTime(elapsedTime)}
               </div>
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                <span
+                  className={`font-semibold ${
+                    solved ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
+                  {solved ? 'Puzzle complete' : 'Not quite right'}
+                </span>
+                {' · '}
+                {solved ? 'Completion time' : 'Time'}
+              </p>
               <button
                 onClick={startGame}
-                className="w-full max-w-2xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           ) : (
-            <>
+            <div className="mx-auto max-w-2xl">
               <div
                 ref={boardRef}
-                className="relative w-full aspect-square touch-none select-none overflow-hidden border-2 border-gray-800 dark:border-gray-200 bg-gray-50 dark:bg-gray-800"
+                className="relative w-full aspect-square touch-none select-none overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950"
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerCancel={onPointerUp}
@@ -872,7 +877,7 @@ export default function Tangrams() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!allMoved}
-                className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+                className="btn-primary mt-4 w-full py-3"
               >
                 Submit
               </button>
@@ -880,7 +885,7 @@ export default function Tangrams() {
               <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                 Drag pieces onto the outline to place them.
               </p>
-            </>
+            </div>
           )}
         </div>
       </div>

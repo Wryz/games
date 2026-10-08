@@ -1,15 +1,23 @@
 import type { Metadata } from 'next'
-import { Fredoka } from 'next/font/google'
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import './tailwind.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { UserProvider } from '@/contexts/UserContext'
 import { OverviewProvider } from '@/contexts/OverviewContext'
-import { SidebarProvider } from '@/contexts/SidebarContext'
 import { PostHogProvider } from './providers'
 
-const fredoka = Fredoka({ 
+const sans = Space_Grotesk({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700']
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-mono',
+  display: 'swap',
 })
 
 // Get the base URL from environment variable or use a default
@@ -23,15 +31,18 @@ const getBaseUrl = () => {
   }
   // Fallback for local development
   return process.env.NODE_ENV === 'production' 
-    ? 'https://your-domain.com' // Replace with your actual domain
+    ? 'https://brain-benchmark.com'
     : 'http://localhost:3000'
 }
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
-  title: 'Brain Benchmark - Cognitive Assessment & Educational Brain Training',
-  description: 'Educational cognitive assessment platform for testing and improving memory, reaction time, attention, and processing speed. Free brain training exercises for students and educators.',
-  keywords: ['cognitive assessment', 'brain training', 'educational games', 'memory training', 'reaction time test', 'attention training', 'cognitive skills', 'educational tools', 'brain exercises', 'learning games'],
+  title: {
+    default: 'Brain Benchmark — the benchmark for human capability',
+    template: '%s · Brain Benchmark',
+  },
+  description: 'Short, free tests of what a human mind can do — reaction time, memory, attention, perception, reasoning, numeracy and language. Ranked against everyone, mapped into your own capability profile.',
+  keywords: ['human benchmark', 'reaction time test', 'memory test', 'cognitive test', 'attention test', 'mental rotation', 'color perception test', 'verbal memory', 'chimp test', 'typing test', 'brain test'],
   authors: [{ name: 'Brain Benchmark' }],
   creator: 'Brain Benchmark',
   publisher: 'Brain Benchmark',
@@ -49,26 +60,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Brain Benchmark',
-    title: 'Brain Benchmark - Cognitive Assessment & Educational Brain Training',
-    description: 'Educational cognitive assessment platform for testing and improving memory, reaction time, attention, and processing speed.',
+    title: 'Brain Benchmark — the benchmark for human capability',
+    description: 'Short, free tests of speed, memory, attention, perception, reasoning, numeracy and language. How capable is your mind?',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Brain Benchmark - Cognitive Assessment & Educational Brain Training',
-    description: 'Educational cognitive assessment platform for testing and improving memory, reaction time, attention, and processing speed.',
+    title: 'Brain Benchmark — the benchmark for human capability',
+    description: 'Short, free tests of speed, memory, attention, perception, reasoning, numeracy and language. How capable is your mind?',
   },
   other: {
-    'classification': 'Educational',
-    'category': 'Education',
-    'audience': 'Students, Educators, Researchers',
-    'coverage': 'Worldwide',
-    'distribution': 'Global',
-    'rating': 'General',
-    'revisit-after': '7 days',
-    'subject': 'Cognitive Assessment and Brain Training',
-    'topic': 'Educational Cognitive Training',
-    'language': 'English',
-    'geo.region': 'US',
+    'subject': 'Human capability benchmarks',
   },
 }
 
@@ -78,7 +79,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`${sans.variable} ${mono.variable} scroll-smooth`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -95,14 +96,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${fredoka.className} bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-100 min-h-screen overflow-x-hidden transition-colors duration-300`}>
+      <body className="font-sans min-h-screen overflow-x-hidden">
         <PostHogProvider>
           <ThemeProvider>
             <UserProvider>
               <OverviewProvider>
-                <SidebarProvider>
-                  {children}
-                </SidebarProvider>
+                {children}
               </OverviewProvider>
             </UserProvider>
           </ThemeProvider>

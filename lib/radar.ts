@@ -1,5 +1,7 @@
 import { GAMES, type Game } from '@/types/games'
-import type { GameCategory } from '@/lib/levels'
+import { DOMAINS, type DomainKey } from '@/lib/domains'
+
+type GameCategory = DomainKey
 
 export interface RadarGameStat {
   id: string
@@ -22,33 +24,13 @@ export interface CategoryRadarAxis {
   games: Game[]
 }
 
-export const CATEGORY_LABELS: Record<GameCategory, string> = {
-  motor: 'Motor',
-  memory: 'Memory',
-  perception: 'Perception',
-  cognitive: 'Cognitive',
-  computation: 'Computation',
-  linguistic: 'Linguistic',
-  attention: 'Attention',
-  language: 'Language',
-  social: 'Social',
-  creative: 'Creative',
-  puzzles: 'Puzzles',
-}
+export const CATEGORY_LABELS = Object.fromEntries(
+  DOMAINS.map(d => [d.key, d.label])
+) as Record<GameCategory, string>
 
-export const CATEGORY_COLORS: Record<GameCategory, string> = {
-  motor: '#3b82f6',
-  memory: '#a855f7',
-  perception: '#ec4899',
-  cognitive: '#06b6d4',
-  computation: '#f97316',
-  linguistic: '#22c55e',
-  attention: '#eab308',
-  language: '#6366f1',
-  social: '#f43f5e',
-  creative: '#8b5cf6',
-  puzzles: '#10b981',
-}
+export const CATEGORY_COLORS = Object.fromEntries(
+  DOMAINS.map(d => [d.key, d.color])
+) as Record<GameCategory, string>
 
 function num(score: Record<string, unknown> | null | undefined, key: string): number {
   const v = score?.[key]
@@ -92,7 +74,10 @@ export function getGameStrength(
       return ratioHigher(num(userScore, 'wpm'), num(topScore, 'wpm'))
     case 'memory':
     case 'visual-memory':
+    case 'color-perception':
       return ratioHigher(num(userScore, 'level_reached'), num(topScore, 'level_reached'))
+    case 'verbal-memory':
+      return ratioHigher(num(userScore, 'words_remembered'), num(topScore, 'words_remembered'))
     case 'reaction-time':
       // Leaderboard sorts by average_time ASC
       return ratioLower(num(userScore, 'average_time'), num(topScore, 'average_time'))
@@ -111,7 +96,9 @@ export function getGameStrength(
       return ratioLower(num(userScore, 'time_taken'), num(topScore, 'time_taken'))
     case 'algebra':
     case 'arithmetic':
-    case 'geometry': {
+    case 'geometry':
+    case 'flanker':
+    case 'mental-rotation': {
       const correct = ratioHigher(num(userScore, 'correct_answers'), num(topScore, 'correct_answers'))
       const time = ratioLower(num(userScore, 'average_time'), num(topScore, 'average_time'))
       return (correct + time) / 2
@@ -128,7 +115,7 @@ export function getGameStrength(
  * Value = average of per-game strength vs top scorers (0 if unplayed).
  */
 export function getCategoryRadarAxes(gameStats: RadarGameStat[]): CategoryRadarAxis[] {
-  const categories = Array.from(new Set(GAMES.map(g => g.category))) as GameCategory[]
+  const categories = DOMAINS.map(d => d.key).filter(key => GAMES.some(g => g.category === key))
 
   return categories
     .map(category => {

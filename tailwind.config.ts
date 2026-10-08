@@ -1,101 +1,81 @@
 import type { Config } from 'tailwindcss'
 
+/**
+ * Brain Benchmark design tokens.
+ *
+ * - `gray` is a warm "ink on paper" neutral scale (light: paper, dark: ink).
+ * - `blue` / `signal` is the single brand accent (electric cobalt). Games use
+ *   blue-* utilities for their primary actions, so they inherit the brand.
+ * - `volt` is the highlight used sparingly for records and "you" markers.
+ */
+const signal = {
+  50: '#eef1ff',
+  100: '#dfe4ff',
+  200: '#c3ccff',
+  300: '#9aa9ff',
+  400: '#6d80ff',
+  500: '#4a5cff',
+  600: '#3341f5',
+  700: '#2832d8',
+  800: '#232baf',
+  900: '#222a89',
+  950: '#141850',
+}
+
+const ink = {
+  50: '#f7f6f2',
+  100: '#efede7',
+  200: '#e2e0d8',
+  300: '#cbc8be',
+  400: '#a3a097',
+  500: '#7a776f',
+  600: '#5a5852',
+  700: '#3f3d39',
+  800: '#272624',
+  900: '#181716',
+  950: '#0e0e0d',
+}
+
 const config: Config = {
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './games/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx}',
+    './types/**/*.{js,ts,jsx,tsx}',
   ],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
-        secondary: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-        },
-        blue: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#60a5fa',
-          600: '#60a5fa',
-          700: '#3b82f6',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
-        purple: {
-          50: '#faf5ff',
-          100: '#f3e8ff',
-          200: '#e9d5ff',
-          300: '#d8b4fe',
-          400: '#c084fc',
-          500: '#a855f7',
-          600: '#9333ea',
-          700: '#7e22ce',
-          800: '#6b21a8',
-          900: '#581c87',
-        },
-        cyan: {
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
+        gray: ink,
+        neutral: ink,
+        blue: signal,
+        signal,
+        primary: signal,
+        volt: {
+          DEFAULT: '#d4ff3f',
+          soft: '#ecffb0',
+          deep: '#4d6b00',
         },
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'brain-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'hero-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #06b6d4 100%)',
-        'card-gradient': 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+      fontFamily: {
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      fontSize: {
+        'display-xl': ['clamp(2.75rem, 6.5vw, 5.5rem)', { lineHeight: '0.95', letterSpacing: '-0.04em' }],
+        'display': ['clamp(2rem, 4vw, 3.25rem)', { lineHeight: '1', letterSpacing: '-0.035em' }],
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'fade-in-up': 'fadeInUp 0.6s ease-out',
+        'fade-in': 'fadeIn 0.4s ease-out',
+        'fade-in-up': 'fadeInUp 0.5s ease-out both',
         'slide-up': 'slideUp 0.3s ease-out',
-        'slide-in': 'slideIn 0.4s ease-out',
-        'bounce-gentle': 'bounceGentle 2s infinite',
-        'float': 'float 6s ease-in-out infinite',
-        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+        'scale-in': 'scaleIn 0.25s ease-out',
         'shimmer': 'shimmer 2.5s linear infinite',
-        'gradient-shift': 'gradientShift 3s ease infinite',
-        'scale-in': 'scaleIn 0.3s ease-out',
-        'neural-pulse': 'neuralPulse 2s ease-in-out infinite',
-        'stagger-1': 'fadeInUp 0.6s ease-out 0.1s both',
-        'stagger-2': 'fadeInUp 0.6s ease-out 0.2s both',
-        'stagger-3': 'fadeInUp 0.6s ease-out 0.3s both',
-        'stagger-4': 'fadeInUp 0.6s ease-out 0.4s both',
         'shake': 'shake 0.5s ease-in-out',
+        'blink': 'blink 1.2s steps(2, start) infinite',
+        'ticker': 'ticker 40s linear infinite',
+        'bounce-gentle': 'bounceGentle 2s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -103,71 +83,42 @@ const config: Config = {
           '100%': { opacity: '1' },
         },
         fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
-        slideIn: {
-          '0%': { transform: 'translateX(-20px)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-        bounceGentle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-20px)' },
-        },
-        pulseGlow: {
-          '0%, 100%': { 
-            opacity: '1',
-            boxShadow: '0 0 20px rgba(102, 126, 234, 0.4)',
-          },
-          '50%': { 
-            opacity: '0.8',
-            boxShadow: '0 0 40px rgba(102, 126, 234, 0.8)',
-          },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-1000px 0' },
-          '100%': { backgroundPosition: '1000px 0' },
-        },
-        gradientShift: {
-          '0%, 100%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-        },
         scaleIn: {
-          '0%': { transform: 'scale(0.9)', opacity: '0' },
+          '0%': { transform: 'scale(0.96)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
-        neuralPulse: {
-          '0%, 100%': { 
-            opacity: '0.6',
-            transform: 'scale(1)',
-          },
-          '50%': { 
-            opacity: '1',
-            transform: 'scale(1.05)',
-          },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
         shake: {
           '0%, 100%': { transform: 'translateX(0)' },
           '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-8px)' },
           '20%, 40%, 60%, 80%': { transform: 'translateX(8px)' },
         },
+        blink: {
+          to: { visibility: 'hidden' },
+        },
+        ticker: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        bounceGentle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        },
       },
       boxShadow: {
-        'glow-sm': '0 0 10px rgba(102, 126, 234, 0.3)',
-        'glow': '0 0 20px rgba(102, 126, 234, 0.4)',
-        'glow-lg': '0 0 30px rgba(102, 126, 234, 0.5)',
-        'glow-purple': '0 0 20px rgba(168, 85, 247, 0.4)',
-        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.4)',
-        'card-hover': '0 20px 40px rgba(0, 0, 0, 0.1)',
-        'card-3d': '0 10px 30px -5px rgba(0, 0, 0, 0.3)',
+        'card': '0 1px 0 rgba(14, 14, 13, 0.04), 0 1px 3px rgba(14, 14, 13, 0.06)',
+        'lift': '0 12px 32px -12px rgba(14, 14, 13, 0.25)',
+        'signal': '0 8px 24px -8px rgba(51, 65, 245, 0.55)',
       },
       backdropBlur: {
         xs: '2px',

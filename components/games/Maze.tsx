@@ -486,18 +486,20 @@ export default function Maze() {
       sortKey="time_taken"
       sortDirection="asc"
     >
-      <div className="flex flex-col items-center justify-start min-h-[400px] sm:min-h-[600px] pt-8">
-        {/* Stats and Reset */}
-        <div className="flex justify-between items-center w-full max-w-2xl mb-6 text-sm sm:text-base">
-          <div className="text-gray-600 dark:text-gray-400">
-            Time: <span className="font-bold text-blue-600 dark:text-blue-400">
+      <div className="w-full">
+        {/* Status row */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex items-baseline gap-2">
+            <span className="eyebrow">Time</span>
+            <span className="num text-sm font-medium text-gray-900 dark:text-gray-100">
               {formatTime(elapsedTime)}
             </span>
           </div>
           <button
             onClick={resetGame}
-            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
             title="New maze"
+            aria-label="New maze"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -505,33 +507,25 @@ export default function Maze() {
           </button>
         </div>
 
-        {/* Game Area */}
-        <div className="w-full max-w-2xl mb-6">
+        {/* Stage */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900 sm:p-6">
           {gameState === 'finished' ? (
-            <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-700 dark:text-gray-100">
-                Maze Complete!
-              </h2>
-              <div className="bg-white dark:bg-gray-700 p-6 sm:p-8 rounded-lg shadow-md mb-6">
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">
-                    {formatExactTime(elapsedTime)}
-                  </div>
-                  <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    Completion Time
-                  </div>
-                </div>
+            <div className="flex min-h-[420px] flex-col items-center justify-center text-center sm:min-h-[480px]">
+              <span className="eyebrow">Result</span>
+              <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
+                {formatExactTime(elapsedTime)}
               </div>
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Completion time</p>
               <button
                 onClick={startGame}
-                className="w-full max-w-2xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-colors"
+                className="btn-ink mt-8"
               >
-                Play Again
+                Play again
               </button>
             </div>
           ) : (
             <>
-              <div className="grid gap-0 aspect-square" style={{ gridTemplateColumns: `repeat(${MAZE_SIZE}, minmax(0, 1fr))` }}>
+              <div className="mx-auto grid aspect-square w-full max-w-2xl gap-0" style={{ gridTemplateColumns: `repeat(${MAZE_SIZE}, minmax(0, 1fr))` }}>
                 {maze.map((row, rowIdx) =>
                   row.map((cell, colIdx) => {
                     const isPlayer = playerPos.row === rowIdx && playerPos.col === colIdx
@@ -570,17 +564,17 @@ export default function Maze() {
                   })
                 )}
               </div>
-              <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                 Use arrow keys to move the ball from Start (green) to Exit (red)
-              </div>
-              
+              </p>
+
               {/* Mobile Arrow Controls */}
-              <div className="md:hidden mt-6 flex flex-col items-center">
+              <div className="mt-6 flex flex-col items-center md:hidden">
                 <div className="mb-2">
                   <button
                     onClick={() => handleMove('up')}
                     disabled={gameState !== 'playing'}
-                    className="w-16 h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg shadow-lg transition-colors flex items-center justify-center active:scale-95"
+                    className="flex h-16 w-16 touch-manipulation items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 transition-colors hover:border-gray-400 active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-gray-600 dark:active:bg-gray-800"
                     aria-label="Move up"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -592,7 +586,7 @@ export default function Maze() {
                   <button
                     onClick={() => handleMove('left')}
                     disabled={gameState !== 'playing'}
-                    className="w-16 h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg shadow-lg transition-colors flex items-center justify-center active:scale-95"
+                    className="flex h-16 w-16 touch-manipulation items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 transition-colors hover:border-gray-400 active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-gray-600 dark:active:bg-gray-800"
                     aria-label="Move left"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -602,7 +596,7 @@ export default function Maze() {
                   <button
                     onClick={() => handleMove('down')}
                     disabled={gameState !== 'playing'}
-                    className="w-16 h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg shadow-lg transition-colors flex items-center justify-center active:scale-95"
+                    className="flex h-16 w-16 touch-manipulation items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 transition-colors hover:border-gray-400 active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-gray-600 dark:active:bg-gray-800"
                     aria-label="Move down"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -612,7 +606,7 @@ export default function Maze() {
                   <button
                     onClick={() => handleMove('right')}
                     disabled={gameState !== 'playing'}
-                    className="w-16 h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg shadow-lg transition-colors flex items-center justify-center active:scale-95"
+                    className="flex h-16 w-16 touch-manipulation items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 transition-colors hover:border-gray-400 active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-gray-600 dark:active:bg-gray-800"
                     aria-label="Move right"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
