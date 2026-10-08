@@ -74,7 +74,12 @@ DROP POLICY IF EXISTS "Allow public insert access on mental_rotation_scores" ON 
 CREATE POLICY "Allow public read access on mental_rotation_scores" ON mental_rotation_scores FOR SELECT USING (true);
 CREATE POLICY "Allow public insert access on mental_rotation_scores" ON mental_rotation_scores FOR INSERT WITH CHECK (true);
 
+-- Supabase's default privileges grant ALL on new public tables to anon and
+-- authenticated, so revoke what the app never uses before granting the rest.
+-- (TRUNCATE is not subject to RLS.)
+REVOKE ALL ON verbal_memory_scores, flanker_scores, color_perception_scores, mental_rotation_scores FROM anon, authenticated;
 GRANT SELECT, INSERT ON verbal_memory_scores, flanker_scores, color_perception_scores, mental_rotation_scores TO anon, authenticated;
+REVOKE ALL ON SEQUENCE verbal_memory_scores_id_seq, flanker_scores_id_seq, color_perception_scores_id_seq, mental_rotation_scores_id_seq FROM anon, authenticated;
 GRANT USAGE, SELECT ON SEQUENCE verbal_memory_scores_id_seq, flanker_scores_id_seq, color_perception_scores_id_seq, mental_rotation_scores_id_seq TO anon, authenticated;
 
 -- ── Realtime (live feed + leaderboards) ─────────────────────────────────
