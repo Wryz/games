@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useSyncExternalStore } from 'react'
 
 type Theme = 'dark' | 'light'
 
@@ -14,30 +14,42 @@ const ThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => {}
 })
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
+// The inline script in app/layout.tsx puts the saved (or system) theme class on
+// <html> before hydration, so that class is the source of truth.
+const listeners = new Set<() => void>()
 
-  useEffect(() => {
-    // Check if there's a saved theme in localStorage
-    const savedTheme = localStorage.getItem('theme') as Theme
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      setTheme(savedTheme)
-    } else {
-      // Check system preference
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setTheme(systemPrefersDark ? 'dark' : 'light')
-    }
-  }, [])
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
 
-  useEffect(() => {
-    const root = window.document.documentElement
-    root.classList.remove('light', 'dark')
-    root.classList.add(theme)
+function getSnapshot(): Theme {
+  return document.documentElement.classList.contains('light') ? 'light' : 'dark'
+}
+
+function getServerSnapshot(): Theme {
+  return 'dark'
+}
+
+function applyTheme(theme: Theme) {
+  const root = document.documentElement
+  root.classList.remove('light', 'dark')
+  root.classList.add(theme)
+  try {
     localStorage.setItem('theme', theme)
-  }, [theme])
+  } catch {
+    // ignore storage errors
+  }
+  listeners.forEach(listener => listener())
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark')
+    applyTheme(theme === 'dark' ? 'light' : 'dark')
   }
 
   return (

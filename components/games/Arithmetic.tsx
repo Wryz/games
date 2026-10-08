@@ -15,15 +15,62 @@ interface Problem {
   answer: number
 }
 
+// Generate a random arithmetic problem where answer is a whole number
+function generateProblem(): Problem {
+  const operations = ['+', '-', '*', '/']
+  const operation = operations[Math.floor(Math.random() * operations.length)]
+  
+  let num1: number
+  let num2: number
+  let answer: number
+  let problem: string
+  
+  switch (operation) {
+    case '+':
+      num1 = Math.floor(Math.random() * 100) + 1
+      num2 = Math.floor(Math.random() * 100) + 1
+      answer = num1 + num2
+      problem = `${num1} + ${num2}`
+      break
+    case '-':
+      num1 = Math.floor(Math.random() * 100) + 1
+      num2 = Math.floor(Math.random() * num1) // Ensure positive result
+      answer = num1 - num2
+      problem = `${num1} - ${num2}`
+      break
+    case '*':
+      num1 = Math.floor(Math.random() * 12) + 1 // 1-12 for multiplication tables
+      num2 = Math.floor(Math.random() * 12) + 1
+      answer = num1 * num2
+      problem = `${num1} × ${num2}`
+      break
+    case '/':
+      // For division, ensure whole number result
+      num2 = Math.floor(Math.random() * 12) + 1 // divisor 1-12
+      answer = Math.floor(Math.random() * 12) + 1 // quotient 1-12
+      num1 = num2 * answer // dividend = divisor * quotient
+      problem = `${num1} ÷ ${num2}`
+      break
+    default:
+      num1 = 1
+      num2 = 1
+      answer = 2
+      problem = '1 + 1'
+  }
+  
+  return { problem, answer }
+}
+
 export default function Arithmetic() {
   const [scores, setScores] = useState<ArithmeticScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameState, setGameState] = useState<GameState>('idle')
-  const [currentProblem, setCurrentProblem] = useState<Problem | null>(null)
+  const [gameState, setGameState] = useState<GameState>('playing')
+  // Games are client-only (ssr: false in GameRenderer), so the first question can be generated here
+  const [currentProblem, setCurrentProblem] = useState<Problem | null>(generateProblem)
   const [userInput, setUserInput] = useState('')
   const [correctCount, setCorrectCount] = useState(0)
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
-  const [questionStartTime, setQuestionStartTime] = useState(0)
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now)
   const [responseTimes, setResponseTimes] = useState<number[]>([])
   const [elapsedTime, setElapsedTime] = useState(0)
   const { username } = useUser()
@@ -33,18 +80,23 @@ export default function Arithmetic() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerStartedRef = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getArithmeticScores({ limit: 50 })
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getArithmeticScores({ limit: 50 })
+      .then(data => {
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   const clearTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -66,54 +118,8 @@ export default function Arithmetic() {
     }, 1000)
   }, [])
 
-  // Generate a random arithmetic problem where answer is a whole number
-  const generateProblem = useCallback((): Problem => {
-    const operations = ['+', '-', '*', '/']
-    const operation = operations[Math.floor(Math.random() * operations.length)]
-    
-    let num1: number
-    let num2: number
-    let answer: number
-    let problem: string
-    
-    switch (operation) {
-      case '+':
-        num1 = Math.floor(Math.random() * 100) + 1
-        num2 = Math.floor(Math.random() * 100) + 1
-        answer = num1 + num2
-        problem = `${num1} + ${num2}`
-        break
-      case '-':
-        num1 = Math.floor(Math.random() * 100) + 1
-        num2 = Math.floor(Math.random() * num1) // Ensure positive result
-        answer = num1 - num2
-        problem = `${num1} - ${num2}`
-        break
-      case '*':
-        num1 = Math.floor(Math.random() * 12) + 1 // 1-12 for multiplication tables
-        num2 = Math.floor(Math.random() * 12) + 1
-        answer = num1 * num2
-        problem = `${num1} × ${num2}`
-        break
-      case '/':
-        // For division, ensure whole number result
-        num2 = Math.floor(Math.random() * 12) + 1 // divisor 1-12
-        answer = Math.floor(Math.random() * 12) + 1 // quotient 1-12
-        num1 = num2 * answer // dividend = divisor * quotient
-        problem = `${num1} ÷ ${num2}`
-        break
-      default:
-        num1 = 1
-        num2 = 1
-        answer = 2
-        problem = '1 + 1'
-    }
-    
-    return { problem, answer }
-  }, [])
-
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for arithmetic scores
     const channel = supabase
@@ -132,18 +138,11 @@ export default function Arithmetic() {
       )
       .subscribe()
 
-    // Start game automatically
-    const problem = generateProblem()
-    setCurrentProblem(problem)
-    setGameState('playing')
-    setQuestionStartTime(Date.now())
-    setTimeout(() => inputRef.current?.focus(), 100)
-
     return () => {
       clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [generateProblem, clearTimer])
+  }, [clearTimer, fetchScores])
 
   // Keep the answer input focused while playing (esp. after submit on mobile)
   useEffect(() => {
@@ -167,7 +166,7 @@ export default function Arithmetic() {
     setUserInput('')
     setQuestionStartTime(Date.now())
     setTimeout(() => inputRef.current?.focus(), 100)
-  }, [generateProblem, clearTimer])
+  }, [clearTimer])
 
   // Handle submit
   const handleSubmit = useCallback(() => {
@@ -246,7 +245,7 @@ export default function Arithmetic() {
         })
       }
     }
-  }, [gameState, userInput, currentProblem, correctCount, questionStartTime, responseTimes, username, generateProblem, loadScores, clearTimer])
+  }, [gameState, userInput, currentProblem, correctCount, questionStartTime, responseTimes, username, loadScores, clearTimer])
 
   // Handle key press
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -275,7 +274,7 @@ export default function Arithmetic() {
       setQuestionStartTime(Date.now())
       setTimeout(() => inputRef.current?.focus(), 100)
     }, 100)
-  }, [generateProblem, clearTimer])
+  }, [clearTimer])
 
   const formatScore = (score: ArithmeticScore) => {
     return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`

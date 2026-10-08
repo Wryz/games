@@ -15,15 +15,37 @@ interface Equation {
   answer: number
 }
 
+// Generate a random algebraic equation where x is a whole number
+function generateEquation(): Equation {
+  // Generate equations of the form: ax + b = c, where x is a whole number
+  // We'll ensure the answer is always a whole number
+  
+  const a = Math.floor(Math.random() * 10) + 1 // coefficient of x (1-10)
+  const x = Math.floor(Math.random() * 20) + 1 // solution (1-20, positive for mobile keyboards)
+  const b = Math.floor(Math.random() * 50) - 25 // constant term (-25 to 24)
+  const c = a * x + b // right side of equation
+  
+  // Format equation as "ax + b = c" or "ax - b = c" if b is negative
+  let equation: string
+  if (b >= 0) {
+    equation = `${a}x + ${b} = ${c}`
+  } else {
+    equation = `${a}x - ${Math.abs(b)} = ${c}`
+  }
+  
+  return { equation, answer: x }
+}
+
 export default function Algebra() {
   const [scores, setScores] = useState<AlgebraScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameState, setGameState] = useState<GameState>('idle')
-  const [currentEquation, setCurrentEquation] = useState<Equation | null>(null)
+  const [gameState, setGameState] = useState<GameState>('playing')
+  // Games are client-only (ssr: false in GameRenderer), so the first question can be generated here
+  const [currentEquation, setCurrentEquation] = useState<Equation | null>(generateEquation)
   const [userInput, setUserInput] = useState('')
   const [correctCount, setCorrectCount] = useState(0)
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
-  const [questionStartTime, setQuestionStartTime] = useState(0)
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now)
   const [responseTimes, setResponseTimes] = useState<number[]>([])
   const [elapsedTime, setElapsedTime] = useState(0)
   const { username } = useUser()
@@ -33,18 +55,23 @@ export default function Algebra() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerStartedRef = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getAlgebraScores({ limit: 50 })
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getAlgebraScores({ limit: 50 })
+      .then(data => {
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   const clearTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -66,29 +93,8 @@ export default function Algebra() {
     }, 1000)
   }, [])
 
-  // Generate a random algebraic equation where x is a whole number
-  const generateEquation = useCallback((): Equation => {
-    // Generate equations of the form: ax + b = c, where x is a whole number
-    // We'll ensure the answer is always a whole number
-    
-    const a = Math.floor(Math.random() * 10) + 1 // coefficient of x (1-10)
-    const x = Math.floor(Math.random() * 20) + 1 // solution (1-20, positive for mobile keyboards)
-    const b = Math.floor(Math.random() * 50) - 25 // constant term (-25 to 24)
-    const c = a * x + b // right side of equation
-    
-    // Format equation as "ax + b = c" or "ax - b = c" if b is negative
-    let equation: string
-    if (b >= 0) {
-      equation = `${a}x + ${b} = ${c}`
-    } else {
-      equation = `${a}x - ${Math.abs(b)} = ${c}`
-    }
-    
-    return { equation, answer: x }
-  }, [])
-
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for algebra scores
     const channel = supabase
@@ -107,18 +113,11 @@ export default function Algebra() {
       )
       .subscribe()
 
-    // Start game automatically
-    const equation = generateEquation()
-    setCurrentEquation(equation)
-    setGameState('playing')
-    setQuestionStartTime(Date.now())
-    setTimeout(() => inputRef.current?.focus(), 100)
-
     return () => {
       clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [generateEquation, clearTimer])
+  }, [clearTimer, fetchScores])
 
   // Keep the answer input focused while playing (esp. after submit on mobile)
   useEffect(() => {
@@ -142,7 +141,7 @@ export default function Algebra() {
     setUserInput('')
     setQuestionStartTime(Date.now())
     setTimeout(() => inputRef.current?.focus(), 100)
-  }, [generateEquation, clearTimer])
+  }, [clearTimer])
 
   // Handle submit
   const handleSubmit = useCallback(() => {
@@ -221,7 +220,7 @@ export default function Algebra() {
         })
       }
     }
-  }, [gameState, userInput, currentEquation, correctCount, questionStartTime, responseTimes, username, generateEquation, loadScores, clearTimer])
+  }, [gameState, userInput, currentEquation, correctCount, questionStartTime, responseTimes, username, loadScores, clearTimer])
 
   // Handle key press
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -250,7 +249,7 @@ export default function Algebra() {
       setQuestionStartTime(Date.now())
       setTimeout(() => inputRef.current?.focus(), 100)
     }, 100)
-  }, [generateEquation, clearTimer])
+  }, [clearTimer])
 
   const formatScore = (score: AlgebraScore) => {
     return `${formatNumber(score.correct_answers)} correct (${formatNumber(score.average_time)}ms avg)`

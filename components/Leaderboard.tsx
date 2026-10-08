@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 
@@ -42,7 +42,9 @@ export default function Leaderboard({
   const [personalScores, setPersonalScores] = useState<any[]>([])
   const [personalLoading, setPersonalLoading] = useState(false)
   const fetchScoresRef = useRef(fetchScores)
-  fetchScoresRef.current = fetchScores
+  useLayoutEffect(() => {
+    fetchScoresRef.current = fetchScores
+  })
 
   const loadPersonalScores = useCallback(async () => {
     if (!username) {

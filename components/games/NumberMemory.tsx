@@ -23,20 +23,25 @@ export default function NumberMemory() {
   const hasSubmittedScore = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getNumberMemoryScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getNumberMemoryScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for number memory scores
     const channel = supabase
@@ -58,7 +63,7 @@ export default function NumberMemory() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: NumberMemoryScore) => {
     return `${formatNumber(score.longest_sequence)} digits`

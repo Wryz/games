@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { TimeEstimationIcon } from '../icons/GameIcons'
 import { getTimeEstimationScores, submitTimeEstimationScore } from '@/lib/scores'
 import { useUser } from '@/contexts/UserContext'
@@ -31,20 +31,25 @@ export default function TimeEstimation() {
   const TOTAL_ATTEMPTS = 3
   const FAIL_THRESHOLD = 5000 // 5 seconds in milliseconds
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getTimeEstimationScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getTimeEstimationScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for time estimation scores
     const channel = supabase
@@ -68,7 +73,10 @@ export default function TimeEstimation() {
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
       if (failTimeoutRef.current) clearTimeout(failTimeoutRef.current)
     }
-  }, [])
+  }, [fetchScores])
+
+  // startRound and handleFail schedule each other; the timer calls the latest handleFail
+  const handleFailRef = useRef<() => void>(() => {})
 
   // Start a new round
   const startRound = useCallback(() => {
@@ -102,7 +110,7 @@ export default function TimeEstimation() {
           
           // Auto-fail if user doesn't click within 5 seconds after target time
           failTimeoutRef.current = setTimeout(() => {
-            handleFail()
+            handleFailRef.current()
           }, randomTime + FAIL_THRESHOLD)
         }
       }, 1000)
@@ -134,6 +142,10 @@ export default function TimeEstimation() {
       }
     }, 2000)
   }, [currentAttempt, startRound])
+
+  useLayoutEffect(() => {
+    handleFailRef.current = handleFail
+  })
 
   // Handle click
   const handleClick = useCallback(() => {
@@ -213,7 +225,7 @@ export default function TimeEstimation() {
         hasSubmittedScore.current = false
       })
     }
-  }, [gameState, accuracies, username])
+  }, [gameState, accuracies, username, loadScores])
 
   // Reset game
   const resetGame = useCallback(() => {

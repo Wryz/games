@@ -31,20 +31,25 @@ export default function VisualMemory() {
 
   const GRID_SIZE = 5 // 5x5 grid
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getVisualMemoryScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getVisualMemoryScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for visual memory scores
     const channel = supabase
@@ -66,7 +71,7 @@ export default function VisualMemory() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: VisualMemoryScore) => {
     return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.total_patterns)} correct tiles)`

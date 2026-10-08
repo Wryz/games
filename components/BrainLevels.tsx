@@ -28,16 +28,9 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
 
   const axes = useMemo(() => getCategoryRadarAxes(gameStats), [gameStats])
 
-  useEffect(() => {
-    if (axes.length === 0) return
-    if (!selectedKey || !axes.some(a => a.key === selectedKey)) {
-      // Prefer weakest non-zero gap, else first axis
-      const weakest = [...axes].sort((a, b) => a.value - b.value)[0]
-      setSelectedKey(weakest.key)
-    }
-  }, [axes, selectedKey])
-
-  const selectedAxis: CategoryRadarAxis | undefined = axes.find(a => a.key === selectedKey)
+  // Until the user picks one (or their pick disappears), select the weakest capability
+  const selectedAxis: CategoryRadarAxis | undefined =
+    axes.find(a => a.key === selectedKey) ?? [...axes].sort((a, b) => a.value - b.value)[0]
 
   const hasAnyScore = gameStats.some(gs => gs.userBest !== null)
 
@@ -232,7 +225,7 @@ export default function BrainLevels({ username }: BrainLevelsProps) {
           <div className="min-w-0 order-1 lg:order-2">
             <CategoryRadar
               axes={axes}
-              selectedKey={selectedKey}
+              selectedKey={selectedAxis?.key ?? null}
               onSelect={setSelectedKey}
             />
 

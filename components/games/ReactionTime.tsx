@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { ReactionTimeIcon } from '../icons/GameIcons'
 import { getReactionTimeScores, submitReactionTimeScore } from '@/lib/scores'
 import { useUser } from '@/contexts/UserContext'
@@ -28,9 +28,12 @@ export default function ReactionTime() {
 
   const TOTAL_ATTEMPTS = 5
 
-  gameStateRef.current = gameState
-  currentAttemptRef.current = currentAttempt
-  reactionTimesRef.current = reactionTimes
+  // Keep the refs read by timers and handlers in sync with state (before paint)
+  useLayoutEffect(() => {
+    gameStateRef.current = gameState
+    currentAttemptRef.current = currentAttempt
+    reactionTimesRef.current = reactionTimes
+  })
 
   const clearTimers = useCallback(() => {
     if (timeoutRef.current) {
@@ -39,20 +42,25 @@ export default function ReactionTime() {
     }
   }, [])
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getReactionTimeScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getReactionTimeScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for reaction time scores
     const channel = supabase
@@ -75,7 +83,7 @@ export default function ReactionTime() {
       supabase.removeChannel(channel)
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [])
+  }, [fetchScores])
 
   // Start a new round
   const startRound = useCallback(() => {
@@ -176,7 +184,7 @@ export default function ReactionTime() {
         hasSubmittedScore.current = false
       })
     }
-  }, [gameState, reactionTimes, username])
+  }, [gameState, loadScores, reactionTimes, username])
 
   // Reset game
   const resetGame = useCallback(() => {

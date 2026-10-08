@@ -40,20 +40,25 @@ export default function ChimpTest() {
     return 7 // 7x7 for levels 31+
   }, [])
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getChimpTestScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getChimpTestScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for chimp test scores
     const channel = supabase
@@ -75,7 +80,7 @@ export default function ChimpTest() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: ChimpTestScore) => {
     return `${formatNumber(score.patterns_remembered)} correct`

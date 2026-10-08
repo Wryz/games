@@ -24,14 +24,24 @@ const COLORS = [
   { name: 'BROWN', value: 'brown', cssColor: '#78350f' },  // Warmest
 ]
 
+// Randomly select a word and a color (they might be different)
+function randomQuestion() {
+  const randomWord = COLORS[Math.floor(Math.random() * COLORS.length)]
+  const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)]
+  return { word: randomWord.name, color: randomColor.value }
+}
+
 export default function StroopTest() {
   const [scores, setScores] = useState<StroopTestScore[]>([])
   const [loading, setLoading] = useState(true)
   const [gameState, setGameState] = useState<GameState>('playing')
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [responseTimes, setResponseTimes] = useState<number[]>([])
-  const [currentWord, setCurrentWord] = useState<string>('')
-  const [currentColor, setCurrentColor] = useState<string>('')
+  // Games are client-only (ssr: false in GameRenderer), so the first question can be generated here.
+  // Its response clock starts on the first answer (ensureTimerStarted).
+  const [firstQuestion] = useState(randomQuestion)
+  const [currentWord, setCurrentWord] = useState<string>(firstQuestion.word)
+  const [currentColor, setCurrentColor] = useState<string>(firstQuestion.color)
   const [mistakeSelected, setMistakeSelected] = useState<string>('')
   const [mistakeWord, setMistakeWord] = useState<string>('')
   const [mistakeCorrectColor, setMistakeCorrectColor] = useState<string>('')
@@ -43,17 +53,22 @@ export default function StroopTest() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerStartedRef = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getStroopTestScores({ limit: 50 })
-      setScores(data)
-    } catch (error) {
-      console.error('Error loading scores:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getStroopTestScores({ limit: 50 })
+      .then(data => {
+        setScores(data)
+      })
+      .catch(error => {
+        console.error('Error loading scores:', error)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   const clearTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -76,7 +91,7 @@ export default function StroopTest() {
   }, [])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
     
     // Set up realtime listener for stroop test scores
     const channel = supabase
@@ -99,16 +114,13 @@ export default function StroopTest() {
       clearTimer()
       supabase.removeChannel(channel)
     }
-  }, [clearTimer])
+  }, [clearTimer, fetchScores])
 
   // Generate a new question
   const generateQuestion = useCallback(() => {
-    // Randomly select a word and a color (they might be different)
-    const randomWord = COLORS[Math.floor(Math.random() * COLORS.length)]
-    const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)]
-    
-    setCurrentWord(randomWord.name)
-    setCurrentColor(randomColor.value)
+    const question = randomQuestion()
+    setCurrentWord(question.word)
+    setCurrentColor(question.color)
     questionStartTime.current = Date.now()
   }, [])
 
@@ -123,13 +135,6 @@ export default function StroopTest() {
     hasSubmittedScore.current = false
     generateQuestion()
   }, [generateQuestion, clearTimer])
-
-  // Initialize game on mount
-  useEffect(() => {
-    if (gameState === 'playing' && currentWord === '') {
-      generateQuestion()
-    }
-  }, [gameState, currentWord, generateQuestion])
 
   // Handle color selection
   const handleColorSelect = useCallback((selectedColor: string) => {

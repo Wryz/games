@@ -278,12 +278,13 @@ function previousEditableCell(
 export default function Sudoku() {
   const [scores, setScores] = useState<SudokuScore[]>([])
   const [loading, setLoading] = useState(true)
-  const [ready, setReady] = useState(false)
+  // Games are client-only (ssr: false in GameRenderer), so Math.random() here can't cause a hydration mismatch
+  const [firstGame] = useState(createNewGame)
   const [gameState, setGameState] = useState<GameState>('playing')
-  const [puzzle, setPuzzle] = useState<Grid>(() => emptyGrid())
-  const [solution, setSolution] = useState<Grid>(() => emptyGrid())
-  const [grid, setGrid] = useState<Grid>(() => emptyGrid())
-  const [selected, setSelected] = useState<[number, number] | null>(null)
+  const [puzzle, setPuzzle] = useState<Grid>(firstGame.puzzle)
+  const [solution, setSolution] = useState<Grid>(firstGame.solution)
+  const [grid, setGrid] = useState<Grid>(firstGame.grid)
+  const [selected, setSelected] = useState<[number, number] | null>(() => firstEmptyCell(firstGame.puzzle))
   const [elapsedTime, setElapsedTime] = useState(0)
   const [timerStarted, setTimerStarted] = useState(false)
   const { username } = useUser()
@@ -291,21 +292,26 @@ export default function Sudoku() {
   const startTimeRef = useRef(0)
   const hasSubmittedScore = useRef(false)
 
-  const loadScores = async () => {
-    try {
-      setLoading(true)
-      const data = await getSudokuScores({ limit: 50 })
-      setScores(data || [])
-    } catch (error) {
-      console.error('Error loading sudoku scores:', error)
-      setScores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // State is only set in promise callbacks, so this is safe to call from an effect
+  const fetchScores = useCallback(() => {
+    return getSudokuScores({ limit: 50 })
+      .then(data => {
+        setScores(data || [])
+      })
+      .catch(error => {
+        console.error('Error loading sudoku scores:', error)
+        setScores([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const loadScores = useCallback(() => {
+    setLoading(true)
+    return fetchScores()
+  }, [fetchScores])
 
   useEffect(() => {
-    loadScores()
+    fetchScores()
 
     const channel = supabase
       .channel('sudoku_scores_changes')
@@ -325,7 +331,7 @@ export default function Sudoku() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchScores])
 
   const formatScore = (score: SudokuScore) => {
     if (!score || score.time_taken === undefined || score.time_taken === null) {
@@ -371,25 +377,15 @@ export default function Sudoku() {
     setGameState('playing')
     setElapsedTime(0)
     setTimerStarted(false)
-    setReady(true)
     hasSubmittedScore.current = false
     startTimeRef.current = 0
     clearTimer()
   }, [clearTimer])
 
-  // Generate puzzle on client only — Math.random() during SSR causes hydration mismatches
-  useEffect(() => {
-    const next = createNewGame()
-    setPuzzle(next.puzzle)
-    setSolution(next.solution)
-    setGrid(next.grid)
-    setSelected(firstEmptyCell(next.puzzle))
-    setReady(true)
-    return () => clearTimer()
-  }, [clearTimer])
+  useEffect(() => () => clearTimer(), [clearTimer])
 
   const placeNumber = useCallback((num: number) => {
-    if (!ready || gameState !== 'playing' || !selected || num === 0) return
+    if (gameState !== 'playing' || !selected || num === 0) return
     const [row, col] = selected
     if (puzzle[row][col] !== 0) return
 
@@ -399,10 +395,10 @@ export default function Sudoku() {
     next[row][col] = num
     setGrid(next)
     setSelected(nextEmptyCell(puzzle, next, row, col))
-  }, [ready, gameState, selected, puzzle, grid, startTimer])
+  }, [gameState, selected, puzzle, grid, startTimer])
 
   const clearAndGoPrevious = useCallback(() => {
-    if (!ready || gameState !== 'playing' || !selected) return
+    if (gameState !== 'playing' || !selected) return
     const [row, col] = selected
     if (puzzle[row][col] !== 0) return
 
@@ -410,16 +406,16 @@ export default function Sudoku() {
     next[row][col] = 0
     setGrid(next)
     setSelected(previousEditableCell(puzzle, row, col) ?? [row, col])
-  }, [ready, gameState, selected, puzzle, grid])
+  }, [gameState, selected, puzzle, grid])
 
   const handleCellClick = useCallback((row: number, col: number) => {
-    if (!ready || gameState !== 'playing') return
+    if (gameState !== 'playing') return
     setSelected([row, col])
-  }, [ready, gameState])
+  }, [gameState])
 
   // Same pattern as Maze: finish + submit score in the completion handler
   const handleSubmit = useCallback(() => {
-    if (!ready || gameState !== 'playing' || !isFilled(grid)) return
+    if (gameState !== 'playing' || !isFilled(grid)) return
 
     const finalTime = startTimeRef.current > 0
       ? Date.now() - startTimeRef.current
@@ -443,10 +439,10 @@ export default function Sudoku() {
         hasSubmittedScore.current = false
       })
     }
-  }, [ready, gameState, grid, solution, username, elapsedTime, clearTimer])
+  }, [gameState, grid, elapsedTime, clearTimer, solution, username, loadScores])
 
   useEffect(() => {
-    if (!ready || gameState !== 'playing') return
+    if (gameState !== 'playing') return
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key >= '1' && e.key <= '9') {
@@ -476,10 +472,10 @@ export default function Sudoku() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [ready, gameState, selected, placeNumber, clearAndGoPrevious])
+  }, [gameState, selected, placeNumber, clearAndGoPrevious])
 
   const selectedValue = selected ? grid[selected[0]][selected[1]] : 0
-  const boardFilled = ready && isFilled(grid)
+  const boardFilled = isFilled(grid)
   const solved = gameState === 'finished' && isComplete(grid, solution)
 
   return (
