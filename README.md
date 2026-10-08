@@ -1,174 +1,94 @@
 # Brain Benchmark
 
-A modern Next.js platform for cognitive assessment and brain training exercises built with TypeScript and Tailwind CSS.
+**The benchmark for human capability.** We benchmark AI models on everything; this is the benchmark for people — short, honest tests that each isolate one thing a human mind can do, ranked live against everyone else and rolled up into a personal capability profile.
 
-## Features
+Live at [brain-benchmark.com](https://brain-benchmark.com).
 
-- 🧠 **Cognitive Assessment**: Test and benchmark your mental performance across various domains
-- 🎯 **Targeted Training**: Specialized exercises for aim, reaction time, memory, and attention
-- 🎨 **Modern UI**: Beautiful, responsive design with Tailwind CSS
-- 📱 **Mobile Responsive**: Optimized for all screen sizes and devices
-- ⚡ **Fast Performance**: Built with Next.js 14 and optimized for speed
-- 🎯 **TypeScript**: Fully typed for better development experience
-- 📊 **Performance Tracking**: Detailed analytics and progress monitoring (coming soon)
+## The tests
 
-## Brain Training Categories
+20 tests across 7 capabilities. The taxonomy lives in [`lib/domains.ts`](lib/domains.ts); every test is registered in [`types/games.ts`](types/games.ts).
 
-- 🎯 **Aim Training**: Improve precision and hand-eye coordination
-- ⚡ **Reaction Time**: Test and enhance your response speed
-- 🧠 **Memory**: Challenge your working memory capacity
-- 🔍 **Attention**: Measure focus and concentration abilities
-- 🧮 **Processing Speed**: Assess cognitive processing efficiency
-- 🎲 **Decision Making**: Train rapid decision-making skills
+| Capability | Tests |
+| --- | --- |
+| **Speed** | Reaction Time, Aim Trainer |
+| **Memory** | Number Memory, Verbal Memory ✦, Visual Memory, Chimp Test, Sequence Memory |
+| **Attention** | Stroop Test, Flanker ✦ |
+| **Perception** | Color Perception ✦, Time Estimation |
+| **Reasoning** | Mental Rotation ✦, Tangrams, Maze, Sudoku |
+| **Numeracy** | Arithmetic, Algebra, Geometry |
+| **Language** | Typing Test, Word Search |
 
-## Getting Started
+✦ = added in the 2026 revamp. Each new test fills a gap so every capability has at least two tests, and each is a classic cognitive-psychology paradigm (continuous recognition, Eriksen flanker, colour-discrimination staircase, Shepard–Metzler rotation). Sources are listed on the [About page](app/about/page.tsx).
 
-### Prerequisites
+## Stack
 
-- Node.js 18+ 
-- npm or yarn
+- Next.js 14 (App Router) · TypeScript · Tailwind CSS
+- Supabase (Postgres + RPC + Realtime) for scores and leaderboards
+- PostHog for product analytics
 
-### Installation
+## Getting started
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd games
-```
-
-2. Install dependencies:
 ```bash
 npm install
-# or
-yarn install
+npm run dev        # http://localhost:3000
 ```
 
-3. Run the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
+Environment (`.env`):
 
 ```
-brain-benchmark/
-├── app/                    # Next.js app directory
-│   ├── tailwind.css      # Global styles
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx          # Home page
-│   ├── loading.tsx       # Loading component
-│   ├── not-found.tsx     # 404 page
-│   └── about/            # About page
-├── components/           # Reusable components
-│   ├── BackgroundPattern.tsx  # Background design
-│   ├── GameHeader.tsx    # Main header component
-│   ├── GameFooter.tsx    # Footer component
-│   └── SimpleGameGrid.tsx # Grid layout for exercises
-├── games/               # Brain training exercises (coming soon)
-│   └── types/           # Game type definitions
-├── data/                # Exercise data
-│   └── games.ts         # Exercise configurations
-├── types/               # TypeScript type definitions
-│   └── game.ts          # Exercise-related types
-└── public/              # Static assets
-    └── background/      # Background patterns
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_POSTHOG_KEY=...      # optional
+NEXT_PUBLIC_SITE_URL=https://brain-benchmark.com
 ```
 
-## Customization
+## Database
 
-### Adding New Brain Training Exercises
+SQL lives in [`database/`](database). Run these in the Supabase SQL editor:
 
-Edit `data/games.ts` to add new cognitive exercises to the platform:
+1. `new_tests.sql` — tables, RLS (read + insert only), realtime and submit functions for the four new tests.
+2. **Then** `game_stats.sql` and `recent_activity.sql` — the overview and live-feed RPCs. These reference the new tables, so apply step 1 first or the RPCs will error.
 
-```typescript
-{
-  id: 'unique-game-id',
-  title: 'Game Title',
-  description: 'Game description...',
-  category: 'Action', // Must match GameCategory type
-  image: 'https://example.com/image.jpg',
-  rating: 4.5,
-  players: '1-4 Players',
-  difficulty: 'Medium',
-  playTime: '30-60 min',
-  tags: ['Tag1', 'Tag2'],
-  featured: false,
-  releaseDate: '2025-11-09',
-  developer: 'Developer Name',
-  platform: ['Web', 'Mobile']
-}
+`npm run types` regenerates `types/database.types.ts` from the live project.
+
+## Project structure
+
+```
+app/
+  page.tsx                Home: hero, live results, capability sections
+  games/[id]/page.tsx     Test page (server: per-test metadata) → components/TestPage
+  [username]/page.tsx     Public capability profile (radar)
+  about/page.tsx          Positioning, method and references
+components/
+  SiteShell, SiteHeader, SiteFooter, UserMenu   Site chrome
+  TestPage.tsx            Test header, record / your best / runs strip, related tests
+  GameRenderer.tsx        Code-split map of test id → component
+  GameWrapper.tsx, Leaderboard.tsx              Shared leaderboard under each test
+  games/*.tsx             One component per test
+lib/
+  domains.ts              The 7 capabilities (labels, taglines, colours)
+  format-score.ts         One formatter for every score shape
+  radar.ts                Per-test strength vs record → profile radar
+  scores.ts               Supabase submit/fetch per test
+types/games.ts            Test registry (name, capability, how-to, metric, table)
 ```
 
-### Styling
+## Adding a test
 
-The project uses Tailwind CSS with custom components defined in `globals.css`. Key classes:
+1. **SQL** — create `<test>_scores`, RLS (select + insert only), a `submit_<test>_score` function, and add the table to the `supabase_realtime` publication. Add a block to `game_stats.sql` and `recent_activity.sql`. `database/new_tests.sql` is a template.
+2. **Types & API** — add the table to `types/database.types.ts` (or run `npm run types`), and `submit…`/`get…` functions to `lib/scores.ts`.
+3. **Registry** — add an entry to `GAMES` in `types/games.ts` and an icon in `components/icons/GameIcons.tsx`.
+4. **Scoring** — add a case to `formatScoreSummary` (`lib/format-score.ts`) and `getGameStrength` (`lib/radar.ts`).
+5. **Component** — create `components/games/<Test>.tsx` following `Flanker.tsx` (status row → stage → result → `GameWrapper` leaderboard) and register it in `components/GameRenderer.tsx`.
 
-- `.game-card` - Styled game card component
-- `.btn-primary` - Primary button style
-- `.btn-secondary` - Secondary button style
-- `.gradient-text` - Gradient text effect
+## Design system
 
-### Color Scheme
+The brand is "instrument, not toy": ink on paper, one accent, monospaced numbers.
 
-The design uses a primary blue color scheme with purple accents. Customize colors in `tailwind.config.ts`:
-
-```typescript
-colors: {
-  primary: {
-    // Your primary color shades
-  },
-  secondary: {
-    // Your secondary color shades
-  }
-}
-```
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Deploy automatically
-
-### Other Platforms
-
-Build the project:
-```bash
-npm run build
-```
-
-The built files will be in the `.next` folder.
-
-## Technologies Used
-
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type-safe JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
-- **Lucide React** - Beautiful icons
-- **React 18** - Latest React features
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- **Colour** — `gray-*` is a warm ink/paper scale; `blue-*` / `signal-*` is the single cobalt accent; `volt` (#d4ff3f) is a sparing highlight for records and "you". Each capability has its own colour in `lib/domains.ts`, used only for small markers.
+- **Type** — Space Grotesk (UI/display) + JetBrains Mono (numbers, labels).
+- **Components** — `.card`, `.btn-primary`, `.btn-ink`, `.btn-ghost`, `.chip`, `.chip-volt`, `.eyebrow`, `.num`, `.input` in `app/tailwind.css`.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-If you have any questions or need help, please open an issue on GitHub.
-
----
-
-Built with ❤️ for game enthusiasts
-A collection of games made by My Phung
+MIT — see [LICENSE](LICENSE).

@@ -1,15 +1,16 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GAMES } from '@/types/games'
-import { formatNumber } from '@/lib/levels'
+import { formatScoreSummary } from '@/lib/format-score'
+import type { DomainKey } from '@/lib/domains'
 
 interface GameStats {
   id: string
   name: string
   icon: any
-  category: 'cognitive' | 'motor' | 'memory' | 'perception' | 'computation' | 'attention' | 'language' | 'social' | 'creative' | 'puzzles' | 'linguistic'
+  category: DomainKey
   totalGames: number
   topScore: {
     username: string
@@ -86,48 +87,6 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
         Array.isArray(rpcData) ? rpcData.map((item: any) => [item.game_id, item]) : []
       )
 
-        // Format scores based on exercise type
-        const formatScore = (score: any, gameId: string) => {
-        if (!score) return null
-        
-          switch (gameId) {
-            case 'aim-trainer':
-              return `${formatNumber(score.reaction_time)}ms (${formatNumber(score.accuracy)}%)`
-            case 'typing-test':
-              return `${formatNumber(score.wpm)} WPM (${formatNumber(score.accuracy)}%)`
-            case 'reaction-time':
-              return `${formatNumber(score.fastest_time)}ms (${formatNumber(score.average_time)}ms avg)`
-            case 'visual-memory':
-              return `Level ${formatNumber(score.level_reached)} (${formatNumber(score.total_patterns)} patterns)`
-            case 'stroop-test':
-              return `${formatNumber(score.correct_answers || 0)} correct (${formatNumber(score.average_time || 0)}ms)`
-            case 'number-memory':
-              return `${formatNumber(score.longest_sequence)} digits`
-            case 'memory':
-              return `${formatNumber(score.total_sequences || 0)} sequences (${formatNumber(score.correct_sequences || 0)} correct)`
-            case 'chimp-test':
-              return `${formatNumber(score.patterns_remembered || 0)} correct`
-            case 'time-estimation':
-              return `${formatNumber(score.average_accuracy || 0)}ms avg (${formatNumber(score.best_accuracy || 0)}ms best)`
-            case 'maze':
-            case 'sudoku':
-            case 'tangrams':
-              const seconds = Math.floor((score.time_taken || 0) / 1000)
-              const milliseconds = Math.floor(((score.time_taken || 0) % 1000) / 100)
-              return `${formatNumber(seconds)}.${milliseconds}s`
-            case 'algebra':
-            case 'arithmetic':
-            case 'geometry':
-              const correctAnswers = score.correct_answers || 0
-              const avgTime = score.average_time || 0
-              return `${formatNumber(correctAnswers)} correct (${formatNumber(avgTime)}ms avg)`
-            case 'word-search':
-              return `${formatNumber(score.characters_found || 0)} characters`
-            default:
-            return `Level ${formatNumber(score.level_reached)}`
-        }
-      }
-
       for (const game of GAMES) {
         const rpcGameData = rpcDataMap.get(game.id)
 
@@ -140,11 +99,11 @@ export function OverviewProvider({ children }: { children: ReactNode }) {
           totalGames: rpcGameData?.total_games || 0,
           topScore: rpcGameData?.top_score ? {
             username: rpcGameData.top_score.username,
-            value: formatScore(rpcGameData.top_score, game.id) || '',
+            value: formatScoreSummary(game.id, rpcGameData.top_score),
             score: rpcGameData.top_score
           } : null,
           userBest: rpcGameData?.user_best ? {
-            value: formatScore(rpcGameData.user_best, game.id) || '',
+            value: formatScoreSummary(game.id, rpcGameData.user_best),
             score: rpcGameData.user_best
           } : null
         })

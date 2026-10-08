@@ -475,6 +475,110 @@ BEGIN
           LIMIT 1)
         ELSE NULL
       END as user_best
+
+    UNION ALL
+
+    -- verbal-memory
+    SELECT
+      'verbal-memory' as game_id,
+      (SELECT COUNT(*) FROM verbal_memory_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'words_remembered', words_remembered,
+        'date_submitted', date_submitted
+      ) FROM verbal_memory_scores
+      ORDER BY words_remembered DESC
+      LIMIT 1) as top_score,
+      CASE
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'words_remembered', words_remembered,
+            'date_submitted', date_submitted
+          ) FROM verbal_memory_scores
+          WHERE username = p_username
+          ORDER BY words_remembered DESC
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
+
+    UNION ALL
+
+    -- flanker
+    SELECT
+      'flanker' as game_id,
+      (SELECT COUNT(*) FROM flanker_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'correct_answers', correct_answers,
+        'average_time', average_time,
+        'date_submitted', date_submitted
+      ) FROM flanker_scores
+      ORDER BY correct_answers DESC, average_time ASC
+      LIMIT 1) as top_score,
+      CASE
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'correct_answers', correct_answers,
+            'average_time', average_time,
+            'date_submitted', date_submitted
+          ) FROM flanker_scores
+          WHERE username = p_username
+          ORDER BY correct_answers DESC, average_time ASC
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
+
+    UNION ALL
+
+    -- color-perception
+    SELECT
+      'color-perception' as game_id,
+      (SELECT COUNT(*) FROM color_perception_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'level_reached', level_reached,
+        'date_submitted', date_submitted
+      ) FROM color_perception_scores
+      ORDER BY level_reached DESC
+      LIMIT 1) as top_score,
+      CASE
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'level_reached', level_reached,
+            'date_submitted', date_submitted
+          ) FROM color_perception_scores
+          WHERE username = p_username
+          ORDER BY level_reached DESC
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
+
+    UNION ALL
+
+    -- mental-rotation
+    SELECT
+      'mental-rotation' as game_id,
+      (SELECT COUNT(*) FROM mental_rotation_scores) as total_games,
+      (SELECT json_build_object(
+        'username', username,
+        'correct_answers', correct_answers,
+        'average_time', average_time,
+        'date_submitted', date_submitted
+      ) FROM mental_rotation_scores
+      ORDER BY correct_answers DESC, average_time ASC
+      LIMIT 1) as top_score,
+      CASE
+        WHEN p_username IS NOT NULL THEN
+          (SELECT json_build_object(
+            'correct_answers', correct_answers,
+            'average_time', average_time,
+            'date_submitted', date_submitted
+          ) FROM mental_rotation_scores
+          WHERE username = p_username
+          ORDER BY correct_answers DESC, average_time ASC
+          LIMIT 1)
+        ELSE NULL
+      END as user_best
   ) as game_stats;
   
   RETURN result;

@@ -1,70 +1,52 @@
 'use client'
 
-import { BrainIcon } from './icons/GameIcons'
-import Home from './Home'
-import AimTrainer from './games/AimTrainer'
-import TypingTest from './games/TypingTest'
-import MemoryGame from './games/MemoryGame'
-import ReactionTime from './games/ReactionTime'
-import NumberMemory from './games/NumberMemory'
-import VisualMemory from './games/VisualMemory'
-import StroopTest from './games/StroopTest'
-import ChimpTest from './games/ChimpTest'
-import Algebra from './games/Algebra'
-import Arithmetic from './games/Arithmetic'
-import Geometry from './games/Geometry'
-import TimeEstimation from './games/TimeEstimation'
-import WordSearch from './games/WordSearch'
-import Maze from './games/Maze'
-import Sudoku from './games/Sudoku'
-import Tangrams from './games/Tangrams'
+import dynamic from 'next/dynamic'
+import type { ComponentType } from 'react'
 import UsernameGate from './UsernameGate'
 
-interface GameRendererProps {
-  selectedGame: string | null
-  onGameSelect?: (gameId: string) => void
+function StageSkeleton() {
+  return (
+    <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 sm:min-h-[480px]">
+      <span className="eyebrow animate-pulse">Loading test…</span>
+    </div>
+  )
 }
 
-export default function GameRenderer({ selectedGame, onGameSelect }: GameRendererProps) {
-  // Show Home by default when no game is selected
-  if (!selectedGame || selectedGame === 'home') {
-    return <Home onGameSelect={onGameSelect} />
-  }
+// Each test is code-split so a page only downloads the test it shows.
+const load = (importer: () => Promise<{ default: ComponentType }>) =>
+  dynamic(importer, { ssr: false, loading: StageSkeleton })
 
-  const gameComponents = {
-    'aim-trainer': AimTrainer,
-    'typing-test': TypingTest,
-    'memory': MemoryGame,
-    'reaction-time': ReactionTime,
-    'number-memory': NumberMemory,
-    'visual-memory': VisualMemory,
-    'stroop-test': StroopTest,
-    'chimp-test': ChimpTest,
-    'algebra': Algebra,
-    'arithmetic': Arithmetic,
-    'geometry': Geometry,
-    'time-estimation': TimeEstimation,
-    'word-search': WordSearch,
-    'maze': Maze,
-    'sudoku': Sudoku,
-    'tangrams': Tangrams,
-  }
+const GAME_COMPONENTS: Record<string, ComponentType> = {
+  'aim-trainer': load(() => import('./games/AimTrainer')),
+  'typing-test': load(() => import('./games/TypingTest')),
+  'memory': load(() => import('./games/MemoryGame')),
+  'reaction-time': load(() => import('./games/ReactionTime')),
+  'number-memory': load(() => import('./games/NumberMemory')),
+  'visual-memory': load(() => import('./games/VisualMemory')),
+  'verbal-memory': load(() => import('./games/VerbalMemory')),
+  'stroop-test': load(() => import('./games/StroopTest')),
+  'flanker': load(() => import('./games/Flanker')),
+  'chimp-test': load(() => import('./games/ChimpTest')),
+  'algebra': load(() => import('./games/Algebra')),
+  'arithmetic': load(() => import('./games/Arithmetic')),
+  'geometry': load(() => import('./games/Geometry')),
+  'time-estimation': load(() => import('./games/TimeEstimation')),
+  'color-perception': load(() => import('./games/ColorPerception')),
+  'word-search': load(() => import('./games/WordSearch')),
+  'maze': load(() => import('./games/Maze')),
+  'sudoku': load(() => import('./games/Sudoku')),
+  'tangrams': load(() => import('./games/Tangrams')),
+  'mental-rotation': load(() => import('./games/MentalRotation')),
+}
 
-  const GameComponent = gameComponents[selectedGame as keyof typeof gameComponents]
+export default function GameRenderer({ selectedGame }: { selectedGame: string }) {
+  const GameComponent = GAME_COMPONENTS[selectedGame]
 
   if (!GameComponent) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] bg-red-50 dark:bg-red-900/20 rounded-lg p-8">
-        <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4 text-red-500">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-          <path d="m15 9-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <h2 className="text-2xl font-bold mb-4 text-red-600 dark:text-red-400">
-          Game Not Found
-        </h2>
-        <p className="text-red-500 dark:text-red-300 text-center">
-          The selected game could not be loaded. Please try selecting a different game.
-        </p>
+      <div className="card flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
+        <p className="eyebrow mb-2">Error</p>
+        <h2 className="text-2xl font-semibold">This test could not be loaded</h2>
       </div>
     )
   }

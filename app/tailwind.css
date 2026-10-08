@@ -2,19 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hide game icon when the card is too small for text + icon */
-.game-card-badge {
-  container-type: size;
-}
+@layer base {
+  :root {
+    color-scheme: light;
+    --grid-line: rgba(14, 14, 13, 0.06);
+  }
 
-@container (max-width: 168px) {
-  .game-card-icon {
-    display: none;
+  :root.dark {
+    color-scheme: dark;
+    --grid-line: rgba(247, 246, 242, 0.05);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-800 antialiased dark:bg-gray-950 dark:text-gray-100;
+    font-feature-settings: 'ss01', 'ss02';
+  }
+
+  ::selection {
+    @apply bg-volt text-gray-950;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-signal-500 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950;
   }
 }
 
-@container (max-height: 168px) {
-  .game-card-icon {
-    display: none;
+@layer components {
+  /* Subtle measurement grid used behind hero sections */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400;
+  }
+
+  .card {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-card dark:border-gray-800 dark:bg-gray-900 dark:shadow-none;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-signal-600 text-white shadow-signal hover:bg-signal-500;
+  }
+
+  .btn-ink {
+    @apply btn bg-gray-950 text-gray-50 hover:bg-gray-800 dark:bg-gray-50 dark:text-gray-950 dark:hover:bg-white;
+  }
+
+  .btn-ghost {
+    @apply btn border border-gray-300 bg-transparent text-gray-800 hover:border-gray-950 hover:text-gray-950 dark:border-gray-700 dark:text-gray-100 dark:hover:border-gray-300 dark:hover:text-white;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 font-mono text-[11px] font-medium text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300;
+  }
+
+  .chip-volt {
+    @apply inline-flex items-center gap-1 rounded-full bg-volt px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-950;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition focus:border-signal-500 focus:ring-2 focus:ring-signal-500/30 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100;
+  }
+
+  .num {
+    @apply font-mono tabular-nums;
   }
 }
