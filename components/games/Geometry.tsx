@@ -15,7 +15,7 @@ type ProblemType = 'triangle_angles' | 'quadrilateral_angles' | 'pythagorean' | 
 interface Problem {
   type: ProblemType
   question: string
-  shape: JSX.Element
+  shape: React.JSX.Element
   answer: number
   options: number[]
 }
