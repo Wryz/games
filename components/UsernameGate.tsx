@@ -78,7 +78,7 @@ export default function UsernameGate({ children }: UsernameGateProps) {
         </div>
       )}
 
-      <div className={showGate ? 'pointer-events-none select-none blur-sm' : undefined} aria-hidden={showGate || undefined}>
+      <div className={showGate ? 'pointer-events-none select-none blur-xs' : undefined} aria-hidden={showGate || undefined}>
         {children}
       </div>
     </div>

@@ -337,7 +337,7 @@ export default function TimeEstimation() {
             )}
             {gameState === 'finished' && (
               <div className="pointer-events-auto flex w-full max-w-md flex-col items-center">
-                <span className="eyebrow !text-white/70">Result</span>
+                <span className="eyebrow text-white/70!">Result</span>
                 <div className="num mt-3 text-6xl font-bold tracking-tight sm:text-7xl">
                   {averageAccuracy}
                   <span className="ml-1 text-2xl font-medium text-white/70 sm:text-3xl">ms</span>
@@ -345,11 +345,11 @@ export default function TimeEstimation() {
                 <div className="mt-1 text-sm text-white/70">average error</div>
                 <div className="mt-8 grid w-full grid-cols-2 gap-3">
                   <div className="rounded-xl bg-white/10 p-4 text-left">
-                    <div className="eyebrow !text-white/70">Best</div>
+                    <div className="eyebrow text-white/70!">Best</div>
                     <div className="num mt-2 text-lg font-semibold">{bestAccuracy} ms</div>
                   </div>
                   <div className="rounded-xl bg-white/10 p-4 text-left">
-                    <div className="eyebrow !text-white/70">Scored rounds</div>
+                    <div className="eyebrow text-white/70!">Scored rounds</div>
                     <div className="num mt-2 text-lg font-semibold">{accuracies.length}/{TOTAL_ATTEMPTS}</div>
                   </div>
                 </div>

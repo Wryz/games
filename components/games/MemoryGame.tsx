@@ -273,7 +273,7 @@ export default function MemoryGame() {
               {/* Feedback line (fixed height so the board never jumps) */}
               <div className="mb-4 flex min-h-[20px] items-center justify-center">
                 {gameState === 'wrong' && showCorrectSequence ? (
-                  <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong — here&apos;s the correct sequence</span>
+                  <span className="eyebrow text-red-600! dark:text-red-400!">Wrong — here&apos;s the correct sequence</span>
                 ) : null}
               </div>
 

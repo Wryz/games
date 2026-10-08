@@ -60,7 +60,7 @@ export default function UserMenu() {
         {username ? (
           <>
             <span className="h-2 w-2 rounded-full bg-volt ring-2 ring-volt/30" aria-hidden />
-            <span className="max-w-[9rem] truncate">{username}</span>
+            <span className="max-w-36 truncate">{username}</span>
           </>
         ) : (
           'Set your name'

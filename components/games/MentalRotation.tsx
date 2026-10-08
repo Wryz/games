@@ -471,7 +471,7 @@ export default function MentalRotation() {
               <div className="mt-2 h-5">
                 {phase === 'feedback' && (
                   <span
-                    className={`eyebrow ${lastCorrect ? '!text-signal-600 dark:!text-signal-400' : '!text-red-600 dark:!text-red-400'}`}
+                    className={`eyebrow ${lastCorrect ? 'text-signal-600! dark:text-signal-400!' : 'text-red-600! dark:text-red-400!'}`}
                   >
                     {lastCorrect ? 'Correct' : 'Wrong'}
                   </span>

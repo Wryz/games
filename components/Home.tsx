@@ -64,7 +64,7 @@ function TestCard({
         </div>
       </div>
 
-      <h3 className="text-base font-semibold leading-tight tracking-tight text-gray-950 dark:text-white sm:text-lg">{game.name}</h3>
+      <h3 className="text-base font-semibold leading-tight tracking-tight text-gray-950 dark:text-white sm:text-lg sm:leading-7">{game.name}</h3>
       <p className="mt-1 hidden text-sm leading-snug text-gray-600 dark:text-gray-400 sm:block">{game.description}</p>
       <p className="num mt-1.5 truncate text-[11px] text-gray-500 dark:text-gray-400 sm:hidden">
         {stat?.userBest ? `Best ${stat.userBest.value}` : stat?.topScore ? `Rec ${stat.topScore.value}` : game.duration}
@@ -90,7 +90,7 @@ function TestCard({
       </dl>
 
       {holdsRecord && (
-        <span className="chip-volt absolute -top-2.5 left-4 shadow-sm">★ RECORD</span>
+        <span className="chip-volt absolute -top-2.5 left-4 shadow-xs">★ RECORD</span>
       )}
     </Link>
   )
@@ -99,10 +99,10 @@ function TestCard({
 function CardSkeleton() {
   return (
     <div className="card relative h-[124px] overflow-hidden p-5 sm:h-[228px]">
-      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-gray-100/70 to-transparent dark:via-white/5" />
+      <div className="absolute inset-0 animate-shimmer bg-linear-to-r from-transparent via-gray-100/70 to-transparent dark:via-white/5" />
       <div className="h-11 w-11 rounded-xl bg-gray-100 dark:bg-gray-800" />
-      <div className="mt-5 h-5 w-1/2 rounded bg-gray-100 dark:bg-gray-800" />
-      <div className="mt-2 h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-800" />
+      <div className="mt-5 h-5 w-1/2 rounded-sm bg-gray-100 dark:bg-gray-800" />
+      <div className="mt-2 h-4 w-3/4 rounded-sm bg-gray-100 dark:bg-gray-800" />
     </div>
   )
 }
@@ -183,7 +183,7 @@ export default function Home() {
     <div>
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-gray-200 dark:border-gray-800">
-        <div className="bg-grid absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden />
+        <div className="bg-grid absolute inset-0 mask-[linear-gradient(to_bottom,black,transparent)]" aria-hidden />
         <div className="container-page relative grid gap-12 py-14 sm:py-20 lg:grid-cols-[1.35fr_1fr] lg:items-center lg:gap-16">
           <div className="animate-fade-in-up">
             <p className="eyebrow mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -252,8 +252,8 @@ export default function Home() {
               {feedLoading
                 ? [...Array(6)].map((_, i) => (
                     <li key={i} className="flex items-center gap-3 px-5 py-3">
-                      <div className="h-4 w-24 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
-                      <div className="ml-auto h-4 w-20 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+                      <div className="h-4 w-24 animate-pulse rounded-sm bg-gray-100 dark:bg-gray-800" />
+                      <div className="ml-auto h-4 w-20 animate-pulse rounded-sm bg-gray-100 dark:bg-gray-800" />
                     </li>
                   ))
                 : recentScores.length === 0

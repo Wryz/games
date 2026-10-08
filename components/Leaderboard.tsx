@@ -214,13 +214,13 @@ export default function Leaderboard({
         </div>
       </div>
 
-      <ol className="max-h-[28rem] overflow-y-auto">
+      <ol className="max-h-112 overflow-y-auto">
         {isLoading ? (
           [...Array(5)].map((_, i) => (
             <li key={i} className="flex items-center gap-4 border-b border-gray-100 px-5 py-3.5 last:border-0 dark:border-gray-800/70">
-              <div className="h-4 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
-              <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
-              <div className="ml-auto h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+              <div className="h-4 w-6 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-800" />
+              <div className="h-4 w-32 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-800" />
+              <div className="ml-auto h-4 w-24 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-800" />
             </li>
           ))
         ) : sortedScores.length === 0 ? (

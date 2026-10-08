@@ -349,7 +349,7 @@ export default function Algebra() {
 
           {gameState === 'wrong' && currentEquation && (
             <div className="flex w-full flex-col items-center text-center">
-              <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong answer</span>
+              <span className="eyebrow text-red-600! dark:text-red-400!">Wrong answer</span>
               <div className="num mt-3 text-6xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-7xl">
                 {correctCount}/20
               </div>

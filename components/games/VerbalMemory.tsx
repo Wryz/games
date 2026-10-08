@@ -373,7 +373,7 @@ export default function VerbalMemory() {
                 Word <span className="num">{shownCount}</span>
               </div>
               <div
-                className="mb-10 sm:mb-14 max-w-full break-words text-center text-4xl sm:text-6xl font-semibold tracking-tight text-gray-950 dark:text-gray-50"
+                className="mb-10 sm:mb-14 max-w-full wrap-break-word text-center text-4xl sm:text-6xl font-semibold tracking-tight text-gray-950 dark:text-gray-50"
                 aria-live="polite"
               >
                 {current.word}

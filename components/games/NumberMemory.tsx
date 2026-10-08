@@ -251,7 +251,7 @@ export default function NumberMemory() {
             </div>
           ) : gameState === 'wrong' && showCorrectAnswer ? (
             <div className="flex w-full flex-col items-center justify-center gap-6">
-              <span className="eyebrow !text-red-600 dark:!text-red-400">Wrong</span>
+              <span className="eyebrow text-red-600! dark:text-red-400!">Wrong</span>
               <div className="flex flex-col items-center gap-2">
                 <span className="eyebrow">Your answer</span>
                 <span className="num break-all text-3xl font-bold text-red-600 dark:text-red-400 sm:text-4xl">{userInput}</span>
