@@ -18,7 +18,7 @@
     "an-array-of-english-words": "^2.0.0",
     "bad-words": "^4.0.0",
     "html2canvas": "^1.4.1",
-    "next": "^16.4.0",
+    "next": "^16.4.1",
     "postcss": "^8",
     "posthog-js": "^1.290.0",
     "react": "^19.3.0",
